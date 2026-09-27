@@ -1,0 +1,25 @@
+# 二进制资产：禁止文本转换与 diff 展开，避免 CRLF 转换带来的额外开销
+*.vhdx   binary
+*.vhd    binary
+*.exe    binary
+*.dll    binary
+*.msi    binary
+*.zip    binary
+*.gz     binary
+*.7z     binary
+*.ico    binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
+*.otf    binary
+*.pdf    binary
+
+# 源码与配置保持原有换行风格
+*.sh     text eol=lf
+Dockerfile* text eol=lf
+*.md     text eol=lf

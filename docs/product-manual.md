@@ -1,0 +1,115 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_4200ad0db9a111f1b172525400248c00
+    ReservedCode1: BQHF+Jn/s5I1wyLbRGFJqVQrrHb1zSenKEZpRzoASi53JZVSXmMbZseXBkwYTLggkKuMem0TJNx/S/wNSfFagAAftVSzsLQNca1v3Vbw+etbpR9WLpNXnwCmRal94+yMXvF5sQhvSr/di3UpD45KbtCBWPTSHI9ZJpnGA2neK1Wlt9SwlLT6BIrInkU=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_4200ad0db9a111f1b172525400248c00
+    ReservedCode2: BQHF+Jn/s5I1wyLbRGFJqVQrrHb1zSenKEZpRzoASi53JZVSXmMbZseXBkwYTLggkKuMem0TJNx/S/wNSfFagAAftVSzsLQNca1v3Vbw+etbpR9WLpNXnwCmRal94+yMXvF5sQhvSr/di3UpD45KbtCBWPTSHI9ZJpnGA2neK1Wlt9SwlLT6BIrInkU=
+---
+
+# 运营智脑 OpsCompass 产品说明书
+
+> 版本：v0.9.0（功能冻结）　发行：BY LAOMENG 网络工作室　更新：2026-09-26
+
+## 1. 产品定位
+
+**运营智脑（OpsCompass）** 是面向中小商家与运营团队的全域运营决策软件。
+
+- **一句话价值**：让数据自动做出最优决策。
+- **解决的问题**：数据散落在各平台（电商、自媒体、广告投放、线下系统），指标口径不一、决策靠经验、复盘靠手工表格。
+- **交付形态**：本地私有化部署（默认）、云端 SaaS、应用市场部署三形态共用同一套 Docker Compose 底座。
+
+## 2. 目标用户
+
+| 角色 | 核心诉求 | 对应功能 |
+|---|---|---|
+| 产品/运营负责人 | 一屏看清全局，快速定位异常 | 运营总览、全景罗盘、指标中心 |
+| 运营执行人员 | 知道下一步做什么、怎么做 | 运营参谋（决策建议 + 行动项） |
+| 数据/技术负责人 | 数据接得上、口径统一、可追溯 | 数据源、数据导入、采集调度、存储适配 |
+| 内容创作者 | 批量产出图文与短视频 | 数字人一键生成、营销渠道 |
+| 系统管理员 | 权限可控、操作可审计 | RBAC、安全日志、审计日志 |
+
+## 3. 核心能力
+
+产品前端共 **13 个功能页面**，对应后端 **19 个接口模块**。
+
+| # | 功能页 | 路由 | 能力说明 |
+|---|---|---|---|
+| 1 | 运营总览 | `/` | 关键指标卡、趋势、待办行动项、系统健康 |
+| 2 | 全景罗盘 | `/compass` | 五环闭环全景视图，链路健康与瓶颈定位 |
+| 3 | 指标中心 | `/metrics` | 指标定义、口径、计算与目标达成 |
+| 4 | 运营参谋 | `/ops` | AI 分析、决策建议、行动项与策略规则 |
+| 5 | 数据导入 | `/data-import` | 文件/接口数据导入、字段映射、校验 |
+| 6 | 数据源 | `/data-sources` | 数据源接入、连通性测试、同步 |
+| 7 | 营销渠道 | `/marketing` | 渠道与投放活动管理、授权、数据回流 |
+| 8 | 采集调度 | `/collect` | 采集任务编排、定时运行、执行留痕 |
+| 9 | 存储适配 | `/storage` | 引擎总览、全文检索、跨存储一致性对账 |
+| 10 | 模型中心 | `/model` | 硬件探测、模型库、推荐与接入（Ollama 等） |
+| 11 | 安全日志 | `/security-log` | INFO/WARNING/CRITICAL 分级安全事件 |
+| 12 | 学习进化 | `/learning` | 决策反馈回流、策略权重自调、经验案例、A/B 对照 |
+| 13 | 数字人 | `/digital-human` | 形象库、音色库、工作流模板、一键生成（四阶段） |
+
+### 3.1 五环闭环方法论
+
+数据接入 → 指标度量 → 智能决策 → 执行落地 → 学习进化，五环相互咬合：
+
+- **接入环**：数据源 + 采集调度 + 存储适配，保证数据进得来、存得下、对得齐。
+- **度量环**：指标中心统一口径，指标可回溯到原始记录。
+- **决策环**：运营参谋基于指标与规则输出建议，含行动项与优先级。
+- **执行环**：营销渠道与数字人承接内容与投放执行。
+- **进化环**：学习进化模块回收执行结果，调整策略权重，沉淀经验案例。
+
+## 4. 技术架构
+
+| 层 | 技术选型 |
+|---|---|
+| 前端 | Vue 3 + TypeScript + Vite，单页应用，Token 路由守卫，Nginx 托管静态产物 |
+| 后端 | FastAPI + SQLAlchemy 2.x + Pydantic + Alembic，异步中间件链（CORS / 安全头 / 审计 / 链路） |
+| 数据 | PostgreSQL 16（业务库，59 张表）、Redis 7（缓存/队列） |
+| 部署 | Docker Compose 四容器：postgres / redis / backend / frontend，桥接网络 opscompass-net |
+| 硬件适配 | WMI + nvidia-smi 探测 CPU/内存/显卡，按显存分档推荐本地模型 |
+| 安全 | RBAC + JWT + 审计日志 + 安全日志分级 + 登录失败锁定 + IP/端口白名单 |
+
+### 4.1 能力规模（2026-09-26 实测）
+
+| 指标 | 数值 |
+|---|---|
+| HTTP 接口路径 | 146 |
+| 接口操作数（含多方法） | 200 |
+| OpenAPI Schema 定义 | 207 |
+| 后端 Python 文件 / 行数 | 92 / 18,467 |
+| 前端源码文件 / 行数 | 35 / 12,905 |
+| 数据库表 / 字段 | 59 / 765 |
+| 权限点 | 50 |
+
+## 5. 部署形态
+
+| 形态 | 适用对象 | 说明 |
+|---|---|---|
+| 本地私有化 | 单商家、数据敏感场景 | 一键 Compose 起四容器，默认监听本机端口 |
+| 云端 SaaS | 多商家、订阅制 | 同一 Compose 上云，叠加多租户隔离与 HTTPS |
+| 应用市场 | 渠道分发 | 打包为上架产物，含签名校验与授权码绑定 |
+
+## 6. 版本与版权
+
+- 当前版本 **v0.9.0**，功能冻结基线，后续按季度（约 3 个月）发布稳定小版本。
+- 版本进化原则：无故障且无人操作连续达标即冻结；版本正常不回退，仅故障触发回退。
+- 版权：**BY LAOMENG 网络工作室所有**。
+
+## 7. 相关文档
+
+| 文档 | 文件 |
+|---|---|
+| 快速上手 | `docs/quick-start.md` |
+| 部署手册 | `docs/deployment-manual.md` |
+| 管理员手册 | `docs/admin-manual.md` |
+| 运维手册 | `docs/ops-manual.md` |
+| 安全白皮书 | `docs/security-whitepaper.md` |
+| 数据字典 | `docs/data-dictionary.md` |
+| 接口文档 | `docs/api.md`、`docs/openapi.json` |
+| 测试报告 | `docs/test-report.md` |
+| 架构说明 | `docs/architecture.md` |
+| 变更日志 | `docs/changelog.md` |
+*（内容由AI生成，仅供参考）*

@@ -1,0 +1,88 @@
+# 运营智脑 本地/测试环境编排（OpsCompass 为技术标识：项目名/容器名/网络名保持不变）
+# 启动前请先执行：Copy-Item .env.example .env
+name: opscompass
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: opscompass-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-opscompass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-opscompass_dev_pwd}
+      POSTGRES_DB: ${POSTGRES_DB:-opscompass}
+      TZ: ${TIMEZONE:-Asia/Shanghai}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-opscompass} -d ${POSTGRES_DB:-opscompass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - opscompass-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: opscompass-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - opscompass-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.backend
+    container_name: opscompass-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-opscompass}:${POSTGRES_PASSWORD:-opscompass_dev_pwd}@postgres:5432/${POSTGRES_DB:-opscompass}
+    ports:
+      - "${BACKEND_PORT:-8000}:${BACKEND_PORT:-8000}"
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - opscompass-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.frontend
+    container_name: opscompass-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    volumes:
+      # 宿主机离线构建的前端静态资源（npm run build 产物），无外网拉取 nginx 基础镜像时使用
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    networks:
+      - opscompass-net
+
+networks:
+  opscompass-net:
+    driver: bridge
