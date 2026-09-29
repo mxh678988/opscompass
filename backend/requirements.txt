@@ -32,3 +32,8 @@ pytest-asyncio==0.25.0
 
 # 数据库直连采集（可选）：MySQL 驱动，离线环境需手工安装
 pymysql==1.2.3
+
+# 数据库直连采集（可选）：ClickHouse 驱动（HTTP 8123 端口），离线环境需手工安装
+# 依赖链：clickhouse-sqlalchemy → clickhouse-connect / clickhouse-driver / asynch / requests
+clickhouse-connect==1.9.0
+clickhouse-sqlalchemy==0.3.2

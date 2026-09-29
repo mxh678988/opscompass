@@ -6,8 +6,8 @@
 - api：用标准库 urllib 拉取 HTTP(S) JSON 接口，按映射解析后真实写入指标值，
   simulated=False；带 SSRF 防护（禁内网/回环/保留地址）与超时/体积上限；
 - sql：直连数据源执行受控 SELECT（表名白名单 + 行数上限 + 连接超时），按字段映射
-  解析后真实写入指标值，simulated=False，已接入 PostgreSQL / MySQL 驱动；
-  ClickHouse / Hive 驱动仍未接入，这两类数据源仅做 TCP 连通性探测，simulated=True。
+  解析后真实写入指标值，simulated=False，已接入 PostgreSQL / MySQL / ClickHouse 驱动；
+  Hive 驱动仍未接入，该类数据源仅做 TCP 连通性探测，simulated=True。
 
 调度：内置轻量守护线程按 30 秒粒度扫描 interval 任务并执行；
 可用环境变量 COLLECT_SCHEDULER_ENABLED=0 关闭（关闭后仅支持手动触发）。
@@ -63,6 +63,8 @@ SQL_MAX_ROWS = 5000
 SQL_SUPPORTED_TYPES: dict[str, tuple[str, str]] = {
     "postgresql": ("postgresql+psycopg", "psycopg"),
     "mysql": ("mysql+pymysql", "pymysql"),
+    # ClickHouse 走 HTTP 接口（默认 8123 端口），驱动 clickhouse-connect + clickhouse-sqlalchemy
+    "clickhouse": ("clickhousedb+connect", "clickhouse_connect"),
 }
 # 表名白名单：仅允许 schema.table / table 形式，杜绝拼接注入
 SQL_TABLE_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_$]*(\.[A-Za-z_][A-Za-z0-9_$]*)?$")
@@ -127,9 +129,9 @@ COLLECT_MODE_CATALOG: list[dict[str, Any]] = [
         "mode": "sql",
         "name": "数据库直连采集",
         "target_label": "库表名",
-        "target_hint": "如 ods_daily_shop，需绑定 PostgreSQL / MySQL 数据源",
+        "target_hint": "如 ods_daily_shop，需绑定 PostgreSQL / MySQL / ClickHouse 数据源",
         "real_fetch": True,
-        "description": "直连 PostgreSQL / MySQL 执行受控 SELECT（表名白名单 + 5000 行上限），按字段映射解析后写入指标值，真实落库；MySQL 需环境已安装 pymysql 驱动，ClickHouse / Hive 驱动未接入仍为演练。",
+        "description": "直连 PostgreSQL / MySQL / ClickHouse 执行受控 SELECT（表名白名单 + 5000 行上限），按字段映射解析后写入指标值，真实落库；ClickHouse 走 HTTP 8123 端口（需已安装 clickhouse-connect），MySQL 需环境已安装 pymysql 驱动，Hive 驱动未接入仍为演练。",
     },
 ]
 
@@ -394,7 +396,9 @@ def _build_sql_url(source: DataSource) -> str:
     """按数据源配置拼装 SQLAlchemy 连接串（口令解密后做 URL 编码）。"""
     entry = SQL_SUPPORTED_TYPES.get(source.ds_type)
     if entry is None:
-        raise CollectError(f"{source.ds_type} 直连驱动尚未接入，当前支持 PostgreSQL / MySQL")
+        raise CollectError(
+            f"{source.ds_type} 直连驱动尚未接入，当前支持 PostgreSQL / MySQL / ClickHouse"
+        )
     driver, driver_module = entry
     try:
         importlib.import_module(driver_module)
@@ -415,6 +419,16 @@ def _build_sql_url(source: DataSource) -> str:
     user = urllib.parse.quote_plus(source.username or "")
     auth = f"{user}:{urllib.parse.quote_plus(password)}@" if user else ""
     return f"{driver}://{auth}{source.host}:{int(source.port)}/{source.db_name}"
+
+
+def _connect_args(ds_type: str) -> dict[str, Any]:
+    """按数据源类型分派驱动连接参数（各驱动对超时参数的命名不一致）。"""
+    if ds_type == "clickhouse":
+        return {
+            "connect_timeout": SQL_TIMEOUT_SECONDS,
+            "send_receive_timeout": SQL_TIMEOUT_SECONDS,
+        }
+    return {"connect_timeout": SQL_TIMEOUT_SECONDS}
 
 
 def _probe_source(source: DataSource, task: CollectTask) -> dict[str, Any]:
@@ -479,9 +493,7 @@ def _run_sql(db: Session, task: CollectTask) -> dict[str, Any]:
     row_limit = max(1, min(row_limit, SQL_MAX_ROWS))
 
     url = _build_sql_url(source)
-    engine = create_engine(
-        url, pool_pre_ping=True, connect_args={"connect_timeout": SQL_TIMEOUT_SECONDS}
-    )
+    engine = create_engine(url, pool_pre_ping=True, connect_args=_connect_args(source.ds_type))
     query_started = time.perf_counter()
     truncated = False
     try:
