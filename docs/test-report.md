@@ -12,6 +12,7 @@ AIGC:
 # 运营智脑 OpsCompass 测试报告
 
 > 版本：v0.9.0（功能冻结基线）  报告日期：2026-09-26  编制：BY LAOMENG 网络工作室
+> 本文件为 v0.9.0 基线快照（对应 git tag v0.9.0）；最新基线报告见 [test-report-v0.10.0.md](./test-report-v0.10.0.md)。
 
 ## 1. 测试范围与环境
 
