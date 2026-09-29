@@ -15,6 +15,10 @@ AIGC:
 
 ## [Unreleased]
 
+### 新增
+
+- **本地 CI 校验脚本**：新增 `scripts/ci.ps1`，一条命令完成升版 / 提交前校验——① 版本一致性（`config.APP_VERSION` / 前端 `package.json` / `docs/openapi.json` / `changelog` 四源比对）；② 后端 `compileall` 与 `pytest`（容器内执行，与运行环境同构）；③ 接口契约基线（运行实例 `/openapi.json` 与 `docs/openapi.json` 的路径集合逐条比对，不一致时输出差异文件）；④ 容器健康与运行版本生效（防止改版未重启）；⑤ 前端 `vue-tsc --noEmit` + `vite build`；⑥ 前端 `eslint`（未安装则跳过）。结果打印汇总并落盘 `temp/ci-logs/<时间戳>/`（含 `pytest.log`、`frontend-build.log`、`summary.json`），存在失败项时以退出码 1 结束，可直接挂接提交钩子或后续远程流水线。支持 `-SkipBackend` / `-SkipFrontend` / `-SkipRuntime` 按需裁剪。
+
 ### 修复
 
 - **版本号单点化**：`/api/v1/system/info` 原先返回硬编码的 `0.1.0`，现与 FastAPI 文档统一改为读取 `settings.APP_VERSION`（定义于 `app/core/config.py`，当前 `0.10.0`）；此后升版只需修改该字段一处，避免版本号漏同步。
