@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.PROJECT_NAME,
-        version="0.10.0",
+        version=settings.APP_VERSION,
         description="运营智脑 · 让数据自动做出最优决策 —— 后端 API",
         docs_url="/docs",
         redoc_url="/redoc",

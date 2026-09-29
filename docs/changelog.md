@@ -15,6 +15,10 @@ AIGC:
 
 ## [Unreleased]
 
+### 修复
+
+- **版本号单点化**：`/api/v1/system/info` 原先返回硬编码的 `0.1.0`，现与 FastAPI 文档统一改为读取 `settings.APP_VERSION`（定义于 `app/core/config.py`，当前 `0.10.0`）；此后升版只需修改该字段一处，避免版本号漏同步。
+
 ## [0.10.0] - 2026-09-29
 
 ### 新增

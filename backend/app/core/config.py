@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     # 项目（PROJECT_NAME 为对外展示品牌名；目录名/容器名/包名等技术标识保持不变）
     PROJECT_NAME: str = "运营智脑"
     PROJECT_SLOGAN: str = "让数据自动做出最优决策"
+    # 版本唯一来源：升版只改此处；FastAPI 文档与 /system/info 均引用本字段
+    APP_VERSION: str = "0.10.0"
     ENV: str = "development"
     DEBUG: bool = True
     TIMEZONE: str = "Asia/Shanghai"

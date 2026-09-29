@@ -27,7 +27,7 @@ def info() -> dict:
     return {
         "name": settings.PROJECT_NAME,
         "slogan": settings.PROJECT_SLOGAN,
-        "version": "0.1.0",
+        "version": settings.APP_VERSION,
         "env": settings.ENV,
         "timezone": settings.TIMEZONE,
     }

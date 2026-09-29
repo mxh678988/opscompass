@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_e036c44cbbd111f1a526525400cd780f
+    ReservedCode1: 1BqxXmB/toyb/rQQ6SjmPnmioHbaBxMR7ajmprqI6xtJ1QsLq5ENOMPQXBf8HL4sClwzqHdHrWIlLM/aF5dIpG0iJwRZm8w95MLLg5yXClIqB23odwmCb0oL4oOVpjhgO1I1aisSxl2r/fEGRDtV6A/lDp4QIc6UpWXvB+lj9JHEgf9WMwZSUrToKM8=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_e036c44cbbd111f1a526525400cd780f
+    ReservedCode2: 1BqxXmB/toyb/rQQ6SjmPnmioHbaBxMR7ajmprqI6xtJ1QsLq5ENOMPQXBf8HL4sClwzqHdHrWIlLM/aF5dIpG0iJwRZm8w95MLLg5yXClIqB23odwmCb0oL4oOVpjhgO1I1aisSxl2r/fEGRDtV6A/lDp4QIc6UpWXvB+lj9JHEgf9WMwZSUrToKM8=
+---
+
 # 运营智脑 OpsCompass 测试报告（v0.10.0）
 
 > 版本：v0.10.0（AI 决策治理闭环 + 商业化中心基线）  报告日期：2026-09-29  编制：BY LAOMENG 网络工作室
@@ -107,4 +118,5 @@
 
 v0.10.0 在结构一致性（166 路径 / 64 表 / 857 字段 / 52 权限点）、前端构建、接口链路（26 项含负向用例全绿）、AI 决策治理闭环、采集链路与商业化中心六个方面全部通过验证，与 changelog 0.10.0 的声明逐项对得上。唯一结构性偏差为 `/system/info` 版本号硬编码残留 0.1.0，建议在下一提交一并修正；后续优先补齐 CI 流水线与自动化回归，再考虑性能与多浏览器兼容性测试。
 
+*（内容由AI生成，仅供参考）*
 *（内容由AI生成，仅供参考）*
