@@ -12,6 +12,7 @@
       6 运行版本     运行实例版本与配置源一致（防止改版未重启）
       7 前端构建     vue-tsc 类型检查 + vite 生产构建
       8 前端 lint    eslint（未安装则跳过）
+      9 依赖可复现   backend/requirements.txt 各 pin 是否真实存在于 PyPI（防止构建不可复现）
 
     退出码：0 全部通过；1 存在失败项。日志输出到 temp/ci-logs/<时间戳>/。
 
@@ -82,6 +83,25 @@ Invoke-Step '版本一致性' {
         throw "版本不一致 -> config=$cfgVer / package=$pkgVer / openapi=$oaVer / changelog=$clVer"
     }
     "四源一致：$cfgVer（config / package / openapi / changelog）"
+}
+
+# ---------------------------------------------------------------- 9 依赖可复现性
+Invoke-Step '依赖清单可复现性' {
+    $log = Join-Path $logDir 'requirements-check.log'
+    python scripts\verify_requirements.py *> $log
+    $code = $LASTEXITCODE
+    $summary = (Get-Content $log -ErrorAction SilentlyContinue |
+                Select-String -Pattern '有效 \d+' |
+                Select-Object -Last 1).Line
+    if ($code -eq 2) { throw "清单文件缺失（日志：$log）" }
+    if ($code -ne 0) {
+        $bad = @(Get-Content $log -ErrorAction SilentlyContinue |
+                 Select-String -Pattern '\[无效\]' |
+                 Select-Object -Last 10)
+        throw "存在无效 pin：$($bad -join '; ')（日志：$log）"
+    }
+    if (-not $summary) { $summary = '依赖清单全部有效' }
+    $summary.Trim()
 }
 
 # ---------------------------------------------------------------- 2/3 后端

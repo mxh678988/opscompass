@@ -21,6 +21,8 @@ AIGC:
 
 ### 修复
 
+- **依赖清单不可复现修复**：`backend/requirements.txt` 中原先写入 `pymysql==2.2.8`，该版本在 PyPI 上并不存在（PyMySQL 最新为 `1.2.3`）；而 `deploy/docker/Dockerfile.backend` 会执行 `pip install -r requirements.txt`，因此在干净环境下镜像构建必然失败，交付基线不具备可复现性。现改为 `pymysql==1.2.3`（与实际运行环境已验证版本一致）。为防回归，新增 `scripts/verify_requirements.py`——对清单内每个 pin 做 PyPI 存在性静态校验（只读联网，不安装、不改环境，离线环境下相关条目降级为 UNKNOWN 不计失败），并接入 `scripts/ci.ps1` 作为第 9 项「依赖清单可复现性」校验，在构建前拦截无效 pin；同时清理历史上误入版本库的两个临时验证脚本（`backend/_p0_verify_tmp.py`、`backend/_tmp_p9_check.py`）。
+
 - **版本号单点化**：`/api/v1/system/info` 原先返回硬编码的 `0.1.0`，现与 FastAPI 文档统一改为读取 `settings.APP_VERSION`（定义于 `app/core/config.py`，当前 `0.10.0`）；此后升版只需修改该字段一处，避免版本号漏同步。
 
 ## [0.10.0] - 2026-09-29
