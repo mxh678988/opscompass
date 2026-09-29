@@ -6,8 +6,9 @@
 - api：用标准库 urllib 拉取 HTTP(S) JSON 接口，按映射解析后真实写入指标值，
   simulated=False；带 SSRF 防护（禁内网/回环/保留地址）与超时/体积上限；
 - sql：直连数据源执行受控 SELECT（表名白名单 + 行数上限 + 连接超时），按字段映射
-  解析后真实写入指标值，simulated=False，已接入 PostgreSQL / MySQL / ClickHouse 驱动；
-  Hive 驱动仍未接入，该类数据源仅做 TCP 连通性探测，simulated=True。
+  解析后真实写入指标值，simulated=False，已接入 PostgreSQL / MySQL / ClickHouse / Hive 驱动；
+  Hive 走 HiveServer2 Thrift 协议（PyHive + thrift + thrift_sasl），本机暂无 Hive Server2 实例，
+  驱动可用性与失败降级已验证，真实源端到端落库尚未验证。
 
 调度：内置轻量守护线程按 30 秒粒度扫描 interval 任务并执行；
 可用环境变量 COLLECT_SCHEDULER_ENABLED=0 关闭（关闭后仅支持手动触发）。
@@ -59,12 +60,14 @@ API_USER_AGENT = "OpsCompass-Collector/0.9"
 # 数据库直连采集参数
 SQL_TIMEOUT_SECONDS = 10
 SQL_MAX_ROWS = 5000
-# 数据源类型 → (SQLAlchemy 驱动名, 运行时需校验的驱动模块)
-SQL_SUPPORTED_TYPES: dict[str, tuple[str, str]] = {
+# 数据源类型 → (SQLAlchemy 驱动名, 运行时需校验的驱动模块：单个模块名或其元组)
+SQL_SUPPORTED_TYPES: dict[str, tuple[str, Any]] = {
     "postgresql": ("postgresql+psycopg", "psycopg"),
     "mysql": ("mysql+pymysql", "pymysql"),
     # ClickHouse 走 HTTP 接口（默认 8123 端口），驱动 clickhouse-connect + clickhouse-sqlalchemy
     "clickhouse": ("clickhousedb+connect", "clickhouse_connect"),
+    # Hive 走 HiveServer2 Thrift 协议（默认 10000 端口），驱动 PyHive + thrift + thrift_sasl
+    "hive": ("hive://", ("pyhive", "thrift_sasl")),
 }
 # 表名白名单：仅允许 schema.table / table 形式，杜绝拼接注入
 SQL_TABLE_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_$]*(\.[A-Za-z_][A-Za-z0-9_$]*)?$")
@@ -129,9 +132,9 @@ COLLECT_MODE_CATALOG: list[dict[str, Any]] = [
         "mode": "sql",
         "name": "数据库直连采集",
         "target_label": "库表名",
-        "target_hint": "如 ods_daily_shop，需绑定 PostgreSQL / MySQL / ClickHouse 数据源",
+        "target_hint": "如 ods_daily_shop，需绑定 PostgreSQL / MySQL / ClickHouse / Hive 数据源",
         "real_fetch": True,
-        "description": "直连 PostgreSQL / MySQL / ClickHouse 执行受控 SELECT（表名白名单 + 5000 行上限），按字段映射解析后写入指标值，真实落库；ClickHouse 走 HTTP 8123 端口（需已安装 clickhouse-connect），MySQL 需环境已安装 pymysql 驱动，Hive 驱动未接入仍为演练。",
+        "description": "直连 PostgreSQL / MySQL / ClickHouse / Hive 执行受控 SELECT（表名白名单 + 5000 行上限），按字段映射解析后写入指标值，真实落库；ClickHouse 走 HTTP 8123 端口（需已安装 clickhouse-connect），Hive 走 HiveServer2 Thrift 10000 端口（需已安装 PyHive/thrift/thrift_sasl，本机无 Hive Server2 实例故未做真实源验证），MySQL 需环境已安装 pymysql 驱动。",
     },
 ]
 
@@ -397,14 +400,16 @@ def _build_sql_url(source: DataSource) -> str:
     entry = SQL_SUPPORTED_TYPES.get(source.ds_type)
     if entry is None:
         raise CollectError(
-            f"{source.ds_type} 直连驱动尚未接入，当前支持 PostgreSQL / MySQL / ClickHouse"
+            f"{source.ds_type} 直连驱动尚未接入，当前支持 PostgreSQL / MySQL / ClickHouse / Hive"
         )
     driver, driver_module = entry
+    modules = (driver_module,) if isinstance(driver_module, str) else tuple(driver_module)
     try:
-        importlib.import_module(driver_module)
+        for module in modules:
+            importlib.import_module(module)
     except ImportError as exc:  # 驱动缺失按可预期错误返回，不抛 500
         raise CollectError(
-            f"{source.ds_type} 直连驱动 {driver_module} 未安装，请先安装该驱动后重试"
+            f"{source.ds_type} 直连驱动 {exc.name or module} 未安装，请先安装该驱动后重试"
         ) from exc
     if not source.host or not source.port:
         raise CollectError(f"数据源 {source.code} 未配置主机/端口")
@@ -417,17 +422,28 @@ def _build_sql_url(source: DataSource) -> str:
         except Exception as exc:  # 口令解密失败按可预期错误返回，不抛 500
             raise CollectError(f"数据源 {source.code} 口令解密失败：{exc}") from exc
     user = urllib.parse.quote_plus(source.username or "")
-    auth = f"{user}:{urllib.parse.quote_plus(password)}@" if user else ""
+    if source.ds_type == "hive" and not password:
+        # PyHive 仅在 LDAP/CUSTOM 认证模式下接受 password；空口令若拼成 `user:@` 会被
+        # 解析为空串口令，触发 ValueError: Password should be set if and only if ...
+        auth = f"{user}@" if user else ""
+    else:
+        auth = f"{user}:{urllib.parse.quote_plus(password)}@" if user else ""
     return f"{driver}://{auth}{source.host}:{int(source.port)}/{source.db_name}"
 
 
-def _connect_args(ds_type: str) -> dict[str, Any]:
-    """按数据源类型分派驱动连接参数（各驱动对超时参数的命名不一致）。"""
+def _connect_args(source: DataSource) -> dict[str, Any]:
+    """按数据源类型分派驱动连接参数（各驱动对超时/认证参数的命名不一致）。"""
+    ds_type = source.ds_type
     if ds_type == "clickhouse":
         return {
             "connect_timeout": SQL_TIMEOUT_SECONDS,
             "send_receive_timeout": SQL_TIMEOUT_SECONDS,
         }
+    if ds_type == "hive":
+        # PyHive 的 Connection.__init__ 不接受 connect_timeout，误传会抛 TypeError；
+        # 该驱动无连接超时入参，目标不可达时依赖底层 socket 超时后报错。
+        # 配置了口令时按 LDAP 模式认证（Hive 口令登录的标准模式），未配口令走默认 NOSASL。
+        return {"auth": "LDAP"} if source.password_enc else {}
     return {"connect_timeout": SQL_TIMEOUT_SECONDS}
 
 
@@ -493,7 +509,7 @@ def _run_sql(db: Session, task: CollectTask) -> dict[str, Any]:
     row_limit = max(1, min(row_limit, SQL_MAX_ROWS))
 
     url = _build_sql_url(source)
-    engine = create_engine(url, pool_pre_ping=True, connect_args=_connect_args(source.ds_type))
+    engine = create_engine(url, pool_pre_ping=True, connect_args=_connect_args(source))
     query_started = time.perf_counter()
     truncated = False
     try:

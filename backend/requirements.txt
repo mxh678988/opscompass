@@ -37,3 +37,11 @@ pymysql==1.2.3
 # 依赖链：clickhouse-sqlalchemy → clickhouse-connect / clickhouse-driver / asynch / requests
 clickhouse-connect==1.9.0
 clickhouse-sqlalchemy==0.3.2
+
+# 数据库直连采集（可选）：Hive 驱动（HiveServer2 Thrift 10000 端口），离线环境需手工安装
+# 依赖链：pyhive → thrift / future；thrift-sasl → thrift / pure-sasl（pure-sasl 为纯 Python 实现，规避 sasl 的 C 编译依赖）
+pyhive==0.7.0
+thrift==0.24.0
+thrift-sasl==0.4.3
+pure-sasl==0.6.2
+future==1.0.0

@@ -2,8 +2,8 @@
 
 能力边界（与前端展示口径一致）：
 - csv / api 两种采集方式真实执行并真实写入指标值；
-- sql 方式：PostgreSQL / MySQL 已直连真实拉取并落库（运行记录 simulated=false）；
-  ClickHouse / Hive 驱动未接入，仅做 TCP 连通性探测（simulated=true）；
+- sql 方式：PostgreSQL / MySQL / ClickHouse / Hive 驱动已接入，直连真实拉取并落库
+  （运行记录 simulated=false；Hive 本机无 HiveServer2 实例，真实源端到端尚未验证）；
 - 内置调度线程默认启用，可用 COLLECT_SCHEDULER_ENABLED=0 关闭。
 """
 
