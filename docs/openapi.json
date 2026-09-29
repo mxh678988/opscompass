@@ -6490,10 +6490,21 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 500,
+              "maximum": 200,
               "minimum": 1,
-              "default": 100,
+              "default": 20,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
             }
           },
           {
@@ -6519,7 +6530,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_list_InsightOut__"
+                  "$ref": "#/components/schemas/ApiResponse_PageResult_InsightOut__"
                 }
               }
             }
@@ -6949,10 +6960,21 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 500,
+              "maximum": 200,
               "minimum": 1,
-              "default": 100,
+              "default": 20,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
             }
           },
           {
@@ -6978,7 +7000,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_list_ActionOut__"
+                  "$ref": "#/components/schemas/ApiResponse_PageResult_ActionOut__"
                 }
               }
             }
@@ -7199,6 +7221,347 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponse_ActionOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/decisions/board": {
+      "get": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "决策分级授权看板",
+        "description": "三级决策授权概览：各级数量、待办、已叫停、自主执行与演练模式计数。",
+        "operationId": "decision_board_api_v1_ai_decisions_board_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_DecisionBoardOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/actions/{action_id}/decision-level": {
+      "put": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "调整决策分级",
+        "description": "把处置单在 仅用户决策 / 需用户授权 / 智能体自主 三级之间调整，来源记为 manual。",
+        "operationId": "set_action_decision_level_api_v1_ai_actions__action_id__decision_level_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Action Id"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionDecisionLevelIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ActionOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/actions/{action_id}/revoke": {
+      "post": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "一键叫停/撤销",
+        "description": "用户一键叫停 AI 决策：立即失效、停止引用并全过程留痕。",
+        "operationId": "revoke_action_api_v1_ai_actions__action_id__revoke_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Action Id"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionRevokeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ActionOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/actions/{action_id}/restore": {
+      "post": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "还原叫停决策",
+        "description": "还原被误叫停的决策，回到撤销前状态。",
+        "operationId": "restore_action_api_v1_ai_actions__action_id__restore_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Action Id"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionDecisionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ActionOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/actions/{action_id}/trace": {
+      "get": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "决策全过程追溯",
+        "description": "单条处置单全链路留痕：洞察生成 → 分级路由 → 审批/执行 → 撤销/还原。",
+        "operationId": "action_trace_api_v1_ai_actions__action_id__trace_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Action Id"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_DecisionTraceOut_"
                 }
               }
             }
@@ -12618,6 +12981,1137 @@
         }
       }
     },
+    "/api/v1/commercial/overview": {
+      "get": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "商业化总览（套餐/授权/订单/收入/用量告警/上架门槛清单）",
+        "operationId": "read_overview_api_v1_commercial_overview_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/commercial/entitlement": {
+      "get": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "当前租户权益（生效授权 + 套餐限额 + 本月用量对账）",
+        "operationId": "read_entitlement_api_v1_commercial_entitlement_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/commercial/plans": {
+      "get": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "套餐列表",
+        "operationId": "list_plans_api_v1_commercial_plans_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "名称或编码关键字",
+              "title": "Keyword"
+            },
+            "description": "名称或编码关键字"
+          },
+          {
+            "name": "edition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "private|saas|market|trial",
+              "title": "Edition"
+            },
+            "description": "private|saas|market|trial"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "新建套餐",
+        "operationId": "create_plan_api_v1_commercial_plans_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/plans/seed": {
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "重建内置套餐（社区版/专业版/旗舰版/SaaS 订阅）",
+        "operationId": "seed_plans_api_v1_commercial_plans_seed_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/commercial/plans/{plan_id}": {
+      "patch": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "修改套餐",
+        "operationId": "update_plan_api_v1_commercial_plans__plan_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Plan Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "删除套餐（已签发授权的套餐不可删）",
+        "operationId": "delete_plan_api_v1_commercial_plans__plan_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Plan Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/licenses": {
+      "get": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "授权列表",
+        "operationId": "list_licenses_api_v1_commercial_licenses_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "授权码/授权对象/机器码关键字",
+              "title": "Keyword"
+            },
+            "description": "授权码/授权对象/机器码关键字"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "pending|active|expired|revoked",
+              "title": "Status"
+            },
+            "description": "pending|active|expired|revoked"
+          },
+          {
+            "name": "license_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "private|saas|market|trial",
+              "title": "License Type"
+            },
+            "description": "private|saas|market|trial"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 20,
+              "title": "Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "签发授权证书（自动写入数字签名）",
+        "operationId": "issue_license_api_v1_commercial_licenses_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/licenses/{license_id}/activate": {
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "激活授权（绑定机器码）",
+        "operationId": "activate_license_api_v1_commercial_licenses__license_id__activate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "license_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "License Id"
+            }
+          },
+          {
+            "name": "machine_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "机器码，留空则仅切换为生效态",
+              "default": "",
+              "title": "Machine Code"
+            },
+            "description": "机器码，留空则仅切换为生效态"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/licenses/{license_id}/renew": {
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "续期授权并重算签名",
+        "operationId": "renew_license_api_v1_commercial_licenses__license_id__renew_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "license_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "License Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseRenewIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/licenses/{license_id}/revoke": {
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "吊销授权",
+        "operationId": "revoke_license_api_v1_commercial_licenses__license_id__revoke_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "license_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "License Id"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "吊销原因",
+              "default": "",
+              "title": "Reason"
+            },
+            "description": "吊销原因"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/license/verify": {
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "校验授权（签名/状态/有效期/机器码四重校验）",
+        "operationId": "verify_license_api_v1_commercial_license_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseVerifyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/commercial/events": {
+      "get": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "授权事件留痕（签发/激活/续期/吊销/校验失败）",
+        "operationId": "list_events_api_v1_commercial_events_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/orders": {
+      "get": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "订单列表",
+        "operationId": "list_orders_api_v1_commercial_orders_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单号/购买方/套餐名关键字",
+              "title": "Keyword"
+            },
+            "description": "订单号/购买方/套餐名关键字"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "pending|paid|cancelled|refunded",
+              "title": "Status"
+            },
+            "description": "pending|paid|cancelled|refunded"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 20,
+              "title": "Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "创建订单",
+        "operationId": "create_order_api_v1_commercial_orders_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/orders/{order_id}/pay": {
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "订单支付（成功后自动签发授权）",
+        "operationId": "pay_order_api_v1_commercial_orders__order_id__pay_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderPayIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/orders/{order_id}/cancel": {
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "取消订单",
+        "operationId": "cancel_order_api_v1_commercial_orders__order_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "取消原因",
+              "default": "",
+              "title": "Reason"
+            },
+            "description": "取消原因"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commercial/usage": {
+      "get": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "用量列表（可按账期过滤）",
+        "operationId": "list_usage_api_v1_commercial_usage_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "账期 YYYY-MM，留空返回全部",
+              "title": "Period"
+            },
+            "description": "账期 YYYY-MM，留空返回全部"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "commercial"
+        ],
+        "summary": "登记/更新用量（自动判定告警与超额）",
+        "operationId": "upsert_usage_api_v1_commercial_usage_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsageIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -12682,6 +14176,40 @@
         "title": "ActionDecisionIn",
         "description": "人工审批 / 执行入参。"
       },
+      "ActionDecisionLevelIn": {
+        "properties": {
+          "operator": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Operator",
+            "description": "操作人",
+            "default": "operator"
+          },
+          "decision_level": {
+            "type": "string",
+            "title": "Decision Level",
+            "description": "user_only/user_authorized/agent_autonomous"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "调整说明"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_level"
+        ],
+        "title": "ActionDecisionLevelIn",
+        "description": "调整处置单的决策分级（仅用户本人 / 需用户授权 / 智能体自主）。"
+      },
       "ActionOut": {
         "properties": {
           "id": {
@@ -12740,6 +14268,24 @@
           "severity": {
             "type": "string",
             "title": "Severity"
+          },
+          "decision_level": {
+            "type": "string",
+            "title": "Decision Level",
+            "description": "决策分级 user_only/user_authorized/agent_autonomous",
+            "default": "user_authorized"
+          },
+          "decision_source": {
+            "type": "string",
+            "title": "Decision Source",
+            "description": "分级来源 policy/manual/rule",
+            "default": "policy"
+          },
+          "sim_mode": {
+            "type": "boolean",
+            "title": "Sim Mode",
+            "description": "是否来自演练/模拟模式，界面须显性提示",
+            "default": false
           },
           "handler": {
             "type": "string",
@@ -12821,6 +14367,61 @@
             ],
             "title": "Executed At"
           },
+          "revoked": {
+            "type": "boolean",
+            "title": "Revoked",
+            "description": "是否已被用户撤销/叫停",
+            "default": false
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At",
+            "description": "撤销/叫停时间"
+          },
+          "revoked_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked By",
+            "description": "撤销/叫停操作人"
+          },
+          "revoke_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoke Reason",
+            "description": "撤销/叫停原因"
+          },
+          "prev_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Status",
+            "description": "撤销前状态，用于回溯"
+          },
           "created_at": {
             "anyOf": [
               {
@@ -12859,6 +14460,32 @@
           "review_required"
         ],
         "title": "ActionOut"
+      },
+      "ActionRevokeIn": {
+        "properties": {
+          "operator": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Operator",
+            "description": "操作人",
+            "default": "operator"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "撤销/叫停原因"
+          }
+        },
+        "type": "object",
+        "title": "ActionRevokeIn",
+        "description": "一键撤销 / 叫停 AI 决策。"
       },
       "AiAnalysisRequest": {
         "properties": {
@@ -13102,6 +14729,50 @@
               }
             ],
             "title": "Error"
+          },
+          "sim_mode": {
+            "type": "boolean",
+            "title": "Sim Mode",
+            "description": "是否演练/模拟模式：结论不作为真实决策依据",
+            "default": false
+          },
+          "data_sources": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Sources",
+            "description": "结论引用的数据来源清单"
+          },
+          "evidence_metrics": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Metrics",
+            "description": "结论依据的指标清单"
+          },
+          "credibility": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credibility",
+            "description": "结论整体置信度 0-1"
           },
           "created_by": {
             "type": "string",
@@ -13500,6 +15171,58 @@
         "type": "object",
         "title": "ApiResponse[DataSourceOut]"
       },
+      "ApiResponse_DecisionBoardOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionBoardOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[DecisionBoardOut]"
+      },
+      "ApiResponse_DecisionTraceOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionTraceOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[DecisionTraceOut]"
+      },
       "ApiResponse_GeoTaskOut_": {
         "properties": {
           "code": {
@@ -13760,6 +15483,32 @@
         "type": "object",
         "title": "ApiResponse[OverviewOut]"
       },
+      "ApiResponse_PageResult_ActionOut__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PageResult_ActionOut_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[PageResult[ActionOut]]"
+      },
       "ApiResponse_PageResult_AuditLogOut__": {
         "properties": {
           "code": {
@@ -13915,6 +15664,32 @@
         },
         "type": "object",
         "title": "ApiResponse[PageResult[ImportTaskOut]]"
+      },
+      "ApiResponse_PageResult_InsightOut__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PageResult_InsightOut_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[PageResult[InsightOut]]"
       },
       "ApiResponse_PageResult_MarketingChannelOut__": {
         "properties": {
@@ -14384,36 +16159,6 @@
         },
         "type": "object",
         "title": "ApiResponse[dict]"
-      },
-      "ApiResponse_list_ActionOut__": {
-        "properties": {
-          "code": {
-            "type": "integer",
-            "title": "Code",
-            "default": 0
-          },
-          "message": {
-            "type": "string",
-            "title": "Message",
-            "default": "ok"
-          },
-          "data": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/ActionOut"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Data"
-          }
-        },
-        "type": "object",
-        "title": "ApiResponse[list[ActionOut]]"
       },
       "ApiResponse_list_AnalysisOut__": {
         "properties": {
@@ -18118,6 +19863,107 @@
         "type": "object",
         "title": "DataSourceUpdate"
       },
+      "DecisionBoardOut": {
+        "properties": {
+          "levels": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionLevelOut"
+            },
+            "type": "array",
+            "title": "Levels"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts"
+          },
+          "revoked_total": {
+            "type": "integer",
+            "title": "Revoked Total",
+            "default": 0
+          },
+          "pending_total": {
+            "type": "integer",
+            "title": "Pending Total",
+            "default": 0
+          },
+          "auto_executed_total": {
+            "type": "integer",
+            "title": "Auto Executed Total",
+            "default": 0
+          },
+          "sim_mode_total": {
+            "type": "integer",
+            "title": "Sim Mode Total",
+            "description": "演练/模拟模式产出的处置单数量",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "DecisionBoardOut",
+        "description": "决策分级授权看板：分级元数据 + 各级数量 + 待办/叫停概览。"
+      },
+      "DecisionLevelOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "desc": {
+            "type": "string",
+            "title": "Desc",
+            "default": ""
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order",
+            "default": 0
+          },
+          "auto_execute": {
+            "type": "boolean",
+            "title": "Auto Execute",
+            "default": false
+          },
+          "need_approval": {
+            "type": "boolean",
+            "title": "Need Approval",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "DecisionLevelOut",
+        "description": "决策分级元数据。"
+      },
+      "DecisionTraceOut": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ActionOut"
+          },
+          "trace": {
+            "items": {
+              "$ref": "#/components/schemas/TraceItemOut"
+            },
+            "type": "array",
+            "title": "Trace"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "DecisionTraceOut",
+        "description": "处置单全链路留痕（洞察 → 分级 → 处置 → 决策 → 叫停）。"
+      },
       "DimensionCreate": {
         "properties": {
           "code": {
@@ -19606,6 +21452,57 @@
             ],
             "title": "Confidence"
           },
+          "data_sources": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Sources",
+            "description": "数据来源清单（来源表/导入任务/数据源）"
+          },
+          "evidence_metrics": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Metrics",
+            "description": "依据指标清单（编码/取值/环比）"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At",
+            "description": "结论生成时间"
+          },
+          "sim_mode": {
+            "type": "boolean",
+            "title": "Sim Mode",
+            "description": "是否演练/模拟模式",
+            "default": false
+          },
+          "decision_level": {
+            "type": "string",
+            "title": "Decision Level",
+            "description": "决策分级 user_only/user_authorized/agent_autonomous",
+            "default": "user_authorized"
+          },
           "status": {
             "type": "string",
             "title": "Status"
@@ -20050,6 +21947,110 @@
         },
         "type": "object",
         "title": "LevelRuleUpdate"
+      },
+      "LicenseIn": {
+        "properties": {
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          },
+          "license_type": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "License Type",
+            "description": "private|saas|market|trial",
+            "default": "private"
+          },
+          "seats": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Seats",
+            "description": "授权账号数",
+            "default": 1
+          },
+          "machine_code": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Machine Code",
+            "description": "绑定机器码（空=不绑定）",
+            "default": ""
+          },
+          "issued_to": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Issued To",
+            "description": "授权对象",
+            "default": ""
+          },
+          "channel": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Channel",
+            "default": "manual"
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Days",
+            "description": "有效期天数（0=永久）",
+            "default": 365
+          },
+          "remark": {
+            "type": "string",
+            "title": "Remark",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "LicenseIn",
+        "description": "签发授权证书。"
+      },
+      "LicenseRenewIn": {
+        "properties": {
+          "days": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Days",
+            "description": "续期天数",
+            "default": 365
+          },
+          "remark": {
+            "type": "string",
+            "title": "Remark",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "LicenseRenewIn",
+        "description": "续期授权。"
+      },
+      "LicenseVerifyIn": {
+        "properties": {
+          "license_key": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "License Key"
+          },
+          "machine_code": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Machine Code",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "license_key"
+        ],
+        "title": "LicenseVerifyIn",
+        "description": "授权校验（本地/离线场景由调用方直接提交授权码）。"
       },
       "LoginRequest": {
         "properties": {
@@ -21026,6 +23027,75 @@
         ],
         "title": "MetricValueOut"
       },
+      "OrderIn": {
+        "properties": {
+          "plan_id": {
+            "type": "integer",
+            "title": "Plan Id"
+          },
+          "buyer": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Buyer",
+            "default": ""
+          },
+          "contact": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Contact",
+            "default": ""
+          },
+          "pay_channel": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Pay Channel",
+            "default": "offline"
+          },
+          "remark": {
+            "type": "string",
+            "title": "Remark",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_id"
+        ],
+        "title": "OrderIn",
+        "description": "创建订单。"
+      },
+      "OrderPayIn": {
+        "properties": {
+          "pay_channel": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Pay Channel",
+            "default": "offline"
+          },
+          "machine_code": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Machine Code",
+            "description": "下单方机器码（用于绑定授权）",
+            "default": ""
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Days",
+            "description": "授权有效期天数（0=永久）",
+            "default": 365
+          },
+          "remark": {
+            "type": "string",
+            "title": "Remark",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "OrderPayIn",
+        "description": "订单支付（支付后自动签发授权）。"
+      },
       "OverviewItem": {
         "properties": {
           "code": {
@@ -21191,6 +23261,35 @@
           "title"
         ],
         "title": "PageCreate"
+      },
+      "PageResult_ActionOut_": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "default": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size",
+            "default": 20
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ActionOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "PageResult[ActionOut]"
       },
       "PageResult_AuditLogOut_": {
         "properties": {
@@ -21365,6 +23464,35 @@
         },
         "type": "object",
         "title": "PageResult[ImportTaskOut]"
+      },
+      "PageResult_InsightOut_": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "default": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size",
+            "default": 20
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InsightOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "PageResult[InsightOut]"
       },
       "PageResult_MarketingChannelOut_": {
         "properties": {
@@ -21621,6 +23749,307 @@
         ],
         "title": "PermissionOut",
         "description": "权限点。"
+      },
+      "PlanIn": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Code",
+            "description": "套餐编码"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Name",
+            "description": "套餐名称"
+          },
+          "edition": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Edition",
+            "description": "private|saas|market|trial",
+            "default": "private"
+          },
+          "billing_cycle": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "Billing Cycle",
+            "description": "one_time|monthly|yearly",
+            "default": "one_time"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Price",
+            "description": "价格（元）",
+            "default": 0
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 8,
+            "title": "Currency",
+            "default": "CNY"
+          },
+          "seats_limit": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Seats Limit",
+            "description": "账号数上限",
+            "default": 5
+          },
+          "store_limit": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Store Limit",
+            "description": "站点/门店数上限",
+            "default": 1
+          },
+          "metric_limit": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Metric Limit",
+            "description": "指标数上限",
+            "default": 50
+          },
+          "user_limit": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "User Limit",
+            "description": "并发用户上限",
+            "default": 5
+          },
+          "ai_quota": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Ai Quota",
+            "description": "AI 调用配额（0=不限）",
+            "default": 0
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Features",
+            "description": "权益特性数组"
+          },
+          "is_public": {
+            "type": "boolean",
+            "title": "Is Public",
+            "default": true
+          },
+          "sort": {
+            "type": "integer",
+            "title": "Sort",
+            "default": 0
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "Status",
+            "description": "on|off",
+            "default": "on"
+          },
+          "remark": {
+            "type": "string",
+            "title": "Remark",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "PlanIn",
+        "description": "新建套餐。"
+      },
+      "PlanPatch": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "edition": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edition"
+          },
+          "billing_cycle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Cycle"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 8
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "seats_limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seats Limit"
+          },
+          "store_limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Limit"
+          },
+          "metric_limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric Limit"
+          },
+          "user_limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Limit"
+          },
+          "ai_quota": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Quota"
+          },
+          "features": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Features"
+          },
+          "is_public": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Public"
+          },
+          "sort": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "remark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remark"
+          }
+        },
+        "type": "object",
+        "title": "PlanPatch",
+        "description": "修改套餐（仅传需变更字段）。"
       },
       "PolicyDecideOut": {
         "properties": {
@@ -23066,6 +25495,80 @@
         "title": "TokenOut",
         "description": "登录响应。"
       },
+      "TraceItemOut": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "actor_type": {
+            "type": "string",
+            "title": "Actor Type",
+            "default": ""
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor",
+            "default": ""
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "default": ""
+          },
+          "from_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From State"
+          },
+          "to_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To State"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq"
+        ],
+        "title": "TraceItemOut",
+        "description": "决策全过程留痕的单条记录。"
+      },
       "TrendOut": {
         "properties": {
           "code": {
@@ -23161,6 +25664,71 @@
           "saved_path"
         ],
         "title": "UploadOut"
+      },
+      "UsageIn": {
+        "properties": {
+          "metric_key": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Metric Key"
+          },
+          "period": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "Period",
+            "description": "账期 YYYY-MM"
+          },
+          "used": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used",
+            "description": "已用量（为空时按 delta 累加）"
+          },
+          "delta": {
+            "type": "integer",
+            "title": "Delta",
+            "description": "增量（used 为空时生效）",
+            "default": 0
+          },
+          "quota": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quota",
+            "description": "配额（0=不限）"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "Unit",
+            "default": "count"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric_key",
+          "period"
+        ],
+        "title": "UsageIn",
+        "description": "登记/更新用量。"
       },
       "UserCreate": {
         "properties": {

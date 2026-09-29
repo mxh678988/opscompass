@@ -12,11 +12,16 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.ai import (
+    ACTION_STATUSES,
     DATA_LEVEL_ORDER,
+    DECISION_LEVEL_META,
+    DECISION_LEVEL_ORDER,
+    DECISION_LEVELS,
+    DECISION_SOURCES,
     SEVERITY_ORDER,
     AiActionItem,
     AiActionPolicy,
@@ -24,6 +29,10 @@ from app.models.ai import (
     AiAuditLog,
     AiInsight,
 )
+
+from app.storage.cache import cache_adapter
+
+GOVERNANCE_CACHE_TTL = 20  # 秒：治理看板/概览短缓存，兼顾实时性与读压力
 
 DEFAULT_POLICIES: list[dict[str, Any]] = [
     {
@@ -319,6 +328,63 @@ def decide(
     }
 
 
+# ---------------------------------------------------------------- 决策分级授权
+def list_decision_levels() -> list[dict[str, Any]]:
+    """返回三级决策授权元数据（供前端展示与筛选）。"""
+    items: list[dict[str, Any]] = []
+    for code in DECISION_LEVELS:
+        meta = DECISION_LEVEL_META.get(code, {})
+        items.append(
+            {
+                "code": code,
+                "name": meta.get("name", code),
+                "desc": meta.get("desc", ""),
+                "order": DECISION_LEVEL_ORDER.get(code, 0),
+                "auto_execute": bool(meta.get("auto_execute", False)),
+                "need_approval": code != "agent_autonomous",
+            }
+        )
+    items.sort(key=lambda x: x["order"])
+    return items
+
+
+def validate_decision_level(level: str) -> str:
+    """校验决策分级取值。"""
+    value = (level or "").strip()
+    if value not in DECISION_LEVELS:
+        raise ValueError(f"非法决策分级：{level}，可选 {'/'.join(DECISION_LEVELS)}")
+    return value
+
+
+def resolve_decision_level(
+    db: Session, tenant_id: int, *, level: str, action_type: str, severity: str = "info"
+) -> dict[str, Any]:
+    """按「数据级别 × 动作 × 严重度」推导 AI 决策分级。
+
+    边界（与国家层面「智能体决策权限边界」要求一致）：
+    - L3 敏感 / L4 机密：一律「仅用户本人决策」，AI 只给建议，不产生任何自动执行；
+    - L1 公开 / L2 内部：命中策略且允许自动执行 → 「智能体自主决策」；
+      否则 → 「需用户授权决策」，执行前必须由用户授权；
+    - 无论哪一级，用户始终保留知情权与一键叫停权。
+    """
+    decision = decide(db, tenant_id, level=level, actor="ai", action_type=action_type, severity=severity)
+    policy: Optional[AiActionPolicy] = decision.get("policy")
+    if level in ("L3", "L4"):
+        decision_level = "user_only"
+    elif decision.get("auto"):
+        decision_level = "agent_autonomous"
+    else:
+        decision_level = "user_authorized"
+    return {
+        "decision_level": decision_level,
+        "decision_source": "policy",
+        "policy_id": policy.id if policy else None,
+        "reason": decision.get("reason", ""),
+        "allow": bool(decision.get("allow")),
+        "auto": decision_level == "agent_autonomous",
+    }
+
+
 # ---------------------------------------------------------------- 处置单
 def route_insight(db: Session, tenant_id: int, insight: AiInsight, commit: bool = True) -> AiActionItem:
     """把洞察路由为处置单：权限内 AI 自动执行，超权限转人工。"""
@@ -332,7 +398,15 @@ def route_insight(db: Session, tenant_id: int, insight: AiInsight, commit: bool 
     )
     policy: Optional[AiActionPolicy] = decision.get("policy")
     auto = bool(decision.get("auto"))
+    grade = resolve_decision_level(
+        db,
+        tenant_id,
+        level=insight.data_level,
+        action_type=insight.action_type,
+        severity=insight.severity,
+    )
     now = datetime.now(timezone.utc)
+    sim_mode = bool(getattr(insight, "sim_mode", False))
 
     item = AiActionItem(
         tenant_id=tenant_id,
@@ -343,6 +417,9 @@ def route_insight(db: Session, tenant_id: int, insight: AiInsight, commit: bool 
         action_type=insight.action_type,
         data_level=insight.data_level,
         severity=insight.severity,
+        decision_level=grade["decision_level"],
+        decision_source=grade["decision_source"],
+        sim_mode=sim_mode,
         handler="ai" if auto else "human",
         status="auto_executed" if auto else "pending",
         review_required=bool(decision.get("require_review")),
@@ -357,6 +434,8 @@ def route_insight(db: Session, tenant_id: int, insight: AiInsight, commit: bool 
     db.flush()
 
     insight.status = "routed"
+    insight.decision_level = grade["decision_level"]
+    level_name = DECISION_LEVEL_META.get(grade["decision_level"], {}).get("name", grade["decision_level"])
     audit(
         db,
         tenant_id,
@@ -367,12 +446,17 @@ def route_insight(db: Session, tenant_id: int, insight: AiInsight, commit: bool 
         object_id=insight.id,
         from_state="new",
         to_state="routed",
-        detail=f"数据级别 {insight.data_level}；动作 {insight.action_type}；{decision['reason']}",
+        detail=(
+            f"数据级别 {insight.data_level}；动作 {insight.action_type}；"
+            f"决策分级 {level_name}（{grade['decision_level']}）；{decision['reason']}"
+            + ("；【演练/模拟模式】结论不得作为真实决策依据" if sim_mode else "")
+        ),
         commit=False,
     )
     if commit:
         db.commit()
         db.refresh(item)
+    invalidate_governance_cache(tenant_id)
     return item
 
 
@@ -418,7 +502,11 @@ def list_actions(
     status: Optional[str] = None,
     handler: Optional[str] = None,
     level: Optional[str] = None,
+    decision_level: Optional[str] = None,
+    revoked: Optional[bool] = None,
+    analysis_id: Optional[int] = None,
     limit: int = 100,
+    offset: int = 0,
 ) -> list[AiActionItem]:
     stmt = select(AiActionItem).where(AiActionItem.tenant_id == tenant_id)
     if status:
@@ -427,7 +515,13 @@ def list_actions(
         stmt = stmt.where(AiActionItem.handler == handler)
     if level:
         stmt = stmt.where(AiActionItem.data_level == level)
-    return list(db.execute(stmt.order_by(AiActionItem.id.desc()).limit(limit)).scalars().all())
+    if decision_level:
+        stmt = stmt.where(AiActionItem.decision_level == decision_level)
+    if revoked is not None:
+        stmt = stmt.where(AiActionItem.revoked == revoked)
+    if analysis_id is not None:
+        stmt = stmt.where(AiActionItem.analysis_id == analysis_id)
+    return list(db.execute(stmt.order_by(AiActionItem.id.desc()).offset(offset).limit(limit)).scalars().all())
 
 
 def get_action(db: Session, tenant_id: int, action_id: int) -> Optional[AiActionItem]:
@@ -445,6 +539,8 @@ def _set_decision(
     status: str,
     action: str,
 ) -> AiActionItem:
+    if item.revoked:
+        raise ValueError("该决策已被撤销/叫停，不可再处置；如需继续请先还原")
     previous = item.status
     item.status = status
     item.decision_by = operator
@@ -465,6 +561,7 @@ def _set_decision(
     )
     db.commit()
     db.refresh(item)
+    invalidate_governance_cache(tenant_id)
     return item
 
 
@@ -491,6 +588,8 @@ def execute_action(
     当前版本的执行语义为「登记式执行」——记录处置结论与结果说明，
     供外部系统或后续自动化任务消费，不对生产数据做破坏性变更。
     """
+    if item.revoked:
+        raise ValueError("该决策已被撤销/叫停，不可执行；如需继续请先还原")
     previous = item.status
     item.status = "executed"
     item.execution_result = (result or note or "已登记执行")[:4000]
@@ -514,30 +613,347 @@ def execute_action(
     )
     db.commit()
     db.refresh(item)
+    invalidate_governance_cache(tenant_id)
     return item
 
 
-def statistics(db: Session, tenant_id: int) -> dict[str, Any]:
-    """治理概览：洞察 / 处置单 / 策略命中统计。"""
-    insights = db.execute(select(AiInsight).where(AiInsight.tenant_id == tenant_id)).scalars().all()
-    actions = db.execute(select(AiActionItem).where(AiActionItem.tenant_id == tenant_id)).scalars().all()
-    analyses = db.execute(select(AiAnalysis).where(AiAnalysis.tenant_id == tenant_id)).scalars().all()
+def _get_insight(db: Session, tenant_id: int, insight_id: Optional[int]) -> Optional[AiInsight]:
+    if not insight_id:
+        return None
+    return db.execute(
+        select(AiInsight).where(AiInsight.tenant_id == tenant_id, AiInsight.id == insight_id)
+    ).scalars().first()
 
-    by_status: dict[str, int] = {}
-    for item in actions:
-        by_status[item.status] = by_status.get(item.status, 0) + 1
-    by_level: dict[str, int] = {}
-    for insight in insights:
-        by_level[insight.data_level] = by_level.get(insight.data_level, 0) + 1
 
-    return {
-        "analysis_total": len(analyses),
-        "analysis_failed": len([a for a in analyses if a.status == "failed"]),
-        "insight_total": len(insights),
-        "insight_pending": len([i for i in insights if i.status == "new"]),
-        "action_total": len(actions),
-        "action_by_status": by_status,
-        "insight_by_level": by_level,
-        "ai_auto_executed": len([a for a in actions if a.handler == "ai"]),
-        "human_pending": len([a for a in actions if a.handler == "human" and a.status == "pending"]),
+def update_decision_level(
+    db: Session,
+    tenant_id: int,
+    item: AiActionItem,
+    decision_level: str,
+    operator: str,
+    note: str = "",
+) -> AiActionItem:
+    """人工调整处置单的决策分级，分级来源记为 manual 并留痕。"""
+    target = validate_decision_level(decision_level)
+    if item.revoked:
+        raise ValueError("该决策已被撤销/叫停，不可再调整分级")
+    previous = item.decision_level
+    if previous == target:
+        return item
+
+    item.decision_level = target
+    item.decision_source = "manual"
+    level_name = DECISION_LEVEL_META.get(target, {}).get("name", target)
+    if target == "user_only":
+        # 仅用户本人决策：撤回 AI 自动执行权，回到待办由用户本人处置
+        item.review_required = True
+        if item.handler == "ai":
+            item.handler = "human"
+            item.status = "pending"
+            item.executed_at = None
+            item.execution_result = None
+    elif target == "agent_autonomous":
+        item.review_required = False
+
+    audit(
+        db,
+        tenant_id,
+        actor_type="human",
+        actor=operator,
+        action="set_decision_level",
+        object_type="action_item",
+        object_id=item.id,
+        from_state=previous,
+        to_state=target,
+        detail=f"决策分级调整为 {level_name}（{target}）；说明：{note or '无'}",
+        commit=False,
+    )
+    db.commit()
+    db.refresh(item)
+    invalidate_governance_cache(tenant_id)
+    return item
+
+
+def revoke_action(
+    db: Session, tenant_id: int, item: AiActionItem, operator: str, reason: str = ""
+) -> AiActionItem:
+    """用户一键撤销 / 叫停 AI 决策：立即失效、关联结论停止引用、全过程留痕。"""
+    if item.revoked:
+        raise ValueError("该决策已处于撤销/叫停状态")
+    if item.status == "rejected":
+        raise ValueError("已驳回的处置单无需撤销")
+
+    previous = item.status
+    now = datetime.now(timezone.utc)
+    text = (reason or "用户一键叫停 AI 决策")[:2000]
+    invalidated = previous in ("auto_executed", "executed", "approved")
+
+    item.prev_status = previous
+    item.status = "revoked"
+    item.revoked = True
+    item.revoked_at = now
+    item.revoked_by = operator
+    item.revoke_reason = text
+    item.review_required = True
+    if invalidated:
+        stamp = now.strftime("%Y-%m-%d %H:%M:%S UTC")
+        item.execution_result = (
+            (item.execution_result or "") + f"\n[已叫停 {stamp}] {text}"
+        )[:4000]
+
+    # 关联洞察同步失效，避免被叫停的结论继续作为决策依据
+    insight = _get_insight(db, tenant_id, item.insight_id)
+    insight_state: Optional[str] = None
+    if insight is not None:
+        insight_state = insight.status
+        if invalidated and insight.status != "dismissed":
+            insight.status = "dismissed"
+
+    audit(
+        db,
+        tenant_id,
+        actor_type="human",
+        actor=operator,
+        action="revoke",
+        object_type="action_item",
+        object_id=item.id,
+        from_state=previous,
+        to_state="revoked",
+        detail=(
+            f"用户行使叫停权；决策分级 {item.decision_level}；原因：{text}"
+            + (f"；关联洞察状态 {insight_state} → dismissed" if invalidated and insight_state else "")
+        ),
+        commit=False,
+    )
+    db.commit()
+    db.refresh(item)
+    invalidate_governance_cache(tenant_id)
+    return item
+
+
+def restore_action(
+    db: Session, tenant_id: int, item: AiActionItem, operator: str, note: str = ""
+) -> AiActionItem:
+    """还原被撤销/叫停的决策（回到撤销前状态），用于误叫停场景。"""
+    if not item.revoked:
+        raise ValueError("该决策未处于撤销/叫停状态")
+    target = item.prev_status or "pending"
+    if target not in ACTION_STATUSES or target == "revoked":
+        target = "pending"
+
+    item.status = target
+    item.revoked = False
+    item.revoked_at = None
+    if note:
+        item.decision_note = note
+
+    insight = _get_insight(db, tenant_id, item.insight_id)
+    restored_insight = False
+    if insight is not None and insight.status == "dismissed" and target != "pending":
+        insight.status = "routed"
+        restored_insight = True
+
+    audit(
+        db,
+        tenant_id,
+        actor_type="human",
+        actor=operator,
+        action="restore",
+        object_type="action_item",
+        object_id=item.id,
+        from_state="revoked",
+        to_state=target,
+        detail=(
+            f"还原被叫停的决策；原因：{item.revoke_reason or '无'}"
+            + ("；关联洞察恢复为 routed" if restored_insight else "")
+            + f"；说明：{note or '无'}"
+        ),
+        commit=False,
+    )
+    db.commit()
+    db.refresh(item)
+    invalidate_governance_cache(tenant_id)
+    return item
+
+
+def decision_trace(db: Session, tenant_id: int, item: AiActionItem) -> list[dict[str, Any]]:
+    """决策全过程留痕：洞察生成 → 分级路由 → 人工审批/执行 → 撤销/还原。"""
+    entries: list[dict[str, Any]] = []
+    insight = _get_insight(db, tenant_id, item.insight_id)
+
+    if insight is not None:
+        entries.append(
+            {
+                "at": insight.created_at,
+                "actor_type": "ai",
+                "actor": "ai-analyst",
+                "action": "insight_created",
+                "from_state": None,
+                "to_state": insight.status,
+                "detail": f"洞察《{insight.title}》生成；数据级别 {insight.data_level}；置信度 {insight.confidence}",
+            }
+        )
+        logs = db.execute(
+            select(AiAuditLog)
+            .where(
+                AiAuditLog.tenant_id == tenant_id,
+                AiAuditLog.object_type == "insight",
+                AiAuditLog.object_id == insight.id,
+            )
+            .order_by(AiAuditLog.id.asc())
+        ).scalars().all()
+        for log in logs:
+            entries.append(
+                {
+                    "at": log.created_at,
+                    "actor_type": log.actor_type,
+                    "actor": log.actor,
+                    "action": log.action,
+                    "from_state": log.from_state,
+                    "to_state": log.to_state,
+                    "detail": log.detail,
+                }
+            )
+
+    entries.append(
+        {
+            "at": item.created_at,
+            "actor_type": "system",
+            "actor": "policy-engine",
+            "action": "action_created",
+            "from_state": None,
+            "to_state": item.status,
+            "detail": (
+                f"生成处置单并完成决策分级：{item.decision_level}（来源 {item.decision_source}）；"
+                f"数据级别 {item.data_level}；处置方 {item.handler}"
+                + ("；【演练/模拟模式】" if item.sim_mode else "")
+            ),
+        }
+    )
+
+    action_logs = db.execute(
+        select(AiAuditLog)
+        .where(
+            AiAuditLog.tenant_id == tenant_id,
+            AiAuditLog.object_type == "action_item",
+            AiAuditLog.object_id == item.id,
+        )
+        .order_by(AiAuditLog.id.asc())
+    ).scalars().all()
+    for log in action_logs:
+        entries.append(
+            {
+                "at": log.created_at,
+                "actor_type": log.actor_type,
+                "actor": log.actor,
+                "action": log.action,
+                "from_state": log.from_state,
+                "to_state": log.to_state,
+                "detail": log.detail,
+            }
+        )
+
+    entries.sort(key=lambda e: (e["at"] is None, e["at"] or datetime.min.replace(tzinfo=timezone.utc)))
+    for idx, entry in enumerate(entries, start=1):
+        entry["seq"] = idx
+    return entries
+
+
+def _gov_cache_key(namespace: str, tenant_id: int) -> str:
+    return cache_adapter.build_key("ai_gov", namespace, tenant_id)
+
+
+def invalidate_governance_cache(tenant_id: int) -> None:
+    """治理数据写变更后失效看板与概览缓存（缓存不可用时静默跳过）。"""
+    cache_adapter.delete(
+        _gov_cache_key("board", tenant_id),
+        _gov_cache_key("stats", tenant_id),
+    )
+
+
+def _count_rows(db: Session, model, tenant_id: int, *conditions) -> int:
+    """按条件在数据库端聚合计数，避免把整表载入内存。"""
+    stmt = select(func.count()).select_from(model).where(model.tenant_id == tenant_id)
+    for cond in conditions:
+        stmt = stmt.where(cond)
+    return int(db.execute(stmt).scalar() or 0)
+
+
+def decision_board(db: Session, tenant_id: int) -> dict[str, Any]:
+    """决策分级授权看板：三级元数据 + 各级数量 + 叫停/待办/自主执行/模拟模式概览。"""
+    cache_key = _gov_cache_key("board", tenant_id)
+    cached = cache_adapter.get_json(cache_key)
+    if cached is not None:
+        return cached
+    level_rows = db.execute(
+        select(AiActionItem.decision_level, func.count())
+        .where(AiActionItem.tenant_id == tenant_id)
+        .group_by(AiActionItem.decision_level)
+    ).all()
+    counts: dict[str, int] = {code: 0 for code in DECISION_LEVELS}
+    for code, cnt in level_rows:
+        key = code if code in counts else "user_authorized"
+        counts[key] = counts.get(key, 0) + int(cnt or 0)
+    payload = {
+        "levels": list_decision_levels(),
+        "counts": counts,
+        "revoked_total": _count_rows(db, AiActionItem, tenant_id, AiActionItem.revoked.is_(True)),
+        "pending_total": _count_rows(db, AiActionItem, tenant_id, AiActionItem.status == "pending"),
+        "auto_executed_total": _count_rows(
+            db, AiActionItem, tenant_id, AiActionItem.status == "auto_executed"
+        ),
+        "sim_mode_total": _count_rows(db, AiActionItem, tenant_id, AiActionItem.sim_mode.is_(True)),
     }
+    cache_adapter.set_json(cache_key, payload, GOVERNANCE_CACHE_TTL)
+    return payload
+
+
+def statistics(db: Session, tenant_id: int) -> dict[str, Any]:
+    """治理概览：洞察 / 处置单 / 策略命中统计（数据库端聚合，避免全表载入）。"""
+    cache_key = _gov_cache_key("stats", tenant_id)
+    cached = cache_adapter.get_json(cache_key)
+    if cached is not None:
+        return cached
+    action_by_status: dict[str, int] = {
+        str(code): int(cnt or 0)
+        for code, cnt in db.execute(
+            select(AiActionItem.status, func.count())
+            .where(AiActionItem.tenant_id == tenant_id)
+            .group_by(AiActionItem.status)
+        ).all()
+    }
+    insight_by_level: dict[str, int] = {
+        str(code): int(cnt or 0)
+        for code, cnt in db.execute(
+            select(AiInsight.data_level, func.count())
+            .where(AiInsight.tenant_id == tenant_id)
+            .group_by(AiInsight.data_level)
+        ).all()
+    }
+    by_decision: dict[str, int] = {code: 0 for code in DECISION_LEVELS}
+    for code, cnt in db.execute(
+        select(AiActionItem.decision_level, func.count())
+        .where(AiActionItem.tenant_id == tenant_id)
+        .group_by(AiActionItem.decision_level)
+    ).all():
+        key = code if code in by_decision else "user_authorized"
+        by_decision[key] = by_decision.get(key, 0) + int(cnt or 0)
+
+    payload = {
+        "analysis_total": _count_rows(db, AiAnalysis, tenant_id),
+        "analysis_failed": _count_rows(db, AiAnalysis, tenant_id, AiAnalysis.status == "failed"),
+        "insight_total": _count_rows(db, AiInsight, tenant_id),
+        "insight_pending": _count_rows(db, AiInsight, tenant_id, AiInsight.status == "new"),
+        "action_total": _count_rows(db, AiActionItem, tenant_id),
+        "action_by_status": action_by_status,
+        "insight_by_level": insight_by_level,
+        "ai_auto_executed": _count_rows(db, AiActionItem, tenant_id, AiActionItem.handler == "ai"),
+        "human_pending": _count_rows(
+            db, AiActionItem, tenant_id, AiActionItem.handler == "human", AiActionItem.status == "pending"
+        ),
+        "action_by_decision_level": by_decision,
+        "revoked_total": _count_rows(db, AiActionItem, tenant_id, AiActionItem.revoked.is_(True)),
+        "sim_mode_total": _count_rows(db, AiActionItem, tenant_id, AiActionItem.sim_mode.is_(True)),
+    }
+    cache_adapter.set_json(cache_key, payload, GOVERNANCE_CACHE_TTL)
+    return payload

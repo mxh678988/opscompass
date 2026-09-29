@@ -5,29 +5,34 @@
   真实落库写入指标值，simulated=False；
 - api：用标准库 urllib 拉取 HTTP(S) JSON 接口，按映射解析后真实写入指标值，
   simulated=False；带 SSRF 防护（禁内网/回环/保留地址）与超时/体积上限；
-- sql：数据库直连驱动尚未接入（P7 计划），本次仅做 TCP 连通性探测，
-  数据写入为演练，simulated=True，不计入真实写入量。
+- sql：直连数据源执行受控 SELECT（表名白名单 + 行数上限 + 连接超时），按字段映射
+  解析后真实写入指标值，simulated=False，已接入 PostgreSQL / MySQL 驱动；
+  ClickHouse / Hive 驱动仍未接入，这两类数据源仅做 TCP 连通性探测，simulated=True。
 
 调度：内置轻量守护线程按 30 秒粒度扫描 interval 任务并执行；
 可用环境变量 COLLECT_SCHEDULER_ENABLED=0 关闭（关闭后仅支持手动触发）。
 """
 
+import importlib
 import ipaddress
 import json
 import logging
 import os
+import re
 import socket
 import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 from typing import Any, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.orm import Session
 
+from app.core.crypto import decrypt
 from app.models.collect import CollectRun, CollectTask
 from app.models.datasource import DataSource
 from app.models.metric import Metric
@@ -50,6 +55,17 @@ API_TIMEOUT_SECONDS = 10
 API_MAX_BYTES = 5 * 1024 * 1024
 API_MAX_RECORDS = 5000
 API_USER_AGENT = "OpsCompass-Collector/0.9"
+
+# 数据库直连采集参数
+SQL_TIMEOUT_SECONDS = 10
+SQL_MAX_ROWS = 5000
+# 数据源类型 → (SQLAlchemy 驱动名, 运行时需校验的驱动模块)
+SQL_SUPPORTED_TYPES: dict[str, tuple[str, str]] = {
+    "postgresql": ("postgresql+psycopg", "psycopg"),
+    "mysql": ("mysql+pymysql", "pymysql"),
+}
+# 表名白名单：仅允许 schema.table / table 形式，杜绝拼接注入
+SQL_TABLE_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_$]*(\.[A-Za-z_][A-Za-z0-9_$]*)?$")
 
 # 调度扫描间隔与最小调度间隔
 SCHEDULER_TICK_SECONDS = 30
@@ -111,9 +127,9 @@ COLLECT_MODE_CATALOG: list[dict[str, Any]] = [
         "mode": "sql",
         "name": "数据库直连采集",
         "target_label": "库表名",
-        "target_hint": "如 ods_daily_shop，需绑定 MySQL/PG/ClickHouse 数据源",
-        "real_fetch": False,
-        "description": "驱动接入中（P7 计划）：当前仅做数据源 TCP 连通性探测，数据写入为演练，结果标注 simulated。",
+        "target_hint": "如 ods_daily_shop，需绑定 PostgreSQL / MySQL 数据源",
+        "real_fetch": True,
+        "description": "直连 PostgreSQL / MySQL 执行受控 SELECT（表名白名单 + 5000 行上限），按字段映射解析后写入指标值，真实落库；MySQL 需环境已安装 pymysql 驱动，ClickHouse / Hive 驱动未接入仍为演练。",
     },
 ]
 
@@ -363,18 +379,47 @@ def _run_api(db: Session, task: CollectTask, mapping: IngestMapping) -> dict[str
     }
 
 
-def _run_sql(db: Session, task: CollectTask) -> dict[str, Any]:
-    """数据库直连采集：驱动未接入，仅做连通性探测 + 演练记录。"""
-    source: Optional[DataSource] = None
-    if task.source_id:
-        source = db.get(DataSource, task.source_id)
-    if source is None:
-        raise CollectError("数据库采集需绑定数据源后再执行")
+def _jsonable(value: Any) -> Any:
+    """把数据库列值转成可 JSON 序列化的形态，用于运行明细留痕。"""
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, (bytes, bytearray)):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
+def _build_sql_url(source: DataSource) -> str:
+    """按数据源配置拼装 SQLAlchemy 连接串（口令解密后做 URL 编码）。"""
+    entry = SQL_SUPPORTED_TYPES.get(source.ds_type)
+    if entry is None:
+        raise CollectError(f"{source.ds_type} 直连驱动尚未接入，当前支持 PostgreSQL / MySQL")
+    driver, driver_module = entry
+    try:
+        importlib.import_module(driver_module)
+    except ImportError as exc:  # 驱动缺失按可预期错误返回，不抛 500
+        raise CollectError(
+            f"{source.ds_type} 直连驱动 {driver_module} 未安装，请先安装该驱动后重试"
+        ) from exc
     if not source.host or not source.port:
         raise CollectError(f"数据源 {source.code} 未配置主机/端口")
+    if not source.db_name:
+        raise CollectError(f"数据源 {source.code} 未配置库名")
+    password = ""
+    if source.password_enc:
+        try:
+            password = decrypt(source.password_enc)
+        except Exception as exc:  # 口令解密失败按可预期错误返回，不抛 500
+            raise CollectError(f"数据源 {source.code} 口令解密失败：{exc}") from exc
+    user = urllib.parse.quote_plus(source.username or "")
+    auth = f"{user}:{urllib.parse.quote_plus(password)}@" if user else ""
+    return f"{driver}://{auth}{source.host}:{int(source.port)}/{source.db_name}"
 
+
+def _probe_source(source: DataSource, task: CollectTask) -> dict[str, Any]:
+    """驱动未接入的数据源：仅做 TCP 连通性探测，留演练记录。"""
     reachable = False
-    probe_ms = 0
     probe_error = ""
     started = time.perf_counter()
     try:
@@ -394,7 +439,7 @@ def _run_sql(db: Session, task: CollectTask) -> dict[str, Any]:
         "simulated": True,
         "message": (
             f"数据源 {source.code} 连通正常（{probe_ms}ms）；"
-            f"{source.ds_type} 直连驱动尚未接入（P7 计划），本次未真实采集与写入"
+            f"{source.ds_type} 直连驱动尚未接入，本次未真实采集与写入"
         ),
         "detail": {
             "source_code": source.code,
@@ -404,6 +449,105 @@ def _run_sql(db: Session, task: CollectTask) -> dict[str, Any]:
             "probe_ms": probe_ms,
             "table": task.target,
             "simulated": True,
+        },
+    }
+
+
+def _run_sql(db: Session, task: CollectTask) -> dict[str, Any]:
+    """数据库直连采集：受控 SELECT 真实拉取 + 真实落库。"""
+    source: Optional[DataSource] = None
+    if task.source_id:
+        source = db.get(DataSource, task.source_id)
+    if source is None:
+        raise CollectError("数据库采集需绑定数据源后再执行")
+    if not source.host or not source.port:
+        raise CollectError(f"数据源 {source.code} 未配置主机/端口")
+
+    if source.ds_type not in SQL_SUPPORTED_TYPES:
+        return _probe_source(source, task)
+
+    table = str(task.target or "").strip()
+    if not SQL_TABLE_PATTERN.match(table):
+        raise CollectError("表名非法：仅支持「表名」或「库名.表名」，且只含字母/数字/下划线")
+    mapping = _mapping_of(task)
+
+    extra = task.extra_config or {}
+    try:
+        row_limit = int(extra.get("limit") or SQL_MAX_ROWS)
+    except (TypeError, ValueError):
+        raise CollectError("扩展配置 limit 需为整数") from None
+    row_limit = max(1, min(row_limit, SQL_MAX_ROWS))
+
+    url = _build_sql_url(source)
+    engine = create_engine(
+        url, pool_pre_ping=True, connect_args={"connect_timeout": SQL_TIMEOUT_SECONDS}
+    )
+    query_started = time.perf_counter()
+    truncated = False
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(f"SELECT * FROM {table} LIMIT {row_limit + 1}"))
+            rows = [dict(row) for row in result.mappings().all()]
+    except CollectError:
+        raise
+    except Exception as exc:
+        raise CollectError(f"数据库查询失败：{exc}") from exc
+    finally:
+        engine.dispose()
+    query_ms = int((time.perf_counter() - query_started) * 1000)
+
+    if len(rows) > row_limit:
+        rows = rows[:row_limit]
+        truncated = True
+    if not rows:
+        return {
+            "status": "failed",
+            "rows_in": 0,
+            "rows_written": 0,
+            "rows_failed": 0,
+            "simulated": False,
+            "message": f"表 {table} 查询结果为空，未写入指标值",
+            "detail": {
+                "source_code": source.code,
+                "table": table,
+                "query_ms": query_ms,
+                "row_count": 0,
+            },
+        }
+
+    created_codes: list[str] = []
+    stats = _write_records(db, task, mapping, rows, created_codes)
+    status = "success"
+    if stats["failed"] and stats["value_count"]:
+        status = "partial"
+    elif stats["failed"] and not stats["value_count"]:
+        status = "failed"
+    message = (
+        f"数据库采集完成：读取 {len(rows)} 行，写入 {stats['value_count']} 条指标值"
+        + (f"，失败 {stats['failed']} 行" if stats["failed"] else "")
+        + ("；结果集超过上限已截断" if truncated else "")
+    )
+    return {
+        "status": status,
+        "rows_in": len(rows),
+        "rows_written": stats["value_count"],
+        "rows_failed": stats["failed"],
+        "simulated": False,
+        "message": message,
+        "detail": {
+            "source_code": source.code,
+            "ds_type": source.ds_type,
+            "host": source.host,
+            "port": source.port,
+            "table": table,
+            "limit": row_limit,
+            "query_ms": query_ms,
+            "truncated": truncated,
+            "sample": [{k: _jsonable(v) for k, v in r.items()} for r in rows[:3]],
+            "metric_codes": stats["metric_codes"],
+            "created_metrics": created_codes,
+            "skipped_rows": stats["skipped"],
+            "errors": stats["errors"][:20],
         },
     }
 

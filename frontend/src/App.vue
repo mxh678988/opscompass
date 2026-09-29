@@ -21,6 +21,7 @@ const links = [
   { to: '/storage', label: '存储适配' },
   { to: '/model', label: '模型中心' },
   { to: '/security-log', label: '安全日志' },
+  { to: '/ai-governance', label: 'AI 治理' },
   { to: '/learning', label: '学习进化' },
   { to: '/digital-human', label: '数字人' },
   { to: '/commercial', label: '商业化' },

@@ -10,8 +10,10 @@ from app.api.deps import get_tenant_id
 from app.models.ai import (
     DATA_LEVEL_META,
     GRADE_OBJECT_TYPES,
+    AiActionItem,
     AiActionPolicy,
     AiDataLevelRule,
+    AiInsight,
 )
 from app.models.base import get_db
 from app.models.datasource import DataSource
@@ -19,11 +21,15 @@ from app.models.import_task import ImportTask
 from app.models.metric import Metric
 from app.schemas.ai import (
     ActionDecisionIn,
+    ActionDecisionLevelIn,
     ActionOut,
+    ActionRevokeIn,
     AiConfigOut,
     AnalysisOut,
     AnalysisRunIn,
     AuditOut,
+    DecisionBoardOut,
+    DecisionTraceOut,
     GradeRunIn,
     GradeRunOut,
     InsightOut,
@@ -35,7 +41,7 @@ from app.schemas.ai import (
     PolicyOut,
     PolicyUpdate,
 )
-from app.schemas.common import ApiResponse
+from app.schemas.common import ApiResponse, PageResult
 from app.services.ai import analyzer, governor, grader
 from app.services.ai.llm_client import LLMClient
 
@@ -335,11 +341,7 @@ def get_analysis(
     if analysis is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"分析不存在: {analysis_id}")
     insights = analyzer.analysis_insights(db, tenant_id, analysis_id)
-    actions = [
-        item
-        for item in governor.list_actions(db, tenant_id, limit=200)
-        if item.analysis_id == analysis_id
-    ]
+    actions = governor.list_actions(db, tenant_id, analysis_id=analysis_id, limit=200)
     return ApiResponse[dict](
         data={
             "analysis": AnalysisOut.model_validate(analysis),
@@ -359,16 +361,24 @@ def list_analysis_insights(
     return ApiResponse[list[InsightOut]](data=[InsightOut.model_validate(r) for r in rows])
 
 
-@router.get("/insights", response_model=ApiResponse[list[InsightOut]], summary="洞察列表")
+@router.get("/insights", response_model=ApiResponse[PageResult[InsightOut]], summary="洞察列表")
 def list_insights(
     insight_status: Optional[str] = Query(None, alias="status", description="new/routed/resolved/dismissed"),
     severity: Optional[str] = Query(None, description="info/warning/critical"),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(20, ge=1, le=200),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     tenant_id: int = Depends(get_tenant_id),
-) -> ApiResponse[list[InsightOut]]:
-    rows = analyzer.list_insights(db, tenant_id, status=insight_status, severity=severity, limit=limit)
-    return ApiResponse[list[InsightOut]](data=[InsightOut.model_validate(r) for r in rows])
+) -> ApiResponse[PageResult[InsightOut]]:
+    from sqlalchemy import func
+    base_stmt = select(AiInsight).where(AiInsight.tenant_id == tenant_id)
+    if insight_status:
+        base_stmt = base_stmt.where(AiInsight.status == insight_status)
+    if severity:
+        base_stmt = base_stmt.where(AiInsight.severity == severity)
+    total = db.execute(select(func.count()).select_from(base_stmt.subquery())).scalar() or 0
+    rows = analyzer.list_insights(db, tenant_id, status=insight_status, severity=severity, limit=limit, offset=offset)
+    return ApiResponse[PageResult[InsightOut]](data=PageResult(total=total, page=(offset // limit) + 1, page_size=limit, items=[InsightOut.model_validate(r) for r in rows]))
 
 
 @router.post("/insights/route", response_model=ApiResponse[dict], summary="批量路由洞察")
@@ -463,21 +473,32 @@ def decide_policy(
 
 
 # ================================================= 处置单
-@router.get("/actions", response_model=ApiResponse[list[ActionOut]], summary="处置单列表")
+@router.get("/actions", response_model=ApiResponse[PageResult[ActionOut]], summary="处置单列表")
 def list_actions(
     action_status: Optional[str] = Query(
         None, alias="status", description="pending/auto_executed/approved/rejected/executed/failed"
     ),
     handler: Optional[str] = Query(None, description="ai / human"),
     data_level: Optional[str] = Query(None, description="L1-L4"),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(20, ge=1, le=200),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     tenant_id: int = Depends(get_tenant_id),
-) -> ApiResponse[list[ActionOut]]:
+) -> ApiResponse[PageResult[ActionOut]]:
+    from sqlalchemy import func
+
+    base_stmt = select(AiActionItem).where(AiActionItem.tenant_id == tenant_id)
+    if action_status:
+        base_stmt = base_stmt.where(AiActionItem.status == action_status)
+    if handler:
+        base_stmt = base_stmt.where(AiActionItem.handler == handler)
+    if data_level:
+        base_stmt = base_stmt.where(AiActionItem.data_level == data_level)
+    total = db.execute(select(func.count()).select_from(base_stmt.subquery())).scalar() or 0
     rows = governor.list_actions(
-        db, tenant_id, status=action_status, handler=handler, level=data_level, limit=limit
+        db, tenant_id, status=action_status, handler=handler, level=data_level, limit=limit, offset=offset
     )
-    return ApiResponse[list[ActionOut]](data=[ActionOut.model_validate(r) for r in rows])
+    return ApiResponse[PageResult[ActionOut]](data=PageResult(total=total, page=(offset // limit) + 1, page_size=limit, items=[ActionOut.model_validate(r) for r in rows]))
 
 
 @router.post("/actions/{action_id}/approve", response_model=ApiResponse[ActionOut], summary="人工审批通过")
@@ -542,6 +563,89 @@ def execute_action(
         db, tenant_id, item, payload.operator, payload.note or "", payload.result or ""
     )
     return ApiResponse[ActionOut](data=ActionOut.model_validate(item))
+
+
+# ================================================= 决策分级授权与叫停
+@router.get("/decisions/board", response_model=ApiResponse[DecisionBoardOut], summary="决策分级授权看板")
+def decision_board(
+    db: Session = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+) -> ApiResponse[DecisionBoardOut]:
+    """三级决策授权概览：各级数量、待办、已叫停、自主执行与演练模式计数。"""
+    data = governor.decision_board(db, tenant_id)
+    return ApiResponse[DecisionBoardOut](data=DecisionBoardOut.model_validate(data))
+
+
+@router.put("/actions/{action_id}/decision-level", response_model=ApiResponse[ActionOut], summary="调整决策分级")
+def set_action_decision_level(
+    action_id: int,
+    payload: ActionDecisionLevelIn,
+    db: Session = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+) -> ApiResponse[ActionOut]:
+    """把处置单在 仅用户决策 / 需用户授权 / 智能体自主 三级之间调整，来源记为 manual。"""
+    item = governor.get_action(db, tenant_id, action_id)
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"处置单不存在: {action_id}")
+    try:
+        item = governor.update_decision_level(
+            db, tenant_id, item, payload.decision_level, payload.operator, payload.note or ""
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return ApiResponse[ActionOut](data=ActionOut.model_validate(item))
+
+
+@router.post("/actions/{action_id}/revoke", response_model=ApiResponse[ActionOut], summary="一键叫停/撤销")
+def revoke_action(
+    action_id: int,
+    payload: ActionRevokeIn,
+    db: Session = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+) -> ApiResponse[ActionOut]:
+    """用户一键叫停 AI 决策：立即失效、停止引用并全过程留痕。"""
+    item = governor.get_action(db, tenant_id, action_id)
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"处置单不存在: {action_id}")
+    try:
+        item = governor.revoke_action(db, tenant_id, item, payload.operator, payload.reason or "")
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return ApiResponse[ActionOut](data=ActionOut.model_validate(item))
+
+
+@router.post("/actions/{action_id}/restore", response_model=ApiResponse[ActionOut], summary="还原叫停决策")
+def restore_action(
+    action_id: int,
+    payload: ActionDecisionIn,
+    db: Session = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+) -> ApiResponse[ActionOut]:
+    """还原被误叫停的决策，回到撤销前状态。"""
+    item = governor.get_action(db, tenant_id, action_id)
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"处置单不存在: {action_id}")
+    try:
+        item = governor.restore_action(db, tenant_id, item, payload.operator, payload.note or "")
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return ApiResponse[ActionOut](data=ActionOut.model_validate(item))
+
+
+@router.get("/actions/{action_id}/trace", response_model=ApiResponse[DecisionTraceOut], summary="决策全过程追溯")
+def action_trace(
+    action_id: int,
+    db: Session = Depends(get_db),
+    tenant_id: int = Depends(get_tenant_id),
+) -> ApiResponse[DecisionTraceOut]:
+    """单条处置单全链路留痕：洞察生成 → 分级路由 → 审批/执行 → 撤销/还原。"""
+    item = governor.get_action(db, tenant_id, action_id)
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"处置单不存在: {action_id}")
+    entries = governor.decision_trace(db, tenant_id, item)
+    return ApiResponse[DecisionTraceOut](
+        data=DecisionTraceOut(action=ActionOut.model_validate(item), trace=entries)
+    )
 
 
 # ================================================= 审计

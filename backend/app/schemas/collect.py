@@ -90,6 +90,13 @@ class CollectTaskOut(BaseModel):
     fail_count: int = 0
     last_status: Optional[str] = None
     remark: str = ""
+
+    @field_validator("remark", mode="before")
+    @classmethod
+    def _remark_none_to_text(cls, value: Any) -> Any:
+        """库中 remark 可为 NULL，序列化前统一转为空串，避免响应校验失败。"""
+        return "" if value is None else value
+
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

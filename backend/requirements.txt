@@ -29,3 +29,6 @@ httpx==0.28.1
 # 测试
 pytest==8.3.4
 pytest-asyncio==0.25.0
+
+# 数据库直连采集（可选）：MySQL 驱动，离线环境需手工安装
+pymysql==2.2.8

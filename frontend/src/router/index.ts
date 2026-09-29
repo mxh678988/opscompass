@@ -78,6 +78,12 @@ const router = createRouter({
       meta: { title: '安全日志' },
     },
     {
+      path: '/ai-governance',
+      name: 'ai-governance',
+      component: () => import('@/views/AiGovernance.vue'),
+      meta: { title: 'AI 治理' },
+    },
+    {
       path: '/learning',
       name: 'learning',
       component: () => import('@/views/Learning.vue'),

@@ -256,13 +256,14 @@ SEO/GEO 任务与 AI 分析默认走本地模型（`mode=local`），执行结�
 
 ## 接口全量索引（v0.10.0，自动生成）
 
-> 由 `docs/openapi.json` 实时导出：共 220 个操作 / 161 条路径；215 个数据模型。接口契约以 OpenAPI 为准。
-### ai（25）
+> 由 `docs/openapi.json` 实时导出：共 225 个操作 / 166 条路径；226 个数据模型。接口契约以 OpenAPI 为准。
+### ai（30）
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | GET | `/api/v1/ai/config` | AI 配置与状态 |
 | GET | `/api/v1/ai/statistics` | AI 治理概览 |
+| GET | `/api/v1/ai/decisions/board` | 三级决策看板（分级统计 + 处置概况） |
 | POST | `/api/v1/ai/level/rules/seed` | 写入内置分级规则 |
 | GET | `/api/v1/ai/level/rules` | 分级规则列表 |
 | POST | `/api/v1/ai/level/rules` | 新建分级规则 |
@@ -285,6 +286,10 @@ SEO/GEO 任务与 AI 分析默认走本地模型（`mode=local`），执行结�
 | POST | `/api/v1/ai/actions/{action_id}/approve` | 人工审批通过 |
 | POST | `/api/v1/ai/actions/{action_id}/reject` | 人工驳回 |
 | POST | `/api/v1/ai/actions/{action_id}/execute` | 人工执行处置 |
+| PUT | `/api/v1/ai/actions/{action_id}/decision-level` | 调整处置单决策分级 |
+| POST | `/api/v1/ai/actions/{action_id}/revoke` | 一键叫停/撤销处置单 |
+| POST | `/api/v1/ai/actions/{action_id}/restore` | 还原已叫停处置单 |
+| GET | `/api/v1/ai/actions/{action_id}/trace` | 决策全过程追溯 |
 | GET | `/api/v1/ai/audit` | 审计日志 |
 
 ### audit（6）

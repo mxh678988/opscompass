@@ -17,12 +17,18 @@ AIGC:
 
 ### 新增
 
+- **AI 决策治理闭环（P8）**：新增迁移 `d1a7b3c9e5f2`（治理三表补齐 13 列），`app/services/ai/governor.py` 的三级决策（仅用户本人决策 / 需用户授权决策 / 智能体自主决策）由后端贯通到界面；前端新增 `src/views/AiGovernance.vue` 与 `src/api/ai.ts` 类型封装，注册路由 `/ai-governance` 并在顶部导航新增「AI 治理」；页面含三级决策看板、处置单处置表（审批 / 驳回 / 执行 / 分级调整 / 叫停 / 还原）与决策全过程追溯时间线。
 - **商业化中心（P10）后端**：新增 `app/api/v1/endpoints/commercial.py`（18 条路径，挂载 `/api/v1/commercial`）与 `app/services/commercial_service.py`；落库 5 张表（套餐 `oc_com_plan`、授权 `oc_com_license`、订单 `oc_com_order`、用量 `oc_com_usage`、事件 `oc_com_license_event`）；覆盖套餐 CRUD 与 `plans/seed` 预置、授权签发/激活/续期/吊销、`license/verify` 授权校验（返回 `valid` / `message` / 剩余天数）、订单创建/支付（支付后自动签发授权）/取消、用量登记与告警超额判定、总览 `overview`（含 `modes` 授权模式与 `launch_checklist` 上架门槛）、当前租户权益 `entitlement`；权限点 `commercial:view` / `commercial:manage`。后端验证 25/25 通过。
 - **商业化中心前端**：新增 `src/api/commercial.ts`（封装 overview / entitlement / plans / licenses / orders / usage / license-verify / events 全部接口与严格类型）与 `src/views/CommercialCenter.vue`（六标签页：总览、套餐、授权、订单、用量、授权校验）；`router/index.ts` 注册懒加载路由 `/commercial`，`App.vue` 顶部导航新增「商业化」。
 
 ### 变更
 
 - `api/commercial.ts` 中 `createOrder` 的 `plan_id` 调整为可选（缺省时由后端取首个上架套餐）。
+- **治理读接口性能优化**：`insights` / `actions` 列表改为数据库端分页（`limit` / `offset`，返回 `total` / `page` / `page_size`），`analyses/{id}` 详情改用数据库端 `analysis_id` 过滤，替代原「拉取近 200 条再内存过滤」；`decision_board` / `statistics` 改为数据库端聚合计数（`group_by` + `count`），不再全表载入内存。
+- **索引补齐**：新增迁移 `p5_ai_gov_perf_idx`，补建 `ix_ai_insight_tenant_status_severity`、`ix_ai_action_tenant_status_handler`、`ix_ai_action_tenant_analysis`，并修正 `p4` 迁移 `downgrade` 中的索引名错误（`ix_ai_analysis_data_level` → `ix_ai_analysis_scope`）；全库 AI 相关索引达 14 个。
+- **治理看板短缓存**：`decision_board` / `statistics` 接入 Redis 短 TTL 缓存（20 秒，复用 `app/storage/cache.py` 适配器，Redis 不可用时自动降级直连数据库），治理写路径（分级调整 / 审批 / 驳回 / 执行 / 叫停 / 还原）提交后主动失效；实测看板接口 410ms → ~50ms。
+- `docs/product-manual.md` 对齐 2026 市场趋势（智能体定规、数据不出域、决策合规可追溯），功能页补充 AI 治理与商业化中心，能力规模刷新至 2026-09-29 实测值。
+- **数据库直连采集（sql 模式）接入真实驱动**：`app/services/collect_service.py` 的 sql 采集由「TCP 探测演练」升级为 PostgreSQL / MySQL 受控 `SELECT` 真实落库（表名白名单、行数上限 5000、10 秒超时、示例行回传）；驱动缺失时按可预期错误返回而非 500；新增扩展配置 `limit`（1~5000）用于小批量试采；采集中心 `modes` 中 sql 的 `real_fetch` 置真，并注明 MySQL 需环境已安装 `pymysql`。
 
 ### 修复
 

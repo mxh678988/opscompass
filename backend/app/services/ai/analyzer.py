@@ -357,13 +357,14 @@ def list_insights(
     status: Optional[str] = None,
     severity: Optional[str] = None,
     limit: int = 100,
+    offset: int = 0,
 ) -> list[AiInsight]:
     stmt = select(AiInsight).where(AiInsight.tenant_id == tenant_id)
     if status:
         stmt = stmt.where(AiInsight.status == status)
     if severity:
         stmt = stmt.where(AiInsight.severity == severity)
-    return list(db.execute(stmt.order_by(AiInsight.id.desc()).limit(limit)).scalars().all())
+    return list(db.execute(stmt.order_by(AiInsight.id.desc()).offset(offset).limit(limit)).scalars().all())
 
 
 def ai_mode_info() -> dict[str, Any]:

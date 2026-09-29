@@ -56,8 +56,34 @@ INSIGHT_STATUSES = ("new", "routed", "resolved", "dismissed")
 ACTION_TYPES = ("notify", "inspect", "optimize", "remediate", "escalate", "record", "none")
 # 执行者
 ACTOR_TYPES = ("ai", "human", "system")
-# 处置单状态
-ACTION_STATUSES = ("pending", "auto_executed", "approved", "rejected", "executed", "failed")
+# 处置单状态（revoked：AI 决策被执行后又被用户撤销/叫停）
+ACTION_STATUSES = ("pending", "auto_executed", "approved", "rejected", "executed", "failed", "revoked")
+
+# 决策分级授权：三级决策权限边界
+# user_only        仅用户本人决策：AI 只给建议，不产生任何自动执行动作
+# user_authorized  需用户授权决策：AI 可生成处置方案，执行前须经用户授权
+# agent_autonomous 智能体自主决策：低风险动作可由智能体自主执行，用户保留知情权与叫停权
+DECISION_LEVELS = ("user_only", "user_authorized", "agent_autonomous")
+DECISION_LEVEL_ORDER = {"user_only": 1, "user_authorized": 2, "agent_autonomous": 3}
+DECISION_LEVEL_META = {
+    "user_only": {
+        "name": "仅用户本人决策",
+        "desc": "AI 仅输出建议与依据，不发起任何自动执行动作，决策权完全在用户本人",
+        "auto_execute": False,
+    },
+    "user_authorized": {
+        "name": "需用户授权决策",
+        "desc": "AI 生成处置方案并等待用户授权，授权通过后方可执行",
+        "auto_execute": False,
+    },
+    "agent_autonomous": {
+        "name": "智能体自主决策",
+        "desc": "权限与风险范围内的低风险动作由智能体自主执行，用户保留知情权与一键叫停权",
+        "auto_execute": True,
+    },
+}
+# 决策分级来源
+DECISION_SOURCES = ("policy", "manual", "rule")
 # 定级来源
 GRADE_SOURCES = ("rule", "manual", "ai")
 # 分级对象类型
@@ -137,7 +163,10 @@ class AiAnalysis(Base):
     """AI 分析任务：一次分析一条记录，记录双模式模型与耗时。"""
 
     __tablename__ = "oc_ai_analysis"
-    __table_args__ = (Index("ix_ai_analysis_tenant_time", "tenant_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_ai_analysis_tenant_time", "tenant_id", "created_at"),
+        Index("ix_ai_analysis_scope", "scope"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     tenant_id: Mapped[int] = mapped_column(Integer, index=True, comment="租户 ID")
@@ -161,6 +190,14 @@ class AiAnalysis(Base):
     prompt_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0", comment="输入 token")
     completion_tokens: Mapped[int] = mapped_column(Integer, default=0, server_default="0", comment="输出 token")
     error: Mapped[Optional[str]] = mapped_column(Text, default=None, comment="失败原因")
+    sim_mode: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", comment="是否演练/模拟模式（结论不作为真实决策依据）"
+    )
+    data_sources: Mapped[Optional[list]] = mapped_column(JSON, default=None, comment="结论引用的数据来源清单")
+    evidence_metrics: Mapped[Optional[list]] = mapped_column(JSON, default=None, comment="结论依据的指标清单")
+    credibility: Mapped[Optional[float]] = mapped_column(
+        Numeric(5, 4), default=None, comment="本次分析结论整体置信度 0-1"
+    )
     created_by: Mapped[str] = mapped_column(
         String(64), default="system", server_default="system", comment="发起方"
     )
@@ -172,7 +209,12 @@ class AiInsight(Base):
     """AI 洞察与建议：分析产出的最小建议单元。"""
 
     __tablename__ = "oc_ai_insight"
-    __table_args__ = (Index("ix_ai_insight_tenant_status", "tenant_id", "status"),)
+    __table_args__ = (
+        Index("ix_ai_insight_tenant_status", "tenant_id", "status"),
+        Index("ix_ai_insight_tenant_decision", "tenant_id", "decision_level"),
+        Index("ix_ai_insight_tenant_status_severity", "tenant_id", "status", "severity"),
+        Index("ix_ai_insight_status_decision", "status", "decision_level"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     tenant_id: Mapped[int] = mapped_column(Integer, index=True, comment="租户 ID")
@@ -196,6 +238,24 @@ class AiInsight(Base):
         String(4), default="L2", server_default="L2", comment="所属数据级别"
     )
     confidence: Mapped[Optional[float]] = mapped_column(Numeric(5, 4), default=None, comment="置信度 0-1")
+    data_sources: Mapped[Optional[list]] = mapped_column(
+        JSON, default=None, comment="数据来源清单（指标表/导入任务/数据源）"
+    )
+    evidence_metrics: Mapped[Optional[list]] = mapped_column(
+        JSON, default=None, comment="依据指标清单（编码 + 取值 + 环比）"
+    )
+    generated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), default=None, comment="结论生成时间"
+    )
+    sim_mode: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", comment="是否演练/模拟模式"
+    )
+    decision_level: Mapped[str] = mapped_column(
+        String(24),
+        default="user_authorized",
+        server_default="user_authorized",
+        comment="决策分级 user_only/user_authorized/agent_autonomous",
+    )
     status: Mapped[str] = mapped_column(
         String(16), default="new", server_default="new", comment="new/routed/resolved/dismissed"
     )
@@ -241,7 +301,14 @@ class AiActionItem(Base):
     """处置单：权限内 AI 自动执行，超出权限转人工待办。"""
 
     __tablename__ = "oc_ai_action_item"
-    __table_args__ = (Index("ix_ai_action_tenant_status", "tenant_id", "status"),)
+    __table_args__ = (
+        Index("ix_ai_action_tenant_status", "tenant_id", "status"),
+        Index("ix_ai_action_tenant_decision", "tenant_id", "decision_level"),
+        Index("ix_ai_action_tenant_status_handler", "tenant_id", "status", "handler"),
+        Index("ix_ai_action_tenant_analysis", "tenant_id", "analysis_id"),
+        Index("ix_ai_action_status_decision", "status", "decision_level"),
+        Index("ix_ai_action_revoked", "revoked"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     tenant_id: Mapped[int] = mapped_column(Integer, index=True, comment="租户 ID")
@@ -258,6 +325,21 @@ class AiActionItem(Base):
     action_type: Mapped[str] = mapped_column(String(16), default="record", server_default="record", comment="动作类型")
     data_level: Mapped[str] = mapped_column(String(4), default="L2", server_default="L2", comment="数据级别")
     severity: Mapped[str] = mapped_column(String(16), default="info", server_default="info", comment="严重度")
+    decision_level: Mapped[str] = mapped_column(
+        String(24),
+        default="user_authorized",
+        server_default="user_authorized",
+        comment="决策分级 user_only 仅用户本人 / user_authorized 需用户授权 / agent_autonomous 智能体自主",
+    )
+    decision_source: Mapped[str] = mapped_column(
+        String(16), default="policy", server_default="policy", comment="分级来源 policy/manual/rule"
+    )
+    sim_mode: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        server_default="false",
+        comment="是否来自演练/模拟模式的分析结论：为真时不得作为真实经营决策依据",
+    )
     handler: Mapped[str] = mapped_column(
         String(16), default="human", server_default="human", comment="处置方：ai 自动 / human 人工"
     )
@@ -265,7 +347,7 @@ class AiActionItem(Base):
         String(16),
         default="pending",
         server_default="pending",
-        comment="pending 待办 / auto_executed AI 已自动执行 / approved 已批准 / rejected 已驳回 / executed 已执行 / failed",
+        comment="pending 待办 / auto_executed AI 已自动执行 / approved 已批准 / rejected 已驳回 / executed 已执行 / failed / revoked 已撤销叫停",
     )
     review_required: Mapped[bool] = mapped_column(
         Boolean, default=True, server_default="true", comment="是否需人工复核"
@@ -276,6 +358,17 @@ class AiActionItem(Base):
     decision_note: Mapped[Optional[str]] = mapped_column(Text, default=None, comment="审批意见")
     execution_result: Mapped[Optional[str]] = mapped_column(Text, default=None, comment="执行结果说明")
     executed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=None)
+    revoked: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", comment="是否已被用户撤销/叫停"
+    )
+    revoked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), default=None, comment="撤销/叫停时间"
+    )
+    revoked_by: Mapped[Optional[str]] = mapped_column(String(64), default=None, comment="撤销/叫停操作人")
+    revoke_reason: Mapped[Optional[str]] = mapped_column(Text, default=None, comment="撤销/叫停原因")
+    prev_status: Mapped[Optional[str]] = mapped_column(
+        String(16), default=None, comment="撤销前的状态，用于回溯与还原"
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

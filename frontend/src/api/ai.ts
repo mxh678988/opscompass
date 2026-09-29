@@ -3,6 +3,14 @@ import type { ApiResponse } from './metrics'
 
 /** ---------------------------------------------------------------- 类型 */
 
+/** 通用分页结果（与后端 PageResult 对齐） */
+export interface PageResult<T> {
+  total: number
+  page: number
+  page_size: number
+  items: T[]
+}
+
 export interface AiStatistics {
   analysis_total: number
   analysis_failed: number
@@ -103,6 +111,11 @@ export interface Insight {
   action_type: string
   data_level: string
   confidence?: number | null
+  data_sources?: unknown[] | null
+  evidence_metrics?: unknown[] | null
+  generated_at?: string | null
+  sim_mode?: boolean
+  decision_level?: string
   status: string
   created_at?: string | null
 }
@@ -146,12 +159,21 @@ export interface ActionItem {
   status: string
   review_required: boolean
   assignee?: string | null
+  decision_level: string
+  decision_source: string
+  sim_mode: boolean
   decision_by?: string | null
   decision_at?: string | null
   decision_note?: string | null
   execution_result?: string | null
   executed_at?: string | null
+  revoked?: boolean
+  revoked_at?: string | null
+  revoked_by?: string | null
+  revoke_reason?: string | null
+  prev_status?: string | null
   created_at?: string | null
+  updated_at?: string | null
 }
 
 export interface PolicyItem {
@@ -246,8 +268,8 @@ export function fetchAnalysisInsights(analysisId: number) {
   return request.get<any, ApiResponse<Insight[]>>(`/ai/analyses/${analysisId}/insights`)
 }
 
-export function fetchInsights(params?: { status?: string; severity?: string; limit?: number }) {
-  return request.get<any, ApiResponse<Insight[]>>('/ai/insights', { params })
+export function fetchInsights(params?: { status?: string; severity?: string; limit?: number; offset?: number }) {
+  return request.get<any, ApiResponse<PageResult<Insight>>>('/ai/insights', { params })
 }
 
 export function routeInsights() {
@@ -282,8 +304,8 @@ export function decidePolicy(params: {
 
 /** ---------------------------------------------------------------- 处置与审计 */
 
-export function fetchActions(params?: { status?: string; handler?: string; data_level?: string; limit?: number }) {
-  return request.get<any, ApiResponse<ActionItem[]>>('/ai/actions', { params })
+export function fetchActions(params?: { status?: string; handler?: string; data_level?: string; limit?: number; offset?: number }) {
+  return request.get<any, ApiResponse<PageResult<ActionItem>>>('/ai/actions', { params })
 }
 
 export function approveAction(actionId: number, payload: { operator: string; note?: string }) {
@@ -300,4 +322,63 @@ export function executeAction(actionId: number, payload: { operator: string; not
 
 export function fetchAudit(limit = 100) {
   return request.get<any, ApiResponse<AuditItem[]>>('/ai/audit', { params: { limit } })
+}
+
+/** ---------------------------------------------------------------- 决策分级授权与叫停 */
+
+export interface DecisionLevel {
+  code: string
+  name: string
+  desc: string
+  order: number
+  auto_execute: boolean
+  need_approval: boolean
+}
+
+export interface DecisionBoard {
+  levels: DecisionLevel[]
+  counts: Record<string, number>
+  revoked_total: number
+  pending_total: number
+  auto_executed_total: number
+  sim_mode_total: number
+}
+
+export interface TraceItem {
+  seq: number
+  at?: string | null
+  actor_type: string
+  actor: string
+  action: string
+  from_state?: string | null
+  to_state?: string | null
+  detail?: string | null
+}
+
+export interface DecisionTrace {
+  action: ActionItem
+  trace: TraceItem[]
+}
+
+export function fetchDecisionBoard() {
+  return request.get<any, ApiResponse<DecisionBoard>>('/ai/decisions/board')
+}
+
+export function setActionDecisionLevel(
+  actionId: number,
+  payload: { operator: string; decision_level: string; note?: string },
+) {
+  return request.put<any, ApiResponse<ActionItem>>(`/ai/actions/${actionId}/decision-level`, payload)
+}
+
+export function revokeAction(actionId: number, payload: { operator: string; reason?: string }) {
+  return request.post<any, ApiResponse<ActionItem>>(`/ai/actions/${actionId}/revoke`, payload)
+}
+
+export function restoreAction(actionId: number, payload: { operator: string; note?: string }) {
+  return request.post<any, ApiResponse<ActionItem>>(`/ai/actions/${actionId}/restore`, payload)
+}
+
+export function fetchActionTrace(actionId: number) {
+  return request.get<any, ApiResponse<DecisionTrace>>(`/ai/actions/${actionId}/trace`)
 }
