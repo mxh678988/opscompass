@@ -59,7 +59,7 @@ AIGC:
 | 模块 | 端点 | 实测结果 |
 |---|---|---|
 | 系统 | `GET /api/v1/system/health` | 200，`status=ok` |
-| 系统 | `GET /api/v1/system/info` | 200（版本字段见第 9 节偏差项） |
+| 系统 | `GET /api/v1/system/info` | 200，`version=0.10.0`（与 FastAPI 文档版本一致，见第 9 节说明） |
 | 鉴权（负向） | `GET /api/v1/rbac/roles`（未带 Token） | 401，鉴权生效 |
 | AI 治理 | `GET /api/v1/ai/decisions/board` | 200，返回三级决策定义（仅用户本人 / 需用户授权 / 智能体自主） |
 | AI 治理 | `GET /api/v1/ai/statistics` | 200，聚合计数正常 |
@@ -107,7 +107,7 @@ AIGC:
 
 | 类别 | 说明 |
 |---|---|
-| 版本号偏差（待修正） | `GET /api/v1/system/info` 返回 `version=0.1.0`，来源为 `app/api/v1/endpoints/health.py:30` 硬编码，未随 v0.10.0 同步；其余 5 处版本号（changelog / main.py / package.json / openapi.json / product-manual.md）已对齐 |
+| 版本号偏差（已修正） | 初测发现 `GET /api/v1/system/info` 返回 `version=0.1.0`，来源为 `app/api/v1/endpoints/health.py` 硬编码；已于提交 `5e13eca` 修正为统一读取 `settings.APP_VERSION`（定义于 `app/core/config.py`），重启后端容器后 HTTP 实测返回 `0.10.0`。现版本号单点可控，其余 5 处（changelog / main.py / package.json / openapi.json / product-manual.md）已对齐 |
 | 测试数据属性 | 商业化 orders / licenses / plans 与部分治理数据为开发期自动化测试造数；`oc_com_usage` 用量表暂为空 |
 | 依赖版本验证 | changelog 声明的「商业化后端验证 25/25」为 P10 开发期自测结果，本报告未复跑该脚本，仅做接口级复验 |
 | 自动化回归 | 暂无 CI/CD 流水线；`backend/tests` 下仅 `test_health.py`，回归依赖手动构建与接口复验 |
