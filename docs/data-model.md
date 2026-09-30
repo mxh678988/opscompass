@@ -133,7 +133,7 @@ Tenant (oc_tenant)
 - **初始化**：`python -m app.init_db` 建表，`python -m app.seed_demo` 写入演示数据（默认租户 + 演示数据源 + 4 个核心指标 + 近 31 天指标值）。
 - **迁移**：开发阶段用 `create_all`，进入 Phase 2 前引入 Alembic 管理增量迁移。
 
-## 5. 表清单速查（v0.10.0，共 64 张）
+## 5. 表清单速查（v0.10.1，共 64 张）
 
 > 全量字段级定义见 `docs/data-dictionary.md`；表数量以 `python -m app.init_db` 输出为准。
 

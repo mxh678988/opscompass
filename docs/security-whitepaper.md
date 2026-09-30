@@ -11,7 +11,7 @@ AIGC:
 
 # 运营智脑 OpsCompass 安全白皮书
 
-> 适用版本：v0.10.0　编制：BY LAOMENG 网络工作室　日期：2026-09-26
+> 适用版本：v0.10.1　编制：BY LAOMENG 网络工作室　日期：2026-09-26
 
 ## 1. 安全目标与设计原则
 
@@ -100,5 +100,5 @@ AIGC:
 
 - TLS 证书、主机加固、云安全组、宿主机账号安全由**部署方**负责。
 - 本产品负责应用层认证、授权、审计、日志与配置安全。
-- 本白皮书描述的能力以 v0.10.0 实际实现为准，实现细节可参见 `backend/app/services/auth_service.py`、`backend/app/api/deps.py`、`backend/app/core` 相关模块。
+- 本白皮书描述的能力以 v0.10.1 实际实现为准，实现细节可参见 `backend/app/services/auth_service.py`、`backend/app/api/deps.py`、`backend/app/core` 相关模块。
 *（内容由AI生成，仅供参考）*
