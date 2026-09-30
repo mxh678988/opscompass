@@ -1,0 +1,124 @@
+# ==============================================================
+# 运营智脑 OpsCompass · 生产环境编排（镜像直用型 · 免构建）
+# Slogan：让数据自动做出最优决策
+# 版权：BY LAOMENG 网络工作室
+# --------------------------------------------------------------
+# 与 docker-compose.yml（本地开发：源码 bind mount + 现场构建）并列，互不叠加。
+# 与开发编排的差异：
+#   1. 只使用已发布的版本化镜像，服务器上不构建（无需 Node / 构建工具链）
+#   2. 不挂载 ./backend 与 ./frontend/dist（镜像内已含后端源码与前端产物）
+#   3. postgres / redis / backend 不向宿主机暴露端口，仅容器网络内可达
+#   4. restart: always + 容器日志轮转，适配长期无人值守运行
+#
+# 用法（均在项目根目录执行）：
+#   构建机：导出镜像离线包（含 SHA256）
+#     powershell -File deploy/scripts/pack-images.ps1
+#   服务器：校验并载入镜像
+#     bash deploy/scripts/load-images.sh deploy/dist/opscompass-<版本>-images.tar
+#   服务器：启动 / 校验 / 停止
+#     docker compose -f docker-compose.prod.yml up -d
+#     docker compose -f docker-compose.prod.yml config
+#     docker compose -f docker-compose.prod.yml down
+#
+# 叠加 HTTPS（正式证书置于 deploy/nginx/certs/）：
+#   docker compose -f docker-compose.prod.yml -f deploy/docker/docker-compose.prod.https.yml up -d
+#
+# 镜像版本：OPS_VERSION（默认与应用版本一致；发布新版本时同步更新此处与 CI 校验项）
+# 注意：本编排与开发编排共用容器名与网络名，同一台机器同一时刻只应运行其中一套。
+# ==============================================================
+name: opscompass
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: opscompass-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-opscompass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 未设置：请先在 .env 中配置强口令（deploy/deploy.sh 会自动生成）}
+      POSTGRES_DB: ${POSTGRES_DB:-opscompass}
+      TZ: ${TIMEZONE:-Asia/Shanghai}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-opscompass} -d ${POSTGRES_DB:-opscompass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - opscompass-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: opscompass-redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - opscompass-net
+
+  backend:
+    image: opscompass-backend:${OPS_VERSION:-0.10.1}
+    container_name: opscompass-backend
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-opscompass}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-opscompass}
+    volumes:
+      # 不挂载 ./backend：镜像内已含后端源码，避免生产环境被宿主目录覆盖
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    networks:
+      - opscompass-net
+
+  frontend:
+    image: opscompass-frontend:${OPS_VERSION:-0.10.1}
+    container_name: opscompass-frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    volumes:
+      # 不挂载 ./frontend/dist：镜像内已含构建产物与 nginx 站点配置
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - opscompass-net
+
+networks:
+  opscompass-net:
+    driver: bridge

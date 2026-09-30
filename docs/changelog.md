@@ -13,6 +13,20 @@ AIGC:
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+
+- **生产部署编排（形态 C）**：新增根目录 `docker-compose.prod.yml`——镜像直用型免构建编排，服务器不再需要 Node / 构建工具链。与开发编排的三点差异：① 只引用已发布版本镜像（`opscompass-backend/frontend:${OPS_VERSION:-0.10.1}`），不挂载 `./backend` 与 `./frontend/dist`，避免生产被宿主目录覆盖；② 仅前端 80 端口对外，`postgres` / `redis` / `backend` 不向宿主机暴露端口，仅容器网络内可达；③ `restart: always` + 容器日志轮转（10~20MB × 5），适配无人值守长期运行。配套新增 HTTPS 叠加文件 `deploy/docker/docker-compose.prod.https.yml`（80 → 443 跳转 + `/api/` 反代 `backend:8000`）。
+
+- **离线镜像打包 / 载入链路（形态 D）**：新增 `deploy/scripts/pack-images.ps1`（构建机执行，自动读取 `config.py` 的 `APP_VERSION` 或 `-Version` 指定版本，校验镜像就绪后 `docker save` 导出，可选一并打包 postgres / redis 基础镜像，并生成 `.sha256` 校验文件）与 `deploy/scripts/load-images.sh`（服务器执行，载入前校验 SHA256，校验失败以退出码 3 中止；支持 `SKIP_CHECK=1` 显式跳过）。服务于无外网交付场景。
+
+### 变更
+
+- **本地 CI 版本一致性由四源扩为五源**：`scripts/ci.ps1` 第 1 项新增 `docker-compose.prod.yml` 中 `OPS_VERSION` 默认版本号校验（该值出现多次且不一致时报错），确保发布新版本时生产编排不会漏改。
+
+- **部署文档同步**：`docs/deployment-manual.md` 形态总览由三类扩为四类（新增「C 生产镜像直用」，原应用市场离线并列为「D」），新增形态 C 完整部署步骤（联网 / 离线两条路径、HTTPS 叠加、验收标准）与生产升级流程；`deploy/README.md` 补充生产编排与离线包的使用说明。
+
 ## [0.10.1] - 2026-09-30
 
 ### 新增

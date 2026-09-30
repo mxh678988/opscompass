@@ -5,6 +5,7 @@
 .DESCRIPTION
     校验项：
       1 版本一致性   config.APP_VERSION / frontend package.json / docs/openapi.json / docs/changelog.md
+                     / docker-compose.prod.yml（OPS_VERSION 默认镜像版本）
       2 后端编译     docker exec ... python -m compileall -q /app/app
       3 后端单测     docker exec ... python -m pytest -q tests
       4 接口契约     运行实例 /openapi.json 与 docs/openapi.json 路径集合逐条比对
@@ -78,11 +79,22 @@ Invoke-Step '版本一致性' {
     $clMatch = [regex]::Match($clRaw, '##\s*\[(\d+\.\d+\.\d+)\]')
     $clVer = if ($clMatch.Success) { $clMatch.Groups[1].Value } else { 'n/a' }
 
-    $uniq = @($cfgVer, $pkgVer, $oaVer, $clVer) | Sort-Object -Unique
-    if ($uniq.Count -ne 1) {
-        throw "版本不一致 -> config=$cfgVer / package=$pkgVer / openapi=$oaVer / changelog=$clVer"
+    # 生产编排中的镜像版本默认值（OPS_VERSION）须与配置源同源
+    $prodVer = 'n/a'
+    if (Test-Path 'docker-compose.prod.yml') {
+        $prodRaw = Get-Content 'docker-compose.prod.yml' -Raw
+        $prodHits = @([regex]::Matches($prodRaw, 'OPS_VERSION:-([0-9]+\.[0-9]+\.[0-9]+)') |
+                      ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+        if ($prodHits.Count -eq 0) { throw 'docker-compose.prod.yml 未找到 OPS_VERSION 默认版本号' }
+        if ($prodHits.Count -gt 1) { throw "docker-compose.prod.yml 存在多个 OPS_VERSION 默认值：$($prodHits -join ', ')" }
+        $prodVer = $prodHits[0]
     }
-    "四源一致：$cfgVer（config / package / openapi / changelog）"
+
+    $uniq = @($cfgVer, $pkgVer, $oaVer, $clVer, $prodVer) | Sort-Object -Unique
+    if ($uniq.Count -ne 1) {
+        throw "版本不一致 -> config=$cfgVer / package=$pkgVer / openapi=$oaVer / changelog=$clVer / prod-compose=$prodVer"
+    }
+    "五源一致：$cfgVer（config / package / openapi / changelog / prod-compose）"
 }
 
 # ---------------------------------------------------------------- 9 依赖可复现性

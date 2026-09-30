@@ -19,9 +19,10 @@ AIGC:
 |---|---|---|
 | A 本地私有化 | 单商家、数据不出内网 | 默认端口直连，可加自签 HTTPS |
 | B 云端 SaaS | 多商家订阅制 | 域名 + 正式证书、多租户、安全组收敛、异地备份 |
-| C 应用市场离线 | 渠道分发 / 无外网 | 离线镜像或安装包、签名校验、授权码绑定机器指纹 |
+| C 生产镜像直用 | 正式生产 / 交付客户 | 免构建（只用已发布版本镜像）、内部端口不外露、离线镜像包 + SHA256 校验 |
+| D 应用市场离线 | 渠道分发 / 无外网 | 离线镜像或安装包、签名校验、授权码绑定机器指纹 |
 
-三种形态共用同一 `docker-compose.yml` 底座，仅环境变量与前置网络配置不同。
+形态 A 使用开发编排 `docker-compose.yml`（源码 bind mount + 现场构建）；形态 B/C 均基于生产编排 `docker-compose.prod.yml`（镜像直用、免构建），仅环境变量、域名证书与分发方式不同。两套编排并列存在、互不叠加，同一台机器同一时刻只运行其中一套。
 
 ## 2. 组件与端口
 
@@ -29,10 +30,15 @@ AIGC:
 |---|---|---|---|
 | opscompass-postgres | postgres:16-alpine | 5432 | `./data/postgres` |
 | opscompass-redis | redis:7-alpine（AOF 持久化） | 6379 | `./data/redis` |
-| opscompass-backend | 本地构建 `deploy/docker/Dockerfile.backend` | 8000 | `./backend`、`./data`、`./logs` |
-| opscompass-frontend | 本地构建 `deploy/docker/Dockerfile.frontend`（Nginx） | 80 | `./frontend/dist`（只读挂载） |
+| opscompass-backend | 本地构建 `deploy/docker/Dockerfile.backend` / 生产用 `opscompass-backend:<版本>` | 8000 | `./backend`、`./data`、`./logs` |
+| opscompass-frontend | 本地构建 `deploy/docker/Dockerfile.frontend`（Nginx）/ 生产用 `opscompass-frontend:<版本>` | 80 | `./frontend/dist`（只读挂载，仅开发编排） |
 
 网络：桥接网络 `opscompass-net`；容器间以服务名互访（backend 连 `postgres:5432`、`redis:6379`）。
+
+| 编排文件 | 场景 | 端口暴露 | 源码挂载 |
+|---|---|---|---|
+| `docker-compose.yml` | 开发 / 本地私有化（形态 A） | 80 / 443 / 8000 / 5432 / 6379 | 挂载 `./backend`、`./frontend/dist` |
+| `docker-compose.prod.yml` | 生产 / 交付（形态 B、C） | 仅 80（HTTPS 叠加后 80 + 443） | 不挂载源码，镜像自包含 |
 
 ## 3. 形态 A：本地私有化部署
 
@@ -64,15 +70,72 @@ cd frontend; npm run build
 
 上线前务必执行：① 关闭 `DEBUG`；② 管理员默认口令替换；③ 开启 IP 白名单（`SECURITY_IP_ALLOWLIST_ENABLED=true`）；④ 反向代理下开启 `SECURITY_TRUST_FORWARDED_HEADERS=true` 以取真实客户端 IP。
 
-## 5. 形态 C：应用市场 / 离线交付
+## 5. 形态 C：生产环境 · 镜像直用部署（推荐）
 
-1. **构建产物**：宿主机或构建机执行 `docker compose build`，导出镜像 `docker save` 为离线包；前端产物取 `frontend/dist`。
-2. **免构建启动**：compose 已将 `frontend/dist` 以只读方式挂载进 Nginx，无外网环境无需拉取基础镜像即可运行。
+生产环境**不在服务器上构建**，只运行已发布的版本化镜像（`opscompass-backend:<版本>` / `opscompass-frontend:<版本>`）。编排文件为根目录 `docker-compose.prod.yml`，与开发编排并列且互不叠加。
+
+**与开发编排的关键差异**
+
+| 维度 | docker-compose.yml（开发） | docker-compose.prod.yml（生产） |
+|---|---|---|
+| 镜像来源 | `build:` 现场构建 | `image:` 拉取 / 载入版本镜像 |
+| 源码挂载 | 挂载 `./backend`、`./frontend/dist` | 不挂载（镜像自包含） |
+| 端口暴露 | 80 / 443 / 8000 / 5432 / 6379 | 仅 80（后端与数据层仅容器网内可达） |
+| 重启策略 | 无 | `restart: always` |
+| 日志 | 默认 | json-file 轮转（10~20MB × 5） |
+| 版本标识 | — | `OPS_VERSION` 变量，默认 0.10.1 |
+
+**部署步骤（联网服务器）**
+
+```bash
+cd /opt/opscompass
+cp .env.example .env            # 编辑 SECRET_KEY / POSTGRES_PASSWORD / SECURITY_ADMIN_PASSWORD
+                                # 并将 DEBUG=false、ENV=production
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml ps
+curl http://127.0.0.1/health
+```
+
+**部署步骤（无外网服务器：离线镜像包）**
+
+```powershell
+# ① 构建机：导出镜像 + 生成 SHA256（默认输出 deploy/dist/，已 gitignore）
+powershell -File deploy/scripts/pack-images.ps1
+#   → deploy/dist/opscompass-0.10.1-images.tar
+#   → deploy/dist/opscompass-0.10.1-images.tar.sha256
+```
+
+```bash
+# ② 服务器：校验并载入（校验失败即中止，退出码 3）
+bash deploy/scripts/load-images.sh deploy/dist/opscompass-0.10.1-images.tar
+
+# ③ 校验并启动
+docker compose -f docker-compose.prod.yml config
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml ps
+```
+
+**启用 HTTPS（可选）**
+
+```bash
+# 证书放入 deploy/nginx/certs/server.crt|server.key
+docker compose -f docker-compose.prod.yml \
+               -f deploy/docker/docker-compose.prod.https.yml up -d
+```
+
+叠加后 80 端口 301 跳转 443，`/api/` 反向代理至 `backend:8000`。
+
+**验收**：`http://<域名或IP>/` 可访问登录页，`/health` 返回 `ok`；`docker compose -f docker-compose.prod.yml ps` 中 4 容器 running，postgres/redis healthy。
+
+## 6. 形态 D：应用市场 / 离线交付
+
+1. **构建产物**：构建机执行 `pack-images.ps1` 导出离线镜像包（含 SHA256）；前端产物同时可从 `frontend/dist` 取用。
+2. **免构建启动**：基于形态 C 的 `docker-compose.prod.yml`，镜像内已含前端构建产物与 Nginx 站点配置，无外网环境无需拉取基础镜像即可运行。
 3. **完整性校验**：发布包附数字签名，安装前校验签名，避免被篡改。
 4. **授权绑定**：授权码与机器指纹绑定，防止跨机复制运行。
 5. **安装包**：`deploy` 目录已含安装脚本与说明，按渠道要求打包上架。
 
-## 6. 环境变量分类
+## 7. 环境变量分类
 
 | 分类 | 关键变量 | 说明 |
 |---|---|---|
@@ -86,9 +149,9 @@ cd frontend; npm run build
 | 安全日志 | `SECURITY_LOG_ENABLED`、`SECURITY_LOG_MIN_LEVEL`、`SECURITY_LOG_FILE`、`SECURITY_LOG_MAX_BYTES`、`SECURITY_LOG_BACKUP_COUNT`、`SECURITY_LOG_ALERT_LEVEL`、`SECURITY_LOG_MIRROR_TO_MAIN` | 独立文件通道 + 高危镜像告警 |
 | 目录 | `DATA_DIR`、`EXPORT_DIR`、`LOG_DIR` | 默认 `./data`、`./data/exports`、`./logs` |
 
-## 7. 升级与回滚
+## 8. 升级与回滚
 
-**升级**
+**升级（开发 / 形态 A）**
 
 ```powershell
 powershell -File scripts/backup.ps1        # 1 备份数据库
@@ -98,9 +161,25 @@ python scripts/init_db.py                   # 4 执行建表/迁移（幂等）
 docker compose ps && curl http://localhost:8000/api/v1/health
 ```
 
-**回滚**：保留上一版本镜像与发布包，`docker compose down` 后用旧镜像启动，并按备份恢复数据库；版本原则为「正常不回退，仅故障触发回退」。
+**升级（生产 / 形态 C：镜像直用，免构建）**
 
-## 8. 部署检查清单
+```powershell
+# 构建机
+docker build -f deploy/docker/Dockerfile.backend  -t opscompass-backend:0.10.2  .
+docker build -f deploy/docker/Dockerfile.frontend -t opscompass-frontend:0.10.2 .
+powershell -File deploy/scripts/pack-images.ps1 -Version 0.10.2   # 导出 tar + SHA256
+
+# 服务器
+bash deploy/scripts/load-images.sh deploy/dist/opscompass-0.10.2-images.tar
+# 将 .env 与编排中的 OPS_VERSION 改为 0.10.2
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml ps
+curl http://127.0.0.1/health
+```
+
+**回滚**：保留上一版本镜像与发布包，`docker compose down` 后用旧镜像启动（生产环境把 `OPS_VERSION` 改回旧版本即可，无需重新构建），并按备份恢复数据库；版本原则为「正常不回退，仅故障触发回退」。
+
+## 9. 部署检查清单
 
 | # | 检查项 | 通过标准 |
 |---|---|---|
