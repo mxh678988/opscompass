@@ -19,6 +19,12 @@ AIGC:
 
 - **本地 CI 校验脚本**：新增 `scripts/ci.ps1`，一条命令完成升版 / 提交前校验——① 版本一致性（`config.APP_VERSION` / 前端 `package.json` / `docs/openapi.json` / `changelog` 四源比对）；② 后端 `compileall` 与 `pytest`（容器内执行，与运行环境同构）；③ 接口契约基线（运行实例 `/openapi.json` 与 `docs/openapi.json` 的路径集合逐条比对，不一致时输出差异文件）；④ 容器健康与运行版本生效（防止改版未重启）；⑤ 前端 `vue-tsc --noEmit` + `vite build`；⑥ 前端 `eslint`（未安装则跳过）。结果打印汇总并落盘 `temp/ci-logs/<时间戳>/`（含 `pytest.log`、`frontend-build.log`、`summary.json`），存在失败项时以退出码 1 结束，可直接挂接提交钩子或后续远程流水线。支持 `-SkipBackend` / `-SkipFrontend` / `-SkipRuntime` 按需裁剪。
 
+- **前端 lint 基线落地**：新增 `frontend/.eslintrc.cjs`（`eslint:recommended` + `plugin:vue/vue3-essential` + `plugin:@typescript-eslint/recommended`；格式类规则交由 prettier 统一，避免双重标准），`devDependencies` 增补 `eslint@8.57.1` / `eslint-plugin-vue@9.32.0` / `@typescript-eslint/parser@8.26.0` / `@typescript-eslint/eslint-plugin@8.26.0`。`scripts/ci.ps1` 第 8 项「前端 lint」由长期 SKIP 转为 PASS，本地 CI 首次全绿（通过 9 / 失败 0 / 跳过 0）。基线条目口径为 0 error / 286 warning（warning 全部为 `@typescript-eslint/no-explicit-any`，作为类型债留待后续版本逐步收紧）。
+
+### 验证
+
+- **后端镜像重建实证（可选驱动免手工重装）**：`docker compose build backend` 重建后的镜像自带全部四类采集驱动（PostgreSQL / MySQL / ClickHouse / Hive），对 16 个关键模块做导入检查为 16/16 通过，重建后**无需再手工 pip 安装驱动**；重建全程非中断，运行中的 `opscompass-backend` 容器保持 healthy。附注：`pure-sasl` 的导入名是 `puresasl`（非 `pure_sasl`）。
+
 ### 修复
 
 - **依赖清单不可复现修复**：`backend/requirements.txt` 中原先写入 `pymysql==2.2.8`，该版本在 PyPI 上并不存在（PyMySQL 最新为 `1.2.3`）；而 `deploy/docker/Dockerfile.backend` 会执行 `pip install -r requirements.txt`，因此在干净环境下镜像构建必然失败，交付基线不具备可复现性。现改为 `pymysql==1.2.3`（与实际运行环境已验证版本一致）。为防回归，新增 `scripts/verify_requirements.py`——对清单内每个 pin 做 PyPI 存在性静态校验（只读联网，不安装、不改环境，离线环境下相关条目降级为 UNKNOWN 不计失败），并接入 `scripts/ci.ps1` 作为第 9 项「依赖清单可复现性」校验，在构建前拦截无效 pin；同时清理历史上误入版本库的两个临时验证脚本（`backend/_p0_verify_tmp.py`、`backend/_tmp_p9_check.py`）。
@@ -35,6 +41,7 @@ AIGC:
 
 ### 变更
 
+- **数据库直连采集（sql 模式）驱动补齐至四类库**：`app/services/collect_service.py` 的 SQL 直连支持类型由 PostgreSQL / MySQL 扩展至 ClickHouse 与 Hive 共四类。ClickHouse 走 `clickhousedb+connect`（HTTP 8123），Hive 走 `hive://`（HiveServer2 Thrift 10000）；`_connect_args` 改为按数据源分派——ClickHouse 同时下发 `connect_timeout` 与 `send_receive_timeout`，Hive 有口令时以 `auth=LDAP` 认证、无口令时用默认 NOSASL 且空口令不再拼接 `user:@`（规避 PyHive「口令仅允许 LDAP/CUSTOM 模式」与「不接受 connect_timeout」两处硬校验，详见同期踩坑记录）。两类驱动均已 pin 入 `backend/requirements.txt`：`clickhouse-connect` / `clickhouse-sqlalchemy`，以及 `pyhive` / `thrift` / `thrift-sasl` / `pure-sasl` / `future`（以纯 Python 的 `pure-sasl` 替代需 C 编译的 `sasl`）。验证口径：ClickHouse 与 PostgreSQL、MySQL 均实测真实拉取落库（`simulated=false`）；Hive 因本机无 HiveServer2 实例，仅验证驱动可用性与失败降级——连接不可达时返回可预期业务错误并留失败运行记录，不抛 500，真实源端到端验证待具备实例后再补。同期清理版本库外残留的临时校验日志 `backend/_tmp_p9_check.log`（P9 阶段产物，已被 `.gitignore` 忽略）。
 - `api/commercial.ts` 中 `createOrder` 的 `plan_id` 调整为可选（缺省时由后端取首个上架套餐）。
 - **治理读接口性能优化**：`insights` / `actions` 列表改为数据库端分页（`limit` / `offset`，返回 `total` / `page` / `page_size`），`analyses/{id}` 详情改用数据库端 `analysis_id` 过滤，替代原「拉取近 200 条再内存过滤」；`decision_board` / `statistics` 改为数据库端聚合计数（`group_by` + `count`），不再全表载入内存。
 - **索引补齐**：新增迁移 `p5_ai_gov_perf_idx`，补建 `ix_ai_insight_tenant_status_severity`、`ix_ai_action_tenant_status_handler`、`ix_ai_action_tenant_analysis`，并修正 `p4` 迁移 `downgrade` 中的索引名错误（`ix_ai_analysis_data_level` → `ix_ai_analysis_scope`）；全库 AI 相关索引达 14 个。
