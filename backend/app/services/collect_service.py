@@ -67,7 +67,8 @@ SQL_SUPPORTED_TYPES: dict[str, tuple[str, Any]] = {
     # ClickHouse 走 HTTP 接口（默认 8123 端口），驱动 clickhouse-connect + clickhouse-sqlalchemy
     "clickhouse": ("clickhousedb+connect", "clickhouse_connect"),
     # Hive 走 HiveServer2 Thrift 协议（默认 10000 端口），驱动 PyHive + thrift + thrift_sasl
-    "hive": ("hive://", ("pyhive", "thrift_sasl")),
+    # 方言名统一不带协议头（`://` 由 _build_sql_url 统一补），写成 "hive://" 会拼出 `hive://://...` 畸形串
+    "hive": ("hive", ("pyhive", "thrift_sasl")),
 }
 # 表名白名单：仅允许 schema.table / table 形式，杜绝拼接注入
 SQL_TABLE_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_$]*(\.[A-Za-z_][A-Za-z0-9_$]*)?$")

@@ -27,6 +27,8 @@ AIGC:
 
 ### 修复
 
+- **Hive 方言名修正（连接串畸形）**：`collect_service.SQL_SUPPORTED_TYPES` 中 Hive 的方言名误写为 `hive://`，而 `_build_sql_url` 已统一补 `://`，实际拼出 `hive://://user@host:10000/db` 畸形串——SQLAlchemy 解析为「主机为空 + 空口令」，PyHive 随即抛 `ValueError: Password should be set if and only if in LDAP or CUSTOM mode`，连接在参数校验阶段即失败，与目标库是否可达无关。现修正为 `hive`（与 PostgreSQL / MySQL / ClickHouse 三类对齐），并新增 `backend/tests/test_collect_sql.py`——50 条纯函数级用例（不连库、不出网、不落库）固化四类驱动分派、连接串拼装（含 Hive 空口令不拼 `user:@`、口令 URL 编码）、连接参数分派、表名白名单、SSRF 防护与调度排期基线；容器内 `python -m pytest -q tests` 由 2 passed 升至 **52 passed**。修正后同一场景（127.0.0.1:10000 无实例）的失败归因为真实网络层 `TTransportException: Could not connect to [('127.0.0.1', 10000)]`，Hive「失败降级」口径自洽；真实源端到端落库仍需 HiveServer2 实例方可补验。
+
 - **依赖清单不可复现修复**：`backend/requirements.txt` 中原先写入 `pymysql==2.2.8`，该版本在 PyPI 上并不存在（PyMySQL 最新为 `1.2.3`）；而 `deploy/docker/Dockerfile.backend` 会执行 `pip install -r requirements.txt`，因此在干净环境下镜像构建必然失败，交付基线不具备可复现性。现改为 `pymysql==1.2.3`（与实际运行环境已验证版本一致）。为防回归，新增 `scripts/verify_requirements.py`——对清单内每个 pin 做 PyPI 存在性静态校验（只读联网，不安装、不改环境，离线环境下相关条目降级为 UNKNOWN 不计失败），并接入 `scripts/ci.ps1` 作为第 9 项「依赖清单可复现性」校验，在构建前拦截无效 pin；同时清理历史上误入版本库的两个临时验证脚本（`backend/_p0_verify_tmp.py`、`backend/_tmp_p9_check.py`）。
 
 - **版本号单点化**：`/api/v1/system/info` 原先返回硬编码的 `0.1.0`，现与 FastAPI 文档统一改为读取 `settings.APP_VERSION`（定义于 `app/core/config.py`，当前 `0.10.0`）；此后升版只需修改该字段一处，避免版本号漏同步。
