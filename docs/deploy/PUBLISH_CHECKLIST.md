@@ -13,10 +13,11 @@
 | **iOS App Store**（iPhone 手机版） | .ipa | 规划中 | — | 需 Apple 签名 | Apple 审核 |
 | **华为应用市场**（鸿蒙手机版） | .hap | 规划中 | — | 需华为签名 | 华为审核 |
 | **应用宝 / 安卓各市场**（安卓手机版） | .apk / .aab | 规划中 | — | 需自有签名 | 各市场审核 |
-| **Microsoft Store** | — | 待评估 | — | 需 Microsoft 签名 | Microsoft 审核 |
+| **Microsoft Store** | .msixbundle（PWA 打包） | 规划中（免注册费） | — | 微软托管签名 | Microsoft 审核 |
 
 > **手机版三端**（iPhone / 鸿蒙 / 安卓）已纳入规划，技术选型、排期与预算详见 `docs/MOBILE_PLAN.md`；
 > 启动条件：各市场 / 应用商店发布成功 → Mac 系统应用开发完成。
+> **Microsoft Store** 上架方案（免费政策、PWA→MSIX 路线、操作步骤与风险）详见 `docs/deploy/MSSTORE_GUIDE.md`。
 
 ## 二、Windows 安装包
 
@@ -180,12 +181,13 @@ cd ~/OpsCompass && ./start.sh
 
 | 项目 | 要求 |
 |---|---|
-| **签名证书** | Microsoft Code Signing Certificate |
-| **隐私政策** | 必须在应用商店页面展示隐私政策 URL |
+| **签名证书** | 无需自备，代码签名与二进制托管由微软承担 |
+| **隐私政策** | 必须在应用商店页面展示可公网访问的隐私政策 URL |
 | **内容审核** | 需要符合 Microsoft Store 内容标准 |
-| **开发者账号** | Microsoft Developer Center 账号 |
-| **开发成本** | 注册费 $19（个人）/ $99（企业） |
+| **开发者账号** | Microsoft Partner Center 账号（个人微软账户即可注册） |
+| **开发成本** | **免费**（个人开发者；2025-09-11 起取消原 $19 注册费；企业账号 $99） |
 | **审核周期** | 1-5 个工作日 |
+| **上架路线** | PWA → MSIX（推荐，与三端移动端前端同源）/ Win32 → MSIX，详见 `docs/deploy/MSSTORE_GUIDE.md` |
 
 ### 5.2 应用宝（HarmonyOS / Android）
 
