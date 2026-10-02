@@ -53,10 +53,10 @@ cd D:\OpsCompass\deploy\scripts
 
 | 项 | 期望结果 |
 |---|---|
-| `https://<项目名>.pages.dev/` | 正常打开登录页，地址栏出现安装图标 |
-| `https://<项目名>.pages.dev/privacy.html` | 隐私政策页正常渲染 |
-| `https://<项目名>.pages.dev/manifest.webmanifest` | 返回 JSON，`Content-Type` 正常 |
-| `https://<项目名>.pages.dev/sw.js` | 返回 JS，DevTools → Application 显示 SW activated |
+| `https://opscompass.pages.dev/` | 正常打开登录页，地址栏出现安装图标 |
+| `https://opscompass.pages.dev/privacy` | 隐私政策页正常渲染（`/privacy.html` 会 308 跳转至此，亦算通过） |
+| `https://opscompass.pages.dev/manifest.webmanifest` | 返回 JSON，`Content-Type` 正常 |
+| `https://opscompass.pages.dev/sw.js` | 返回 JS，DevTools → Application 显示 SW activated |
 
 ## 三、路线 B：Dashboard 连接私有仓库（自动构建）
 
@@ -78,8 +78,10 @@ cd D:\OpsCompass\deploy\scripts
 商店审核需填写**公网可访问**的隐私政策 URL：
 
 ```
-https://<项目名>.pages.dev/privacy.html
+https://opscompass.pages.dev/privacy
 ```
+
+> ⚠️ Pages 默认启用 clean URL：访问 `/privacy.html` 会返回 **308** 跳转到 `/privacy`。商店后台请填 canonical 地址（`/privacy`），虽 308 通常也能被审核接受，但直接填最终地址更稳。
 
 > 联系邮箱已填写为 `mxh6789@live.cn`（2026-10-02 更正），可直接用于商店审核提交。
 >

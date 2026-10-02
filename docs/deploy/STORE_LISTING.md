@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_632c6d8fbe6511f1884b525400cd780f
+    ReservedCode1: 8zWEvHD1liTp2RuZTFezLkyOERztqdylwekR5w3JmS/d9kQ1vQIkAydktKCzItmhgbomISyr52CADPP6UbNN9/SVfw0VLwiulDQgkC9rAADMZ67ENuurP/TfRXUceSR/HnaUGYCd19xd99o+8bl2Bvw2QF9YtjMy2mOjPhhinwMbZNQ/JKRsWCef/Z8=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_632c6d8fbe6511f1884b525400cd780f
+    ReservedCode2: 8zWEvHD1liTp2RuZTFezLkyOERztqdylwekR5w3JmS/d9kQ1vQIkAydktKCzItmhgbomISyr52CADPP6UbNN9/SVfw0VLwiulDQgkC9rAADMZ67ENuurP/TfRXUceSR/HnaUGYCd19xd99o+8bl2Bvw2QF9YtjMy2mOjPhhinwMbZNQ/JKRsWCef/Z8=
+---
+
 # 微软商店上架素材（Microsoft Store / Partner Center）
 
 > 配套文档：[MSSTORE_GUIDE.md](./MSSTORE_GUIDE.md)（打包与提交流程）、[PUBLISH_CHECKLIST.md](./PUBLISH_CHECKLIST.md)（发布清单）
@@ -16,8 +27,8 @@
 | 分类 | 商务 / 工作效率（Business / Productivity） |
 | 币种与定价 | 免费（Free） |
 | 支持语言 | 简体中文（主）、英语（英区必备） |
-| 官网 / 落地页 | Cloudflare Pages 部署地址（P1 完成后回填） |
-| 隐私政策 URL | `https://<域名>/privacy.html`（P1 完成后回填） |
+| 官网 / 落地页 | `https://opscompass.pages.dev/` |
+| 隐私政策 URL | `https://opscompass.pages.dev/privacy` |
 | 支持邮箱 | mxh6789@live.cn |
 | 开发者 | BY LAOMENG 网络工作室 |
 
@@ -87,7 +98,7 @@ Data sovereignty: designed for local or self-hosted deployment; business data st
 | 应用图标 | 300×300 PNG（商店主图），另需 44×44 / 50×50 / 150×150 | 待从 `frontend/public/icons/` 导出 |
 | 桌面截图 | 1366×768 或 1920×1080，1–10 张，PNG | 待补（登录页、总览、罗盘、指标中心、AI 参谋） |
 | 商店展示图 | 1920×1080 宣传图（可选） | 待补 |
-| 隐私政策页 | 可公网访问的 HTTPS 链接 | 已生成 `privacy.html`，待 P1 托管后回填 URL |
+| 隐私政策页 | 可公网访问的 HTTPS 链接 | ✅ `https://opscompass.pages.dev/privacy`（2026-10-03 上线；填 `/privacy`，勿填 `/privacy.html`） |
 | 应用包 | MSIX（见 MSSTORE_GUIDE 路线 A/B） | 待 P1 后由 PWABuilder 生成 |
 
 截图拍摄建议顺序：登录页 → 运营总览 → 全景罗盘 → 指标中心 → 运营参谋问答 → 学习进化。
@@ -100,3 +111,4 @@ Data sovereignty: designed for local or self-hosted deployment; business data st
 - **数据收集声明**：默认本地部署、不采集用户业务数据；如启用云端托管，需在隐私政策中补充说明。
 - **未成年人**：本应用面向企业/个人运营者，不建议未成年人使用。
 - **商标与署名**：应用名称与图标版权归 BY LAOMENG 网络工作室所有。
+*（内容由AI生成，仅供参考）*

@@ -21,7 +21,7 @@ AIGC:
 
 - **应用内安装引导**：新增 `src/composables/usePwaInstall.ts` 与 `src/components/PwaInstallPrompt.vue`——接管 `beforeinstallprompt` 事件，在顶部导航下方展示「立即安装 / 暂不」引导条；「暂不」写入 localStorage 持久化，独立窗口（standalone）运行时不再打扰。
 
-- **隐私政策页**：新增 `frontend/public/privacy.html` 静态页（联系邮箱 mxh6789@live.cn），待公网托管后填入商店后台。
+- **隐私政策页**：新增 `frontend/public/privacy.html` 静态页（联系邮箱 mxh6789@live.cn），已于 2026-10-03 托管上线（`https://opscompass.pages.dev/privacy`），商店后台可直接填用。
 
 - **Cloudflare Pages 发布链路（P1）**：新增 `deploy/scripts/deploy-cloudflare-pages.ps1`（本地构建 + Wrangler 直传，凭据走环境变量）与 `docs/deploy/CLOUDFLARE_PAGES_GUIDE.md`（路线 A/B 与验证清单）。
 
@@ -36,6 +36,10 @@ AIGC:
 - **本地 CI 版本一致性由四源扩为五源**：`scripts/ci.ps1` 第 1 项新增 `docker-compose.prod.yml` 中 `OPS_VERSION` 默认版本号校验（该值出现多次且不一致时报错），确保发布新版本时生产编排不会漏改。
 
 - **部署文档同步**：`docs/deployment-manual.md` 形态总览由三类扩为四类（新增「C 生产镜像直用」，原应用市场离线并列为「D」），新增形态 C 完整部署步骤（联网 / 离线两条路径、HTTPS 叠加、验收标准）与生产升级流程；`deploy/README.md` 补充生产编排与离线包的使用说明。
+
+### 发布
+
+- **Cloudflare Pages 公网托管上线（P1，2026-10-03）**：站点与隐私页经 Wrangler 直传上线至 Cloudflare Pages 项目 `opscompass`（Production@main，源提交 ff57379；上传 47 文件 / 0.75 MB，部署 ID 39bfc4c8）。生产地址 `https://opscompass.pages.dev/`，隐私政策 `https://opscompass.pages.dev/privacy`（`/privacy.html` 为 308 跳转）。实测 `/`、`/privacy`、`manifest.webmanifest`、`sw.js`、`offline.html` 均返回 200。发布脚本新增 `wrangler whoami` 登录态前置校验与 `$LASTEXITCODE` 退出码校验，规避「认证失败仍报完成」的假成功。`PUBLISH_CHECKLIST.md` 9.1/9.2/9.3、`STORE_LISTING.md`、`MSSTORE_GUIDE.md`、`CLOUDFLARE_PAGES_GUIDE.md` 已同步回填。
 
 ## [0.10.1] - 2026-09-30
 

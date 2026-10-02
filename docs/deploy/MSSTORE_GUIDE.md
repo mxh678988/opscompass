@@ -55,7 +55,7 @@ AIGC:
 | 事项 | 要求 |
 |---|---|
 | PWA 能力（路线 A） | `manifest.json`（名称 / 图标 / 主题色）、Service Worker 离线缓存、HTTPS、可安装提示 |
-| 隐私政策页 | 需**公网可访问** URL；当前仓库为私有仓库，需另行托管静态页（官网 / GitHub Pages） |
+| 隐私政策页 | ✅ 已托管：`https://opscompass.pages.dev/privacy`（Cloudflare Pages，2026-10-03 上线） |
 | 商店素材 | 应用图标（多尺寸）、截图（桌面端 1366×768 起）、中英文描述文案；文案与素材清单已备 → [STORE_LISTING.md](./STORE_LISTING.md) |
 | 数据合规声明 | 本地部署型软件，需在商店页面声明不收集用户数据 |
 | 运行时依赖 | 应用运行时仍依赖 Docker Desktop，需在商店描述与首次启动引导中明示 |
@@ -65,7 +65,7 @@ AIGC:
 | 阶段 | 内容 | 依赖 |
 |---|---|---|
 | P0 | ✅ **已完成（2026-10-02）** PWA 能力补齐（manifest + Service Worker + 图标 + 离线页 + 应用内安装引导） | 落地清单见 `docs/deploy/PWA_GUIDE.md` |
-| P1 | 隐私政策静态页托管 | 公网托管（Cloudflare Pages，见 `CLOUDFLARE_PAGES_GUIDE.md`） |
+| P1 | 隐私政策静态页托管 | ✅ 已完成（2026-10-03，Cloudflare Pages，见 `CLOUDFLARE_PAGES_GUIDE.md`） |
 | P2 | Partner Center 账号注册与产品预约 | 微软账户、身份验证 |
 | P3 | MSIX 打包与本地安装验证 | PWABuilder |
 | P4 | 商店页面素材整理与提交审核 | 文案已备（`STORE_LISTING.md`），余图标 / 截图 |
