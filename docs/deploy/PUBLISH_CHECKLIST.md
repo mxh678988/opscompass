@@ -9,7 +9,7 @@
 | **Windows** | .exe（IExpress 自解压） | 已产出 | 188.0 KB | 可选（EV 证书） | 无 |
 | **macOS** | .tar.gz（内含 .dmg 生成脚本） | 已产出 | 6,976 B | 需 Apple ID 签名 | 可选（App Store） |
 | **Linux** | .tar.gz（内含 systemd 安装脚本） | 已产出 | 6,176 B | 需 GPG 签名 | 无 |
-| **GitHub Releases** | .tar.gz 源码 | 待准备 | — | 无 | 无 |
+| **GitHub Releases** | 三平台安装包 + 离线镜像包 + 校验清单 | 已发布（私有仓库） | 5 项资产（最大 313.7 MB） | 无 | 无 |
 | **华为应用市场** | HAP | 待开发 | — | 需华为签名 | 华为审核 |
 | **Microsoft Store** | — | 待评估 | — | 需 Microsoft 签名 | Microsoft 审核 |
 | **应用宝** | — | 待评估 | — | 需腾讯签名 | 腾讯审核 |
@@ -216,6 +216,17 @@ cd ~/OpsCompass && ./start.sh
 | **开发成本** | 免费 |
 | **审核周期** | 无（直接发布） |
 
+**发布实况（2026-10-02 已完成）**
+
+| 项目 | 详情 |
+|---|---|
+| 仓库 | https://github.com/mxh678988/opscompass（**私有**，默认分支 main） |
+| Release | https://github.com/mxh678988/opscompass/releases/tag/v0.10.1 |
+| Tag | v0.10.1 |
+| 资产（5 项） | `opscompass-0.10.1-windows-setup.exe`、`opscompass-0.10.1-macos.tar.gz`、`opscompass-0.10.1-linux.tar.gz`、`opscompass-0.10.1-images.tar`（313.7 MB）、`SHA256SUMS.txt` |
+| 访问说明 | 私有仓库，下载与克隆需仓库协作者凭据；转公开前需确认凭据清理与开源时机 |
+| 发布前处置 | 已移除 `LOCAL_INSTALLER_GUIDE.md` 中的明文仓库凭据并以 `--amend` 重写未推送提交，确保历史无凭据残留 |
+
 ## 六、发布检查清单
 
 ### 6.1 发布前检查
@@ -229,18 +240,19 @@ cd ~/OpsCompass && ./start.sh
 | Linux 安装包 | ✅ | `opscompass-0.10.1-linux.tar.gz`（6,176 B，已校验） |
 | 离线镜像包 | ✅ | `opscompass-0.10.1-images.tar`（313.7 MB，已校验） |
 | SHA256 校验文件 | ✅ | 四组 `.sha256` 全部比对一致 |
-| 文档更新 | ✅ | PUBLISH_CHECKLIST.md |
-| 发布说明 | ✅ | changelog.md |
+| 文档更新 | ✅ | PUBLISH_CHECKLIST.md / RELEASE_NOTES_v0.10.1.md |
+| 发布说明 | ✅ | docs/deploy/RELEASE_NOTES_v0.10.1.md |
+| GitHub Release | ✅ | v0.10.1 已发布（私有仓库，5 项资产全部 uploaded） |
 | 签名证书 | ✅ | 可选 |
 | 隐私政策 | ✅ | 需要 |
-| 开发者账号 | ⬜ | 需要 |
+| 开发者账号 | ✅ | GitHub 账号已具备（微软/华为/腾讯开放平台账号待开通） |
 | 审核材料 | ⬜ | 需要 |
 
 ### 6.2 发布后检查
 
 | 项目 | 状态 |
 |---|---|
-| 下载链接有效 | 待验证 |
+| 下载链接有效 | ✅ 已发布（私有仓库，需协作者凭据访问） |
 | 安装包可安装 | 待验证 |
 | 应用可运行 | 待验证 |
 | API 可访问 | 待验证 |
@@ -250,6 +262,7 @@ cd ~/OpsCompass && ./start.sh
 
 | 版本 | 发布日期 | 主要更新 |
 |---|---|---|
+| v0.10.1 | 2026-10-02 | **GitHub Release 已发布**（私有仓库 mxh678988/opscompass，tag `v0.10.1`，5 项资产：三平台安装包 + 离线镜像包 + SHA256SUMS） |
 | v0.10.1 | 2026-10-02 | 三平台安装包 + 离线镜像包全部产出并附 SHA256（Windows exe / Linux tar.gz / macOS tar.gz） |
 | v0.10.1 | 2026-10-01 | Windows、Linux 安装包生成；后端/前端镜像推送 TCR 与 GHCR |
 
