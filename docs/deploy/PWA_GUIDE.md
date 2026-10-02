@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_23d10391be5b11f1887c525400de85a5
+    ReservedCode1: Cc/vHF5bKIpwwxuWr7z+zaaHzQ26N1b/psB7W+I8amnE1SCRLJb8o3iYwkm7dMqkkDv/fzm5wOUYaovO2NTuXTDkiSudEYBznnyqNHy5VatJWOEl1atU78ekUSKKj7/Hlnwb+Nd8CpcyU/H9Ua6SKwHfaFaoVLf5kb9BnAwt32NydfhBzOaJzTmGUKI=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_23d10391be5b11f1887c525400de85a5
+    ReservedCode2: Cc/vHF5bKIpwwxuWr7z+zaaHzQ26N1b/psB7W+I8amnE1SCRLJb8o3iYwkm7dMqkkDv/fzm5wOUYaovO2NTuXTDkiSudEYBznnyqNHy5VatJWOEl1atU78ekUSKKj7/Hlnwb+Nd8CpcyU/H9Ua6SKwHfaFaoVLf5kb9BnAwt32NydfhBzOaJzTmGUKI=
+---
+
 # 运营智脑 PWA 能力说明（P0 已落地）
 
 > 生成日期：2026-10-02 · 对应版本：v0.10.1 · 关联文档：`docs/deploy/MSSTORE_GUIDE.md`、`docs/MOBILE_PLAN.md`
@@ -14,7 +25,7 @@
 | 图标 | `frontend/public/icons/favicon-32.png` | 32×32 备用图标 |
 | 离线脚本 | `frontend/public/sw.js` | Service Worker：预缓存 + 分策略缓存 + 旧版本清理 |
 | 离线页 | `frontend/public/offline.html` | 断网且无缓存时兜底页（含 Docker 依赖提示） |
-| 隐私页 | `frontend/public/privacy.html` | 静态隐私政策页（商店审核引用；联系邮箱待补充） |
+| 隐私页 | `frontend/public/privacy.html` | 静态隐私政策页（商店审核引用；联系邮箱 mxh6789@gmail.com） |
 | 入口改造 | `frontend/index.html` | 注入 manifest / apple-touch-icon / PWA meta |
 | 注册逻辑 | `frontend/src/main.ts` | 仅生产构建注册 SW，含更新检测与自动激活 |
 
@@ -58,4 +69,5 @@ Chrome / Edge 打开 `http://localhost:4173` → F12 → Application 面板：
 - 待办（P1）：将 `privacy.html` 与 dist 静态站点托管到公网 HTTPS 域名，并把 URL 填入商店后台。
 
 ---
+*（内容由AI生成，仅供参考）*
 *（内容由AI生成，仅供参考）*

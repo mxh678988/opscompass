@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_2504c994be5b11f1887c525400de85a5
+    ReservedCode1: 8uorGbPFIuVnGRxdMZRLLPs8/ZYWKs8rjd4VCMfeOcmMmk10sPR1b2mB1+IgPR39Rfxrs73ZFvAU0b8eJGeRzSTyvxau3+0LRW09ZGVCwOl9RGfPa12aLXGTgShjCtwv617ks1xYhPZfmwIoHff48SLxNBWbIXguwv7rnQvm7Z3/4ilBYXy4SK+K+cw=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_2504c994be5b11f1887c525400de85a5
+    ReservedCode2: 8uorGbPFIuVnGRxdMZRLLPs8/ZYWKs8rjd4VCMfeOcmMmk10sPR1b2mB1+IgPR39Rfxrs73ZFvAU0b8eJGeRzSTyvxau3+0LRW09ZGVCwOl9RGfPa12aLXGTgShjCtwv617ks1xYhPZfmwIoHff48SLxNBWbIXguwv7rnQvm7Z3/4ilBYXy4SK+K+cw=
+---
+
 # 运营智脑 PWA 站点托管方案（Cloudflare Pages）
 
 > 生成日期：2026-10-02 · 关联：`docs/deploy/PWA_GUIDE.md`、`docs/deploy/MSSTORE_GUIDE.md`
@@ -70,7 +81,7 @@ cd D:\OpsCompass\deploy\scripts
 https://<项目名>.pages.dev/privacy.html
 ```
 
-> **待补充**：`frontend/public/privacy.html` 中的联系邮箱目前为占位符，提交商店前必须替换为真实可收件邮箱。
+> 联系邮箱已填写为 `mxh6789@gmail.com`（2026-10-02），可直接用于商店审核提交。
 
 ## 五、自定义域名（可选，后续）
 
@@ -88,4 +99,5 @@ https://<项目名>.pages.dev/privacy.html
 | 免费额度 | 500 次构建/月，直传路线基本不消耗构建次数 |
 
 ---
+*（内容由AI生成，仅供参考）*
 *（内容由AI生成，仅供参考）*
