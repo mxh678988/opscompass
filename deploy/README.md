@@ -66,6 +66,22 @@ docker compose -f docker-compose.prod.yml -f deploy/docker/docker-compose.prod.h
 
 详见 `docs/deployment-manual.md` 形态 C / D。
 
+## 镜像地址
+
+生产镜像统一使用腾讯云 TCR，地址前缀为 `ccr.ccs.tencentyun.com/laomeng-ops/`。`docker-compose.prod.yml` 中 `image:` 字段应写为：
+
+```
+image: ccr.ccs.tencentyun.com/laomeng-ops/opscompass-backend:0.10.1
+image: ccr.ccs.tencentyun.com/laomeng-ops/opscompass-frontend:0.10.1
+```
+
+> 以下为各仓库镜像对比，详细统计见 `deploy/REPO_STATS.md`。
+
+| 镜像 | 腾讯云 TCR（主） | GitHub Container Registry（备用） |
+|------|------------------|----------------------------------|
+| opscompass-backend | `ccr.ccs.tencentyun.com/laomeng-ops/opscompass-backend:0.10.1` | `ghcr.io/mxh678988/opscompass-backend:0.10.1` |
+| opscompass-frontend | `ccr.ccs.tencentyun.com/laomeng-ops/opscompass-frontend:0.10.1` | `ghcr.io/mxh678988/opscompass-frontend:0.10.1` |
+
 ## 常用命令
 
 ```powershell
