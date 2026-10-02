@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_9b019f39be4811f1887c525400de85a5
+    ReservedCode1: NA7mUIFpC0Uzg78YIZS5Db+mI2c1rDR631BDVG8TjTs6TMMNG3KVO8ArmcUT8OtvbKCext1mGsqM5ggVN8tXeCzcGNcjyausfnyJrSNOil8EnTW1ztsNNvfJBAj+dMeBMAssAaz1EAuJoRKkcGer95oB6cfpt8ASHdxrPGR0qGlX1N4JfoaHCGlfU2c=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_9b019f39be4811f1887c525400de85a5
+    ReservedCode2: NA7mUIFpC0Uzg78YIZS5Db+mI2c1rDR631BDVG8TjTs6TMMNG3KVO8ArmcUT8OtvbKCext1mGsqM5ggVN8tXeCzcGNcjyausfnyJrSNOil8EnTW1ztsNNvfJBAj+dMeBMAssAaz1EAuJoRKkcGer95oB6cfpt8ASHdxrPGR0qGlX1N4JfoaHCGlfU2c=
+---
+
 # 运营智脑 OpsCompass · Microsoft Store 上架方案
 
 > 生成时间：2026-10-02 | 适用版本：v0.10.1+ | 依据：微软 2025-09-11 开发者政策调整
@@ -53,7 +64,7 @@
 
 | 阶段 | 内容 | 依赖 |
 |---|---|---|
-| P0 | PWA 能力补齐（manifest + Service Worker） | 前端改造 |
+| P0 | ✅ **已完成（2026-10-02）** PWA 能力补齐（manifest + Service Worker + 图标 + 离线页） | 落地清单见 `docs/deploy/PWA_GUIDE.md` |
 | P1 | 隐私政策静态页托管 | 公网托管（GitHub Pages / 官网） |
 | P2 | Partner Center 账号注册与产品预约 | 微软账户、身份验证 |
 | P3 | MSIX 打包与本地安装验证 | PWABuilder |
@@ -77,3 +88,4 @@
 
 ---
 **关联文档**：`docs/deploy/PUBLISH_CHECKLIST.md`、`docs/MOBILE_PLAN.md`、`docs/deploy/LOCAL_INSTALLER_GUIDE.md`
+*（内容由AI生成，仅供参考）*

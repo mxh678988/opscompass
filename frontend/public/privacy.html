@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="description" content="运营智脑 OpsCompass 隐私政策" />
+    <title>隐私政策 · 运营智脑 OpsCompass</title>
+    <style>
+      :root { --ink:#0f172a; --sub:#475569; --line:#e2e8f0; --blue:#2563eb; }
+      * { box-sizing:border-box; }
+      body { margin:0; padding:48px 20px 80px; background:#f8fafc; color:#0f172a;
+             font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; line-height:1.8; }
+      .wrap { max-width:760px; margin:0 auto; background:#fff; border:1px solid var(--line); border-radius:14px; padding:40px 36px; }
+      header { display:flex; align-items:center; gap:14px; padding-bottom:20px; border-bottom:1px solid var(--line); margin-bottom:28px; }
+      header img { width:44px; height:44px; }
+      h1 { font-size:22px; margin:0; }
+      .meta { font-size:13px; color:var(--sub); margin-top:4px; }
+      h2 { font-size:16px; margin:30px 0 10px; }
+      p,li { font-size:14.5px; color:#334155; }
+      ul { padding-left:22px; }
+      code { background:#f1f5f9; padding:1px 6px; border-radius:5px; font-size:13px; }
+      a { color:var(--blue); }
+      .callout { background:#eff6ff; border-left:3px solid var(--blue); border-radius:0 8px 8px 0; padding:14px 18px; font-size:14px; margin:18px 0; }
+      footer { margin-top:36px; padding-top:20px; border-top:1px solid var(--line); font-size:13px; color:var(--sub); }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <img src="/icons/icon-192.png" alt="运营智脑" />
+        <div>
+          <h1>隐私政策</h1>
+          <div class="meta">运营智脑 OpsCompass · 生效日期：2026-10-02 · 版本：v1.0</div>
+        </div>
+      </header>
+
+      <div class="callout">
+        <strong>核心承诺：</strong>运营智脑是<strong>本地部署型</strong>软件。您的业务数据默认存储在您自己的设备与数据库中，我们（开发者）不收集、不上传、不查看任何业务数据，也不含广告与第三方埋点。
+      </div>
+
+      <h2>一、适用范围</h2>
+      <p>本政策适用于由 BY LAOMENG 网络工作室（以下称“我们”）开发并发布的运营智脑 OpsCompass 桌面端、Web 端及由此衍生的 Microsoft Store 版本。软件以本地部署方式运行，服务端由使用者自行部署。</p>
+
+      <h2>二、我们如何处理数据</h2>
+      <ul>
+        <li><strong>业务数据</strong>：导入的运营数据、指标、报表等，全部存储在使用者自行部署的本地数据库（PostgreSQL）与本地文件系统中，不经过我们的服务器。</li>
+        <li><strong>账号与登录信息</strong>：账号、加密后的口令、访问令牌保存在本地服务端，用于身份校验，不上传至第三方。</li>
+        <li><strong>操作日志</strong>：安全审计日志保存在本地，保留期限可由使用者在配置中调整（默认 180 天）。</li>
+        <li><strong>本地缓存</strong>：为支持离线可用，应用会在浏览器 / 设备本地缓存界面静态资源（HTML、样式、图标等），<strong>不缓存业务接口数据</strong>。</li>
+      </ul>
+
+      <h2>三、AI 能力与数据流向</h2>
+      <p>软件的 AI 分析能力提供两种模式，由使用者在配置中自行选择：</p>
+      <ul>
+        <li><strong>本地模式（默认）</strong>：调用本机运行的本地大模型，数据不出设备。</li>
+        <li><strong>云端 API 模式</strong>：由使用者自行填写第三方模型服务地址与密钥，此时相关文本数据将发送至<strong>使用者自行选定的服务商</strong>，其处理规则适用该服务商的政策。我们不参与、不代理、不留存该链路数据。</li>
+      </ul>
+
+      <h2>四、我们不做什么</h2>
+      <ul>
+        <li>不收集个人身份信息、设备指纹、地理位置；</li>
+        <li>不内置广告、行为分析 SDK 或遥测上报；</li>
+        <li>不向任何第三方出售、出租或共享您的数据。</li>
+      </ul>
+
+      <h2>五、您的权利</h2>
+      <ul>
+        <li><strong>查阅与导出</strong>：数据均在本机，可随时通过软件界面或数据库直接查阅、导出。</li>
+        <li><strong>删除</strong>：卸载软件并删除数据目录、数据库即可彻底清除全部数据。</li>
+        <li><strong>撤回授权</strong>：可随时在配置中关闭 AI 能力或切换回本地模式。</li>
+      </ul>
+
+      <h2>六、数据安全</h2>
+      <p>软件提供口令强度校验、登录失败锁定、IP 白名单、操作审计等安全机制。因软件为本地部署，最终安全强度亦取决于使用者的部署环境（网络隔离、主机安全、备份策略）。</p>
+
+      <h2>七、儿童隐私</h2>
+      <p>本软件面向企业与运营从业者，不面向 13 岁以下儿童，也不会有意收集儿童信息。</p>
+
+      <h2>八、政策更新</h2>
+      <p>本政策如有更新，我们会在软件仓库与发布页面同步最新版本并更新生效日期。重大变更将在应用内提示。</p>
+
+      <h2>九、联系我们</h2>
+      <p>如对本政策有任何疑问，可通过以下方式联系：<br />
+        开发者：BY LAOMENG 网络工作室<br />
+        联系邮箱：<strong>（待补充）</strong></p>
+
+      <footer>
+        运营智脑 OpsCompass · 让数据自动做出最优决策<br />
+        本页面为静态隐私政策页，可供应用商店审核引用。
+      </footer>
+    </main>
+  </body>
+</html>
