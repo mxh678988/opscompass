@@ -10,9 +10,13 @@
 | **macOS** | .tar.gz（内含 .dmg 生成脚本） | 已产出 | 6,976 B | 需 Apple ID 签名 | 可选（App Store） |
 | **Linux** | .tar.gz（内含 systemd 安装脚本） | 已产出 | 6,176 B | 需 GPG 签名 | 无 |
 | **GitHub Releases** | 三平台安装包 + 离线镜像包 + 校验清单 | 已发布（私有仓库） | 5 项资产（最大 313.7 MB） | 无 | 无 |
-| **华为应用市场** | HAP | 待开发 | — | 需华为签名 | 华为审核 |
+| **iOS App Store**（iPhone 手机版） | .ipa | 规划中 | — | 需 Apple 签名 | Apple 审核 |
+| **华为应用市场**（鸿蒙手机版） | .hap | 规划中 | — | 需华为签名 | 华为审核 |
+| **应用宝 / 安卓各市场**（安卓手机版） | .apk / .aab | 规划中 | — | 需自有签名 | 各市场审核 |
 | **Microsoft Store** | — | 待评估 | — | 需 Microsoft 签名 | Microsoft 审核 |
-| **应用宝** | — | 待评估 | — | 需腾讯签名 | 腾讯审核 |
+
+> **手机版三端**（iPhone / 鸿蒙 / 安卓）已纳入规划，技术选型、排期与预算详见 `docs/MOBILE_PLAN.md`；
+> 启动条件：各市场 / 应用商店发布成功 → Mac 系统应用开发完成。
 
 ## 二、Windows 安装包
 
@@ -262,6 +266,7 @@ cd ~/OpsCompass && ./start.sh
 
 | 版本 | 发布日期 | 主要更新 |
 |---|---|---|
+| v0.10.1 | 2026-10-02 | **移动端三端纳入规划**（iPhone / 鸿蒙 / 安卓），技术选型、排期与预算见 `docs/MOBILE_PLAN.md` |
 | v0.10.1 | 2026-10-02 | **GitHub Release 已发布**（私有仓库 mxh678988/opscompass，tag `v0.10.1`，5 项资产：三平台安装包 + 离线镜像包 + SHA256SUMS） |
 | v0.10.1 | 2026-10-02 | 三平台安装包 + 离线镜像包全部产出并附 SHA256（Windows exe / Linux tar.gz / macOS tar.gz） |
 | v0.10.1 | 2026-10-01 | Windows、Linux 安装包生成；后端/前端镜像推送 TCR 与 GHCR |
