@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_c93edf18be3d11f1887c525400de85a5
+    ReservedCode1: J+M9XXs9iVDoADOe2nk+uBLbmsQs8XBz5Fs1LzHAqrfkOAguKWfke4i5X/f3W3gbXSPs6ClINdFBXiR0NllQQAp7CKlcTz9BDM0tqw/bDL8lKpkXzFc1RueOQHPuQ8UGj7jAFuWjkOti8zpQph3pHkX7EqE9M3y0WFwiCsX+BUottNnCE7PI8udaSZg=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_c93edf18be3d11f1887c525400de85a5
+    ReservedCode2: J+M9XXs9iVDoADOe2nk+uBLbmsQs8XBz5Fs1LzHAqrfkOAguKWfke4i5X/f3W3gbXSPs6ClINdFBXiR0NllQQAp7CKlcTz9BDM0tqw/bDL8lKpkXzFc1RueOQHPuQ8UGj7jAFuWjkOti8zpQph3pHkX7EqE9M3y0WFwiCsX+BUottNnCE7PI8udaSZg=
+---
+
 # 运营智脑 OpsCompass · 移动端三端规划（iPhone / 鸿蒙 / 安卓）
 
 > 版本：v0.10.1 | 生成时间：2026-10-02 | 状态：规划中
@@ -136,3 +147,4 @@
 
 ---
 **关联文档**：`docs/HARMONY_PLAN.md`、`docs/OPEN_SOURCE_PLAN.md`、`docs/deploy/PUBLISH_CHECKLIST.md`、`docs/ui-design-tokens.md`
+*（内容由AI生成，仅供参考）*
