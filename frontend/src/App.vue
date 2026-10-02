@@ -3,6 +3,7 @@
 import { computed, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
+import PwaInstallPrompt from '@/components/PwaInstallPrompt.vue'
 import { useAuthStore } from '@/store/auth'
 
 const route = useRoute()
@@ -70,6 +71,7 @@ async function handleLogout() {
         <button class="logout" type="button" @click="handleLogout">退出</button>
       </div>
     </header>
+    <PwaInstallPrompt />
     <RouterView />
   </template>
   <RouterView v-else />

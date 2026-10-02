@@ -62,7 +62,16 @@ Chrome / Edge 打开 `http://localhost:4173` → F12 → Application 面板：
 - 地址栏出现「安装」图标即表示可安装；
 - Network 面板切 Offline 后刷新，应能打开离线页或缓存的 app shell。
 
-## 五、与商店 / 移动端的关系
+## 五、应用内安装引导
+
+浏览器判定站点可安装时触发 `beforeinstallprompt`，应用接管该事件并在顶部导航下方展示引导条：
+
+- 展示条件：非独立窗口运行（非 standalone）、浏览器已判定可安装、用户未点过「暂不」；
+- 「立即安装」：调用保存的安装事件 `prompt()`，用户接受后由 `appinstalled` 事件收尾；
+- 「暂不」：写入 `localStorage['opscompass.pwa.install.dismissed']`，后续不再打扰；
+- 未覆盖 iOS Safari（无 `beforeinstallprompt`），iOS 场景按「分享 → 添加到主屏幕」引导。
+
+## 六、与商店 / 移动端的关系
 
 - Microsoft Store：PWA → MSIX 路线的前置条件「manifest + Service Worker 离线能力 + HTTPS」已具备，剩余前置为**公网 HTTPS 托管**（见 MSSTORE_GUIDE 的 P1）。
 - 移动端三端：PWA 先行路线共用本套 manifest 与 SW，可直接复用，无需重复开发。

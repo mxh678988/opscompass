@@ -246,7 +246,9 @@ cd ~/OpsCompass && ./start.sh
 | Linux 安装包 | ✅ | `opscompass-0.10.1-linux.tar.gz`（6,176 B，已校验） |
 | 离线镜像包 | ✅ | `opscompass-0.10.1-images.tar`（313.7 MB，已校验） |
 | SHA256 校验文件 | ✅ | 四组 `.sha256` 全部比对一致 |
-| PWA 能力 | ✅ | manifest + Service Worker + 全套图标 + 离线页（见 `docs/deploy/PWA_GUIDE.md`） |
+| PWA 能力 | ✅ | manifest + Service Worker + 全套图标 + 离线页 + 应用内安装引导（见 `docs/deploy/PWA_GUIDE.md`） |
+| 商店文案 | ✅ | 中英双语描述、功能要点、关键词与素材清单（见 `docs/deploy/STORE_LISTING.md`） |
+| 商店截图 | ⬜ | 桌面端 1366×768 起，1–10 张，待 P1 托管后实机截取 |
 | 隐私政策页 | ✅ | `frontend/public/privacy.html` 已就绪（联系邮箱 mxh6789@live.cn），待公网托管 |
 | 文档更新 | ✅ | PUBLISH_CHECKLIST.md / RELEASE_NOTES_v0.10.1.md |
 | 发布说明 | ✅ | docs/deploy/RELEASE_NOTES_v0.10.1.md |
