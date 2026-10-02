@@ -25,7 +25,7 @@ AIGC:
 | 图标 | `frontend/public/icons/favicon-32.png` | 32×32 备用图标 |
 | 离线脚本 | `frontend/public/sw.js` | Service Worker：预缓存 + 分策略缓存 + 旧版本清理 |
 | 离线页 | `frontend/public/offline.html` | 断网且无缓存时兜底页（含 Docker 依赖提示） |
-| 隐私页 | `frontend/public/privacy.html` | 静态隐私政策页（商店审核引用；联系邮箱 mxh6789@gmail.com） |
+| 隐私页 | `frontend/public/privacy.html` | 静态隐私政策页（商店审核引用；联系邮箱 mxh6789@live.cn） |
 | 入口改造 | `frontend/index.html` | 注入 manifest / apple-touch-icon / PWA meta |
 | 注册逻辑 | `frontend/src/main.ts` | 仅生产构建注册 SW，含更新检测与自动激活 |
 

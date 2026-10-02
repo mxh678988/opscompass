@@ -81,7 +81,10 @@ cd D:\OpsCompass\deploy\scripts
 https://<项目名>.pages.dev/privacy.html
 ```
 
-> 联系邮箱已填写为 `mxh6789@gmail.com`（2026-10-02），可直接用于商店审核提交。
+> 联系邮箱已填写为 `mxh6789@live.cn`（2026-10-02 更正），可直接用于商店审核提交。
+>
+> 注：`mxh6789@gmail.com` 是 Cloudflare 账号标识（非联系邮箱），请勿再填入隐私政策的联系邮箱栏位；
+> `CLOUDFLARE_ACCOUNT_ID` 与 `CLOUDFLARE_API_TOKEN` 仍需从 Cloudflare 控制台获取后以环境变量提供。
 
 ## 五、自定义域名（可选，后续）
 

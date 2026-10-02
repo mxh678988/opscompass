@@ -247,7 +247,7 @@ cd ~/OpsCompass && ./start.sh
 | 离线镜像包 | ✅ | `opscompass-0.10.1-images.tar`（313.7 MB，已校验） |
 | SHA256 校验文件 | ✅ | 四组 `.sha256` 全部比对一致 |
 | PWA 能力 | ✅ | manifest + Service Worker + 全套图标 + 离线页（见 `docs/deploy/PWA_GUIDE.md`） |
-| 隐私政策页 | ✅ | `frontend/public/privacy.html` 已就绪（联系邮箱 mxh6789@gmail.com），待公网托管 |
+| 隐私政策页 | ✅ | `frontend/public/privacy.html` 已就绪（联系邮箱 mxh6789@live.cn），待公网托管 |
 | 文档更新 | ✅ | PUBLISH_CHECKLIST.md / RELEASE_NOTES_v0.10.1.md |
 | 发布说明 | ✅ | docs/deploy/RELEASE_NOTES_v0.10.1.md |
 | GitHub Release | ✅ | v0.10.1 已发布（私有仓库，5 项资产全部 uploaded） |
