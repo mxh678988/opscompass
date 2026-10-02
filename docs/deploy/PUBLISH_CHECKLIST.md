@@ -248,7 +248,7 @@ cd ~/OpsCompass && ./start.sh
 | SHA256 校验文件 | ✅ | 四组 `.sha256` 全部比对一致 |
 | PWA 能力 | ✅ | manifest + Service Worker + 全套图标 + 离线页 + 应用内安装引导（见 `docs/deploy/PWA_GUIDE.md`） |
 | 商店文案 | ✅ | 中英双语描述、功能要点、关键词与素材清单（见 `docs/deploy/STORE_LISTING.md`） |
-| 商店截图 | ⬜ | 桌面端 1366×768 起，1–10 张，待 P1 托管后实机截取 |
+| 商店截图 | ⬜ | 桌面端 1366×768 起，1–10 张，待 S1-P1 公网托管后实机截取 |
 | 隐私政策页 | ✅ | `frontend/public/privacy.html` 已就绪（联系邮箱 mxh6789@live.cn），待公网托管 |
 | 文档更新 | ✅ | PUBLISH_CHECKLIST.md / RELEASE_NOTES_v0.10.1.md |
 | 发布说明 | ✅ | docs/deploy/RELEASE_NOTES_v0.10.1.md |
@@ -272,6 +272,8 @@ cd ~/OpsCompass && ./start.sh
 
 | 版本 | 发布日期 | 主要更新 |
 |---|---|---|
+| v0.10.1 | 2026-10-02 | **商店发布执行序落定**：S1 Microsoft Store 分步推进（P1 待公网托管凭据），S2–S4 待移动端开发，见本文档第九章 |
+| v0.10.1 | 2026-10-02 | **TCR 镜像 digest 核对一致**（backend `f008dde52341` / frontend `133ca9a8bd05`）；**4 个积压提交推送成功**（经 `127.0.0.1:7897` 代理） |
 | v0.10.1 | 2026-10-02 | **移动端三端纳入规划**（iPhone / 鸿蒙 / 安卓），技术选型、排期与预算见 `docs/MOBILE_PLAN.md` |
 | v0.10.1 | 2026-10-02 | **GitHub Release 已发布**（私有仓库 mxh678988/opscompass，tag `v0.10.1`，5 项资产：三平台安装包 + 离线镜像包 + SHA256SUMS） |
 | v0.10.1 | 2026-10-02 | 三平台安装包 + 离线镜像包全部产出并附 SHA256（Windows exe / Linux tar.gz / macOS tar.gz） |
@@ -285,3 +287,51 @@ cd ~/OpsCompass && ./start.sh
 4. **网络要求**：首次启动需要拉取 Docker 镜像（约 860 MB）
 5. **数据持久化**：数据存储在 `data/` 目录，建议定期备份
 6. **安全配置**：生产环境请修改 `.env` 中的敏感配置（数据库密码、SECRET_KEY 等）
+
+## 九、商店发布执行序（逐步推进）
+
+> 推进原则：按"前置依赖最少 → 审核周期最短"排序，逐个市场闭环；上一市场的阻塞项解除后再开下一市场。
+
+### 9.1 执行顺序总览
+
+| 序号 | 市场 | 当前状态 | 本步阻塞项 | 责任方 | 审核周期 |
+|---|---|---|---|---|---|
+| S0 | GitHub Releases（自发布） | ✅ 已完成 | — | — | 无 |
+| S1 | **Microsoft Store** | 进行中（P1 待托管） | Cloudflare Pages 凭据（Account ID + API Token） | 老板提供凭据 → Marvis 执行 | 1–5 个工作日 |
+| S2 | 应用宝（安卓） | 未启动 | 安卓版 .apk 未开发 | 待开发 | 1–3 个工作日 |
+| S3 | 华为应用市场（鸿蒙） | 未启动 | 鸿蒙版 .hap 未开发 | 待开发 | 1–5 个工作日 |
+| S4 | iOS App Store | 未启动 | iOS 版 .ipa 未开发（另需 Mac 环境） | 待开发 | 1–5 个工作日 |
+
+### 9.2 S1 · Microsoft Store 分步执行
+
+| 步骤 | 动作 | 执行方式 | 状态 |
+|---|---|---|---|
+| P1-a | 产出 PWA 静态产物（dist） | 本地完成，0.75 MB，manifest/sw/离线页/隐私页/图标 8 项校验通过 | ✅ |
+| P1-b | 公网 HTTPS 托管站点与隐私页 | `deploy/scripts/deploy-cloudflare-pages.ps1` | ⬜ 待凭据 |
+| P1-c | 回填生产地址（STORE_LISTING / MSSTORE_GUIDE / 本文档） | Marvis 执行 | ⬜ |
+| P2 | 注册 Microsoft Partner Center（个人账号，免费） | 老板本人操作（需身份实名） | ⬜ |
+| P3 | PWABuilder 打包 .msixbundle（依赖 P1 公网 URL） | Marvis 执行 | ⬜ |
+| P4 | 提交审核（商店文案 + 截图 + 隐私 URL） | 老板确认，Marvis 备料 | ⬜ |
+
+**P1-b 解除条件（二选一）**
+
+1. 提供 `CLOUDFLARE_API_TOKEN`（权限：Account → Cloudflare Pages → Edit）与 `CLOUDFLARE_ACCOUNT_ID`；或
+2. 在本机终端执行 `npx wrangler login` 完成浏览器授权后告知，改用登录态直接部署。
+
+> 备注：本机 wrangler 4.127.1 已安装，但当前会话为非交互环境，`wrangler login` 无法在此发起；已有登录态已过期。
+
+### 9.3 S1 提交材料状态
+
+| 材料 | 状态 | 说明 |
+|---|---|---|
+| 中英双语文案 | ✅ | `docs/deploy/STORE_LISTING.md` |
+| 图标全套 | ✅ | `frontend/public/icons/` 5 张 + favicon.ico |
+| 隐私政策页 | ✅ | `frontend/public/privacy.html`（联系邮箱 mxh6789@live.cn） |
+| 隐私政策公网 URL | ⬜ | 随 P1-b 产出 |
+| 商店截图（≥1 张，1366×768 起） | ⬜ | 需登录应用实机截取，建议 P1 完成后从托管地址截取 |
+| MSIX 安装包 | ⬜ | 随 P3 产出 |
+
+### 9.4 S2–S4 启动条件
+
+- S2 / S3 / S4 统一前置：**移动端版本开发完成**（技术选型与排期见 `docs/MOBILE_PLAN.md`），三端前端与 S1 的 PWA 同源，可复用同一套文案与隐私政策。
+- S4 额外前置：Mac 系统应用完成（见 `docs/MOBILE_PLAN.md` 启动条件）。
