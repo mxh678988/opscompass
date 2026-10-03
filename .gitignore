@@ -76,3 +76,6 @@ deploy/wsl-data/
 deploy/installers/
 *.vhdx
 *.exe
+
+# ---------- Cloudflare Wrangler（本地缓存与登录态，禁止入库） ----------
+.wrangler/

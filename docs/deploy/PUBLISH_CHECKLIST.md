@@ -1,6 +1,6 @@
 # 运营智脑 OpsCompass · 发布清单（v0.10.1）
 
-> 生成时间：2026-10-01 | 版本：v0.10.1 | 最后更新：2026-10-02
+> 生成时间：2026-10-01 | 版本：v0.10.1 | 最后更新：2026-10-03（回填 S1-P3 打包实测结论）
 
 ## 一、发布平台概览
 
@@ -248,7 +248,8 @@ cd ~/OpsCompass && ./start.sh
 | SHA256 校验文件 | ✅ | 四组 `.sha256` 全部比对一致 |
 | PWA 能力 | ✅ | manifest + Service Worker + 全套图标 + 离线页 + 应用内安装引导（见 `docs/deploy/PWA_GUIDE.md`） |
 | 商店文案 | ✅ | 中英双语描述、功能要点、关键词与素材清单（见 `docs/deploy/STORE_LISTING.md`） |
-| 商店截图 | ⬜ | 桌面端 1366×768 起，1–10 张，建议从托管地址实机截取 |
+| 商店截图 | ⚠️ | 已从托管地址采集 2 张公开页（1366×768：登录页 / 隐私页），满足 1–10 张下限；建议再补 1920×1080 或更多公开页 |
+| MSIX 安装包 | ⚠️ | PWABuilder 已产出 `.msixbundle`（2026-10-03）；当前为**占位身份包**，须待 P2 回填真实 Package Identity / Publisher 后重新打包 |
 | 隐私政策页 | ✅ | `frontend/public/privacy.html` 已上线 `https://opscompass.pages.dev/privacy`（联系邮箱 mxh6789@live.cn，2026-10-03） |
 | 文档更新 | ✅ | PUBLISH_CHECKLIST.md / RELEASE_NOTES_v0.10.1.md |
 | 发布说明 | ✅ | docs/deploy/RELEASE_NOTES_v0.10.1.md |
@@ -272,6 +273,7 @@ cd ~/OpsCompass && ./start.sh
 
 | 版本 | 发布日期 | 主要更新 |
 |---|---|---|
+| v0.10.1 | 2026-10-03 | **P3 打包实测完成**：PWABuilder 校验全通过（Manifest 28/46、图标尺寸与声明一致、SW 离线 active、HTTPS 有效），产出 `.msixbundle`（**占位身份，仅可侧载**）；商店截图 2 张（1366×768）已采集；正式提交仅卡 P2 的真实包标识 |
 | v0.10.1 | 2026-10-03 | **P1-b / P1-c 完成**：Cloudflare Pages 项目 `opscompass` 已上线（47 文件 / 0.75 MB，Production@main，源提交 `ff57379`），生产地址与隐私政策 URL 已回填各文档 |
 | v0.10.1 | 2026-10-02 | **商店发布执行序落定**：S1 Microsoft Store 分步推进（P1 待公网托管凭据），S2–S4 待移动端开发，见本文档第九章 |
 | v0.10.1 | 2026-10-02 | **TCR 镜像 digest 核对一致**（backend `f008dde52341` / frontend `133ca9a8bd05`）；**4 个积压提交推送成功**（经 `127.0.0.1:7897` 代理） |
@@ -298,7 +300,7 @@ cd ~/OpsCompass && ./start.sh
 | 序号 | 市场 | 当前状态 | 本步阻塞项 | 责任方 | 审核周期 |
 |---|---|---|---|---|---|
 | S0 | GitHub Releases（自发布） | ✅ 已完成 | — | — | 无 |
-| S1 | **Microsoft Store** | 进行中（P1 已完成，P2 待注册） | 无硬阻塞；P2 需老板本人实名注册 | 老板注册 Partner Center → Marvis 打包与备料 | 1–5 个工作日 |
+| S1 | **Microsoft Store** | 进行中（P3 打包实测完成，P2 待注册） | P2 需老板本人实名注册并回填三项包标识（真实标识是正式包的硬前置） | 老板注册 Partner Center → Marvis 重打包与备料 | 1–5 个工作日 |
 | S2 | 应用宝（安卓） | 未启动 | 安卓版 .apk 未开发 | 待开发 | 1–3 个工作日 |
 | S3 | 华为应用市场（鸿蒙） | 未启动 | 鸿蒙版 .hap 未开发 | 待开发 | 1–5 个工作日 |
 | S4 | iOS App Store | 未启动 | iOS 版 .ipa 未开发（另需 Mac 环境） | 待开发 | 1–5 个工作日 |
@@ -310,9 +312,17 @@ cd ~/OpsCompass && ./start.sh
 | P1-a | 产出 PWA 静态产物（dist） | 本地完成，0.75 MB，manifest/sw/离线页/隐私页/图标 8 项校验通过 | ✅ |
 | P1-b | 公网 HTTPS 托管站点与隐私页 | `deploy/scripts/deploy-cloudflare-pages.ps1` | ✅ 2026-10-03 |
 | P1-c | 回填生产地址（STORE_LISTING / MSSTORE_GUIDE / 本文档） | Marvis 执行 | ✅ |
-| P2 | 注册 Microsoft Partner Center（个人账号，免费） | 老板本人操作（需身份实名） | ⬜ |
-| P3 | PWABuilder 打包 .msixbundle（依赖 P1 公网 URL） | Marvis 执行 | ⬜ |
-| P4 | 提交审核（商店文案 + 截图 + 隐私 URL） | 老板确认，Marvis 备料 | ⬜ |
+| P2 | 注册 Microsoft Partner Center（个人账号，免费）并预留产品名称、回填三项包标识 | 老板本人操作（需身份实名） | ⬜ |
+| P3 | PWABuilder 打包 .msixbundle（依赖 P1 公网 URL） | Marvis 执行 | ✅ 2026-10-03（占位身份包，见下） |
+| P4 | 重打包正式包 + 提交审核（商店文案 + 截图 + 隐私 URL） | 老板确认，Marvis 备料 | ⬜ |
+
+**P3 实际执行结果（2026-10-03 已完成）**
+
+- PWABuilder 可打包性校验全部通过：Manifest 28/46（Required 字段齐备）、图标 192 / 512 / maskable-512 实测尺寸与声明一致、Service Worker 实测 1 条 active 注册（`/sw.js`，缓存 `opscompass-static-v0.10.1`）、HTTPS 有效；待补项均为不阻塞打包的可选增强项（`screenshots` / `related_applications` / `iarc_rating_id` 等）。
+- 已产出并下载 Windows 包（`运营智脑.msixbundle` + `sideload.msix` + `classic.appxbundle` + `install.ps1`）。
+- **阻断点（转入 P2）**：包内 Identity 三项（`Package/Identity/Name` = `MyCompany.OpsCompass`、`Package/Identity/Publisher` = `CN=3a54a224-05dd-42aa-85bd-3f3c1478fdca`、`PublisherDisplayName` = `My Company Inc`）均为 PWABuilder 占位值，须由 Partner Center 真实标识替换后重新打包；未编造标识，如实停在该步。
+- 商店截图已采集 2 张公开页（1366×768）；`/terms`、`/about`、`/register`、`/dashboard` 均重定向至 `/login`，当前公开可达页仅登录页与隐私页。
+- 结论：P3 的「可打包性与本地验证链路」已闭环，正式提交的唯一前置是 P2 的真实包标识。
 
 **P1-b 实际执行结果（2026-10-03 已完成）**
 
@@ -331,8 +341,8 @@ cd ~/OpsCompass && ./start.sh
 | 图标全套 | ✅ | `frontend/public/icons/` 5 张 + favicon.ico |
 | 隐私政策页 | ✅ | `frontend/public/privacy.html`（联系邮箱 mxh6789@live.cn） |
 | 隐私政策公网 URL | ✅ | `https://opscompass.pages.dev/privacy`（2026-10-03 上线，`/privacy.html` 为 308 跳转） |
-| 商店截图（≥1 张，1366×768 起） | ⬜ | 需登录应用实机截取，建议 P1 完成后从托管地址截取 |
-| MSIX 安装包 | ⬜ | 随 P3 产出 |
+| 商店截图（≥1 张，1366×768 起） | ⚠️ | 已从托管地址采集 2 张公开页（登录页 / 隐私页，实测 1366×768）；`/terms`、`/about`、`/register`、`/dashboard` 均重定向至登录页，暂不可用，建议后续补 1920×1080 |
+| MSIX 安装包 | ⚠️ | 2026-10-03 已产出 `运营智脑.msixbundle`（含 `sideload.msix` / `classic.appxbundle` / `install.ps1`），但为**占位身份包**（仅可侧载），正式包待 P2 回填真实标识后重打 |
 
 ### 9.4 S2–S4 启动条件
 

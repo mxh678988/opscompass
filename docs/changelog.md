@@ -37,9 +37,13 @@ AIGC:
 
 - **部署文档同步**：`docs/deployment-manual.md` 形态总览由三类扩为四类（新增「C 生产镜像直用」，原应用市场离线并列为「D」），新增形态 C 完整部署步骤（联网 / 离线两条路径、HTTPS 叠加、验收标准）与生产升级流程；`deploy/README.md` 补充生产编排与离线包的使用说明。
 
+- **忽略 Wrangler 本地状态**：`.gitignore` 新增 `.wrangler/`，避免 Cloudflare Wrangler 的本地缓存与登录态（`.wrangler/cache/pages.json`、`wrangler-account.json`）误入版本库；该目录已存在于工作区但未被跟踪。
+
 ### 发布
 
 - **Cloudflare Pages 公网托管上线（P1，2026-10-03）**：站点与隐私页经 Wrangler 直传上线至 Cloudflare Pages 项目 `opscompass`（Production@main，源提交 ff57379；上传 47 文件 / 0.75 MB，部署 ID 39bfc4c8）。生产地址 `https://opscompass.pages.dev/`，隐私政策 `https://opscompass.pages.dev/privacy`（`/privacy.html` 为 308 跳转）。实测 `/`、`/privacy`、`manifest.webmanifest`、`sw.js`、`offline.html` 均返回 200。发布脚本新增 `wrangler whoami` 登录态前置校验与 `$LASTEXITCODE` 退出码校验，规避「认证失败仍报完成」的假成功。`PUBLISH_CHECKLIST.md` 9.1/9.2/9.3、`STORE_LISTING.md`、`MSSTORE_GUIDE.md`、`CLOUDFLARE_PAGES_GUIDE.md` 已同步回填。
+
+- **微软商店上架 P3 打包实测完成（2026-10-03）**：PWABuilder 对 `https://opscompass.pages.dev/` 报告卡校验全部通过——可安装性 / 可打包性通过（Manifest 28/46，Required 字段齐备）、图标 192 / 512 / maskable-512 实测尺寸与声明一致、Service Worker 实测 1 条 active 注册（`/sw.js`，缓存 `opscompass-static-v0.10.1`）、HTTPS 安全上下文有效；待补项（`screenshots` / `related_applications` / `iarc_rating_id` 及若干推荐能力项）均为**不阻塞打包**的可选增强项。已产出并下载 Windows 安装包（`运营智脑.msixbundle` + `.sideload.msix` + `.classic.appxbundle` + `install.ps1`）。**阻断点**：包内 Identity 三项（`Package/Identity/Name` = `MyCompany.OpsCompass`、`Package/Identity/Publisher` = `CN=3a54a224-05dd-42aa-85bd-3f3c1478fdca`、`PublisherDisplayName` = `My Company Inc`）均为 PWABuilder 预填占位值，须待 Partner Center（P2）预留产品名称并回填真实标识后**重新打包**方可提交，本次未编造任何标识；PWABuilder 免登录即可打包，无登录墙阻断。商店截图已采集 2 张公开可达页（登录页 / 隐私页，实测 1366×768），`/terms`、`/about`、`/register`、`/dashboard` 因需登录一律重定向至 `/login`，暂不可作为公开素材。`MSSTORE_GUIDE.md` 第五章排期状态与新增 5.1 实测结论、`PUBLISH_CHECKLIST.md` 概览表 / 6.1 / 七、版本发布历史 / 9.1 / 9.2 / 9.3 已同步回填。
 
 ## [0.10.1] - 2026-09-30
 
