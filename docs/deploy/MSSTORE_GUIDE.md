@@ -83,7 +83,7 @@ AIGC:
 | 图标尺寸 | ✅ 实测与声明一致：192×192、512×512、maskable 512×512 |
 | Service Worker / 离线 | ✅ 实测 1 条 active 注册（`/sw.js`，scope 为站点根），Cache Storage 含 `opscompass-static-v0.10.1` |
 | HTTPS / 安全上下文 | ✅ Cloudflare Pages 提供有效 HTTPS |
-| 待补项 | ⚠️ 均为**可选增强项，不阻塞打包**：`screenshots`、`related_applications`、`iarc_rating_id` 未配；`scope_extensions` / `file_handlers` / `launch_handler` / `share_target` / `widgets` 等推荐能力项未配 |
+| 待补项 | ⚠️ 均为**可选增强项，不阻塞打包**：`screenshots`、`launch_handler`（含 `handle_links` / `prefer_related_applications`）已于 2026-10-03 补齐并随 `frontend/public/manifest.webmanifest` 落地，构建后位于 `frontend/dist/screenshots/`；`related_applications`、`iarc_rating_id` 及 `scope_extensions` / `file_handlers` / `share_target` / `widgets` 等推荐能力项仍未配 |
 
 **打包产出（占位身份，仅可侧载）**
 
@@ -108,8 +108,9 @@ AIGC:
 | `pwabuilder-reportcard-1366x768.png` | PWABuilder 报告卡（校验证据） |
 
 > 站点为需登录的 SPA：`/terms`、`/about`、`/register`、`/dashboard` 均重定向至 `/login?redirect=...`，当前公开可达页仅 `/login` 与 `/privacy`，故商店截图暂为 2 张（商店要求 1–10 张，已达标下限；建议后续补 1 张 1920×1080 或更多公开页截图）。
+> 2026-10-03 变更：两张截图已复制进仓库 `frontend/public/screenshots/`，并在 `frontend/public/manifest.webmanifest` 的 `screenshots` 字段以 1366×768 / `form_factor: wide` 引用（提审表单填写稿见 `docs/deploy/MSSTORE_SUBMISSION_FORM.md`）。
 
-**P3 遗留阻断点（转入 P2/P4）**：① 三项真实包标识；② 商店截图数量与 manifest `screenshots` 字段可选补全。
+**P3 遗留阻断点（转入 P2/P4）**：① 三项真实包标识（硬阻塞）；② `related_applications` / `iarc_rating_id` 等可选增强项。`screenshots` 与 `launch_handler` 已于 2026-10-03 补齐，不再列为遗留项。
 
 ## 六、风险与大坑
 

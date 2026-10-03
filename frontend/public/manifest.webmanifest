@@ -33,6 +33,27 @@
       "purpose": "maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshots/login-page-1366x768.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "登录页 · 运营智脑 OpsCompass"
+    },
+    {
+      "src": "/screenshots/privacy-policy-page-1366x768.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "隐私政策页 · 运营智脑 OpsCompass"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "handle_links": "preferred",
+  "prefer_related_applications": false,
   "shortcuts": [
     {
       "name": "运营总览",
