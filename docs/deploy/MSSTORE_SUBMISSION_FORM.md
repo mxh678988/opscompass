@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_411b8af2bec911f1884b525400cd780f
+    ReservedCode1: fdZlrDHXnJDeSSnlOOaRXQIarcu9AMXbI/MquGWmXW5EbmjJy4SKwihPybELiSBnoG17D6oWSi8K2vDIb/fcyilaRECIXyHNPcDsw02s0HkPGNPg3ZQ+xkxzbqfK3jd9azaxvLx0S7OGEkwk1SokCGQomLY55uXM9CIZStkD5uphYHbipSduACBY+eg=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_411b8af2bec911f1884b525400cd780f
+    ReservedCode2: fdZlrDHXnJDeSSnlOOaRXQIarcu9AMXbI/MquGWmXW5EbmjJy4SKwihPybELiSBnoG17D6oWSi8K2vDIb/fcyilaRECIXyHNPcDsw02s0HkPGNPg3ZQ+xkxzbqfK3jd9azaxvLx0S7OGEkwk1SokCGQomLY55uXM9CIZStkD5uphYHbipSduACBY+eg=
+---
+
 # 运营智脑 OpsCompass · Microsoft Store（Partner Center）提审表单填写稿
 
 > 生成时间：2026-10-03 | 适用版本：v0.10.1+ | 对应流程阶段：S1-P4（提交审核）
@@ -276,3 +287,4 @@ AI 能力默认调用本机本地大模型（数据不出设备）；如使用�
 
 ---
 **关联文档**：`docs/deploy/MSSTORE_GUIDE.md`、`docs/deploy/STORE_LISTING.md`、`docs/deploy/PUBLISH_CHECKLIST.md`、`docs/deploy/PWA_GUIDE.md`
+*（内容由AI生成，仅供参考）*
