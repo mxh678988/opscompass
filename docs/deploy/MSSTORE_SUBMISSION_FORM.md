@@ -2,19 +2,21 @@
 AIGC:
     Label: "1"
     ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_411b8af2bec911f1884b525400cd780f
-    ReservedCode1: fdZlrDHXnJDeSSnlOOaRXQIarcu9AMXbI/MquGWmXW5EbmjJy4SKwihPybELiSBnoG17D6oWSi8K2vDIb/fcyilaRECIXyHNPcDsw02s0HkPGNPg3ZQ+xkxzbqfK3jd9azaxvLx0S7OGEkwk1SokCGQomLY55uXM9CIZStkD5uphYHbipSduACBY+eg=
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_057260adbecb11f1884b525400cd780f
+    ReservedCode1: oN65DiqDGs+0GonDCHBgDYTvZr2mDD1gYOlaj6FnmpvGS1kIvN7NeGZaH/uxY+3ftVZyWXmVA9KgnW4z5ejxZ+HOeWtZMk55PsZG5QeE7jFFsCav5BpPSEZbrhskoxxy0uNoRqDYPxY1awnB276N8ivfaPIdfqO7j3z6indsZsfKzfVYuCiynSmnLgg=
     ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_411b8af2bec911f1884b525400cd780f
-    ReservedCode2: fdZlrDHXnJDeSSnlOOaRXQIarcu9AMXbI/MquGWmXW5EbmjJy4SKwihPybELiSBnoG17D6oWSi8K2vDIb/fcyilaRECIXyHNPcDsw02s0HkPGNPg3ZQ+xkxzbqfK3jd9azaxvLx0S7OGEkwk1SokCGQomLY55uXM9CIZStkD5uphYHbipSduACBY+eg=
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_057260adbecb11f1884b525400cd780f
+    ReservedCode2: oN65DiqDGs+0GonDCHBgDYTvZr2mDD1gYOlaj6FnmpvGS1kIvN7NeGZaH/uxY+3ftVZyWXmVA9KgnW4z5ejxZ+HOeWtZMk55PsZG5QeE7jFFsCav5BpPSEZbrhskoxxy0uNoRqDYPxY1awnB276N8ivfaPIdfqO7j3z6indsZsfKzfVYuCiynSmnLgg=
 ---
+
+
 
 # 运营智脑 OpsCompass · Microsoft Store（Partner Center）提审表单填写稿
 
-> 生成时间：2026-10-03 | 适用版本：v0.10.1+ | 对应流程阶段：S1-P4（提交审核）
+> 生成时间：2026-10-03 | 最后更新：2026-10-03（回填 P2 真实产品标识与产品状态） | 适用版本：v0.10.1+ | 对应流程阶段：S1-P4（提交审核）
 > 配套文档：[MSSTORE_GUIDE.md](./MSSTORE_GUIDE.md)（打包与流程）、[STORE_LISTING.md](./STORE_LISTING.md)（双语文案与素材）、[PUBLISH_CHECKLIST.md](./PUBLISH_CHECKLIST.md)（发布清单）
 > 用途：Partner Center「新提交」页面逐字段复制粘贴，避免临场编写。
-> 标记约定：**✅ 可直接照抄** / **⏳ 待 P2 回填**（P2 = 老板本人实名注册 Partner Center 并预留产品名称后，回填产品标识与正式包）
+> 标记约定：**✅ 可直接照抄** / **⏳ 待 P2 回填**（P2 = 老板本人实名注册 Partner Center 并预留产品名称后，回填产品标识与正式包）——P2 已于 **2026-10-03 完成**，本表单已无 ⏳ 回填项，剩余 ⏳ 项均为 P4 提交动作（上传包 / IARC 问卷）。
 
 ---
 
@@ -22,8 +24,8 @@ AIGC:
 
 | # | Partner Center 区块 | 字段 | 状态 | 取值 / 指向 |
 |---|---|---|---|---|
-| 1 | Packages | 安装包 | ⏳ 待 P2 回填 | 正式 `.msixbundle` 须待真实包标识重打 |
-| 2 | Packages | 三项包标识 | ⏳ 待 P2 回填 | 见 §七 |
+| 1 | Packages | 安装包 | ⏳ 待 P4 上传 | 正式包 `OpsCompass-9NVPQCMPZGLN.msixbundle`（真实身份，2.12 MB）已产出，见 §七.1 |
+| 2 | Packages | 三项包标识 | ✅ 已回填 | 真实值见 §七.2；产品预留信息（Store ID `9NVPQCMPZGLN`、草稿态、名称保留至约 2027-01-03）见 §七.0 |
 | 3 | Store listing | 产品名称 | ✅ | 运营智脑（OpsCompass） |
 | 4 | Store listing | 描述（Description） | ✅ | 见 §3.1（中/英） |
 | 5 | Store listing | 功能（Product features） | ✅ | 见 §3.2（6 条） |
@@ -44,11 +46,13 @@ AIGC:
 
 | 字段 | 可直接照抄的值 |
 |---|---|
-| 预留产品名称（提交前先在「产品标识」页确认） | `运营智脑` |
+| 已预留产品名称（Partner Center 实际预留值） | `运营智脑 OpsCompass`（2026-10-03 预留成功，一次通过） |
+| Store ID | `9NVPQCMPZGLN` |
 | 英文名称（英文列表页展示用） | `OpsCompass` |
-| 建议商店展示名（若产品名可拼接） | `运营智脑 OpsCompass` |
+| 包内 `Properties/DisplayName` | `运营智脑` |
 
-> 说明：产品名称一旦提交审核即被锁定，改动需重新提审。请在 P2 阶段**先预留、后打包**，保证包内 `Identity` 与预留名称一致。
+> 说明：产品名称一旦提交审核即被锁定，改动需重新提审。P2 已**先预留、后打包**，包内 `Identity` 与预留产品一致（见 §七.2）。
+> ⚠️ 保留期限：Partner Center 页面原文要求「必须在**三个月内**将此应用提交到 Microsoft Store，否则将会丢失保留的名称」，即须在 **2027-01-03** 前提交；产品当前为**草稿状态**。
 
 ---
 
@@ -132,7 +136,7 @@ Note: this app is a PWA. The Store package launches the app directly; a full sel
 |---|---|
 | 版权（Copyright） | `© 2026 BY LAOMENG 网络工作室` |
 | 商标信息 | `运营智脑、OpsCompass 为 BY LAOMENG 网络工作室所有` |
-| 开发者（Publisher display name） | `BY LAOMENG 网络工作室`（正式值以 Partner Center 产品标识为准，见 §七） |
+| 开发者（Publisher display name） | `LAOMENG 网络工作室`（P2 已回填的真实值，见 §七.2；文案里的 `BY LAOMENG 网络工作室` 为品牌写法，商店表单以本行为准） |
 
 ### 3.5 系统要求（System requirements）与 Docker 依赖声明
 
@@ -220,7 +224,7 @@ AI 能力默认调用本机本地大模型（数据不出设备）；如使用�
 | 是否收集个人信息 | 否（本地部署，见 §5.2） |
 | 是否含在线购物 / 内购 | 无 |
 | 目标受众 | 企业与运营从业者（成年人），**不面向 13 岁以下儿童** |
-| 结果回填 | ⏳ 待 P2 问卷完成后回填 `iarc_rating_id` 至 manifest 与商店元数据 |
+| 结果回填 | ⬜ 待 P4：IARC 问卷在 Partner Center 提交时填写，生成 `iarc_rating_id` 后回填 manifest 与商店元数据 |
 
 ---
 
@@ -233,32 +237,46 @@ AI 能力默认调用本机本地大模型（数据不出设备）；如使用�
 | 电话（Phone） | 留空 | ✅ 不提供 |
 | 官网 / 落地页 | `https://opscompass.pages.dev/` | ✅ |
 | 隐私 / 合规专页 | `https://opscompass.pages.dev/privacy` | ✅ |
-| 开发者名称 | `BY LAOMENG 网络工作室`（正式值以 §七 为准） | ⏳ 待 P2 回填 |
+| 开发者名称 | `LAOMENG 网络工作室`（P2 真实值，见 §七.2） | ✅ |
 | 其他联系方式 | `mxh6789@gmail.com` **仅为 Cloudflare 账号标识，不得作为对外联系方式** | ✅ 禁止填入 |
 
 ---
 
-## 七、包与提交（Packages）— 待 P2 回填清单
+## 七、包与提交（Packages）— P2 已回填，待 P4 上传
+
+### 7.0 产品预留记录（P2 已完成，2026-10-03）
+
+| 项目 | 值 |
+|---|---|
+| Partner Center 账号 | `mxh6789@live.cn`（已完成实名；Partner Center 显示名 `xianghui`） |
+| 预留产品名称 | 运营智脑 OpsCompass（一次通过，未启用备选名） |
+| Store ID | `9NVPQCMPZGLN` |
+| 产品状态 | 草稿（未提交认证、未配置定价） |
+| 名称保留截止 | 约 **2027-01-03**（页面要求三个月内提交，否则丢失保留的名称） |
+| Store URL | `https://apps.microsoft.com/detail/9NVPQCMPZGLN` |
+| Store protocol link | `ms-windows-store://pdp/?productid=9NVPQCMPZGLN` |
 
 ### 7.1 包上载
 
 | 字段 | 值 | 状态 |
 |---|---|---|
-| 安装包文件 | `运营智脑.msixbundle`（正式包，须重新生成） | ⏳ 待 P2 回填 |
-| 当前已有产物 | `OpsCompass.msixbundle`（2.1 MB，**占位身份包，仅可侧载，不可提交**；工作区 output 目录留存） | ✅ 仅本地验证 |
+| 正式提交包 | `OpsCompass-9NVPQCMPZGLN.msixbundle`（2,175.5 KB，真实身份，2026-10-03 由 PWABuilder 以真实标识重打） | ✅ 可提交 |
+| 配套产物 | `OpsCompass-9NVPQCMPZGLN.sideload.msix`（2,173.8 KB）/ `OpsCompass-9NVPQCMPZGLN.classic.appxbundle`（2,217.7 KB）/ `install.ps1` / `pwainstaller.exe`（会话 output 目录） | ✅ 可侧载验证 |
 | 架构 | x64（PWABuilder 默认产物） | ✅ |
-| 版本 | `1.0.1.0`（占位包内值，正式包版本号按 P2 确认后统一） | ⏳ 待确认 |
+| 版本 | `1.0.1.0`（对应产品版本 v0.10.1） | ✅ 包内实测通过 |
+| 已弃用产物 | `OpsCompass.msixbundle` / `运营智脑.msixbundle`（占位身份 `MyCompany.OpsCompass`，仅可用于本地侧载） | ⛔ 禁止上传 |
 
-### 7.2 三项包标识（必须由 Partner Center 产品标识页复制，严禁沿用占位值）
+### 7.2 三项包标识（已回填 Partner Center 真实值，2026-10-03）
 
-| Identity 字段 | 当前占位值（不可用） | 正式值 | 状态 |
-|---|---|---|---|
-| `Package/Identity/Name` | `MyCompany.OpsCompass` | 待回填 | ⏳ P2 |
-| `Package/Identity/Publisher` | `CN=3a54a224-05dd-42aa-85bd-3f3c1478fdca` | 待回填 | ⏳ P2 |
-| `Package/Properties/PublisherDisplayName` | `My Company Inc` | 待回填 | ⏳ P2 |
-| 产品 ID / Store ID（Partner Center 生成） | — | 待回填 | ⏳ P2 |
+| Identity 字段 | 真实值 | 核验 |
+|---|---|---|
+| `Package/Identity/Name` | `LAOMENG.OpsCompass` | ✅ 包内一致 |
+| `Package/Identity/Publisher` | `CN=A65E517F-EADC-4803-B9C4-E753441561FC` | ✅ 包内一致 |
+| `Package/Properties/PublisherDisplayName` | `LAOMENG 网络工作室` | ✅ 包内一致 |
+| 产品 ID / Store ID（Partner Center 生成） | `9NVPQCMPZGLN` | ✅ 产品标识页 |
+| Package Family Name（PFN） | `LAOMENG.OpsCompass_9wp8gzp9rz5xa` | ✅ 产品标识页 |
 
-> 流程：P2 预留产品名称 → 复制上述三项 → 用 PWABuilder 以站点 `https://opscompass.pages.dev/` + 真实标识**重新打包** → 回到本表回填 → 上传提交。
+> 已执行流程：P2 预留产品名称 → 复制上述三项 → 用 PWABuilder 以站点 `https://opscompass.pages.dev/` + 真实标识**重新打包** → 回到本表回填 → 上传提交。核验方式为解包读取包内 `AppxManifest.xml`（Name / Publisher / Version `1.0.1.0` / PublisherDisplayName 四项全match）。
 
 ### 7.3 提交前自检
 
@@ -267,7 +285,7 @@ AI 能力默认调用本机本地大模型（数据不出设备）；如使用�
 | 隐私政策 URL 可公网 HTTPS 访问 | `https://opscompass.pages.dev/privacy` 返回 200 |
 | 截图 1–10 张、≥ 1366×768 | 当前 2 张，均实测 1366×768 |
 | 图标 300×300 已备 | `docs/deploy/store-assets/icon-512-300x300.png` |
-| 包内 Identity 与预留名称一致 | 三项标识回填后方可提交 |
+| 包内 Identity 与预留产品一致 | ✅ 已核验：Name / Publisher / Version `1.0.1.0` / PublisherDisplayName 四项与 Partner Center 完全一致 |
 | Docker 依赖已在描述中明示 | 见 §3.1 运行说明与 §3.5 |
 | AIGC 声明已做 | 见 §5.3 |
 | 中英双语文案 | 见 §3.1 / §3.2 |
@@ -275,16 +293,18 @@ AI 能力默认调用本机本地大模型（数据不出设备）；如使用�
 
 ---
 
-## 八、待办汇总（转 P2 / P4）
+## 八、待办汇总（转 P4）
 
 | 序号 | 待办 | 责任方 | 阻塞级别 |
 |---|---|---|---|
-| 1 | Partner Center 注册与产品名称预留 | 老板本人（实名） | 硬阻塞 |
-| 2 | 回填三项包标识并重新打包 `.msixbundle` | Marvis 重打包 | 硬阻塞 |
-| 3 | IARC 分级问卷填写、回填 `iarc_rating_id` | 老板确认，Marvis 记录 | 提交前 |
-| 4 | 支持 URL 最终确认（是否建独立支持页） | 老板决策 | 非阻塞 |
-| 5 | 可选补拍 1920×1080 截图 / 商店展示图 | Marvis | 非阻塞 |
+| 1 | Partner Center 注册与产品名称预留 | 老板本人（实名） | ✅ 已完成（2026-10-03） |
+| 2 | 回填三项包标识并重新打包 `.msixbundle` | Marvis 重打包 | ✅ 已完成（2026-10-03） |
+| 3 | 上传正式包并提交审核（须于 2027-01-03 前） | 老板确认，Marvis 备料 | 提交前 |
+| 4 | IARC 分级问卷填写、回填 `iarc_rating_id` | 老板确认，Marvis 记录 | 提交前 |
+| 5 | 支持 URL 最终确认（是否建独立支持页） | 老板决策 | 非阻塞 |
+| 6 | 可选补拍 1920×1080 截图 / 商店展示图 | Marvis | 非阻塞 |
 
 ---
 **关联文档**：`docs/deploy/MSSTORE_GUIDE.md`、`docs/deploy/STORE_LISTING.md`、`docs/deploy/PUBLISH_CHECKLIST.md`、`docs/deploy/PWA_GUIDE.md`
+*（内容由AI生成，仅供参考）*
 *（内容由AI生成，仅供参考）*
