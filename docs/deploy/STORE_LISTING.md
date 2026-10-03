@@ -95,7 +95,7 @@ Data sovereignty: designed for local or self-hosted deployment; business data st
 
 | 素材 | 规格要求 | 状态 |
 | --- | --- | --- |
-| 应用图标 | 300×300 PNG（商店主图），另需 44×44 / 50×50 / 150×150 | 待从 `frontend/public/icons/` 导出 |
+| 应用图标 | 300×300 PNG（商店主图），另需 44×44 / 50×50 / 150×150 | ✅ 已导出至 `docs/deploy/store-assets/`：`icon-512-300x300.png`（主图）、`icon-512-150x150.png`、`icon-512-50x50.png`、`icon-512-44x44.png`（源图 `frontend/public/icons/icon-512.png`） |
 | 桌面截图 | 1366×768 或 1920×1080，1–10 张，PNG | 待补（登录页、总览、罗盘、指标中心、AI 参谋） |
 | 商店展示图 | 1920×1080 宣传图（可选） | 待补 |
 | 隐私政策页 | 可公网访问的 HTTPS 链接 | ✅ `https://opscompass.pages.dev/privacy`（2026-10-03 上线；填 `/privacy`，勿填 `/privacy.html`） |
