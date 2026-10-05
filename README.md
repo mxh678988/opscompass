@@ -124,9 +124,26 @@ npm run dev
 - 数据文件一律放在 `data/` 下，禁止写入系统盘或其他目录。
 - 提交前请确认 `.gitignore` 覆盖新增的本地文件类型。
 
+## 开源说明
+
+本项目采用 [Apache License 2.0](LICENSE) 开源。开源范围包括前端、后端、部署配置、文档与测试；商业化模块、数字人模块及高级功能暂不开源。
+
+| 项目 | 开源版 | 商业版 |
+|---|---|---|
+| 功能范围 | 基础功能 + 社区插件 | 全部功能 + 高级功能 |
+| 技术支持 | 社区支持 | 技术支持 + 定制开发 |
+| 更新频率 | 季度更新 | 月度更新 |
+| 价格 | 免费 | 付费订阅 |
+
+- 开源方案：[docs/OPEN_SOURCE_PLAN.md](docs/OPEN_SOURCE_PLAN.md)
+- 贡献指南：[CONTRIBUTING.md](CONTRIBUTING.md)
+- 版权归属：[NOTICE](NOTICE)
+
 ## 文档
 
 - [架构设计](docs/architecture.md)
 - [接口说明](docs/api.md)
 - [更新日志](docs/changelog.md)
+- [开源方案](docs/OPEN_SOURCE_PLAN.md)
+- [贡献指南](CONTRIBUTING.md)
 *（内容由AI生成，仅供参考）*
