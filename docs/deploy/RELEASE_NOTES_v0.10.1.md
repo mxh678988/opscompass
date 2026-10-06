@@ -2,7 +2,9 @@
 
 > 发布日期：2026-10-02 | 版本：v0.10.1 | 类型：生产部署能力版本
 >
-> **说明**：此文档为开源版发布正文，正式发布前补充 GitHub Release 按钮、CI 徽章与社区入口后即可对外使用。
+> **开源版说明**：这是 OpsCompass（运营智脑）发布的首个开源基础版本，非稳定版。项目采用 Apache License 2.0 许可，欢迎通过 Issues 反馈、按 CONTRIBUTING.md 参与共建。
+>
+> 仓库：https://github.com/mxh678988/opscompass ｜ 许可证：[LICENSE](https://github.com/mxh678988/opscompass/blob/main/LICENSE) ｜ 安全策略：[SECURITY.md](https://github.com/mxh678988/opscompass/blob/main/SECURITY.md)
 
 ## 一、版本概述
 
