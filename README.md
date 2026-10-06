@@ -1,6 +1,9 @@
 
 # 运营智脑
 
+[![CI](https://github.com/mxh678988/opscompass/actions/workflows/ci.yml/badge.svg)](https://github.com/mxh678988/opscompass/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mxh678988/opscompass/blob/main/LICENSE)
+
 > 让数据自动做出最优决策
 
 运营智脑是一体化的运营数据智能分析与决策平台。项目采用**单根目录**开发模式，所有代码、数据、文档、脚本与部署配置均收敛在 `D:\OpsCompass` 下（`OpsCompass` 为技术目录名，对外品牌统一为「运营智脑」），便于备份、迁移与统一运维。
