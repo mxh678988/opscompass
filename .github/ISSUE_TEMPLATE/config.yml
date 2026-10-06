@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 使用咨询与技术支持
+    url: mailto:mxh6789@live.cn
+    about: 安装部署、使用问题、商业合作与定制开发，请邮件联系（工作日回复）
+  - name: 文档与手册
+    url: https://github.com/mxh678988/opscompass/blob/main/README.md
+    about: 部署与使用前，请先查阅 README 与 docs/ 目录下的手册

@@ -137,6 +137,8 @@ npm run dev
 
 - 开源方案：[docs/OPEN_SOURCE_PLAN.md](docs/OPEN_SOURCE_PLAN.md)
 - 贡献指南：[CONTRIBUTING.md](CONTRIBUTING.md)
+- 行为准则：[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- 安全策略：[SECURITY.md](SECURITY.md)
 - 版权归属：[NOTICE](NOTICE)
 
 ## 文档

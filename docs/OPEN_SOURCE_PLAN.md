@@ -214,3 +214,24 @@
 5. 发布贡献指南
 6. 启动社区运营
 7. 规划商业版本
+
+## 八、执行状态与待决项（2026-10-06 更新）
+
+### 1. 已完成
+
+| 项 | 产出 | 状态 |
+|---|---|---|
+| 许可证 | `LICENSE`（Apache License 2.0 全文）、`NOTICE` | 已提交 |
+| 贡献指南 | `CONTRIBUTING.md`（流程、规范、CLA 条款） | 已提交 |
+| 社区文件 | `.github/ISSUE_TEMPLATE/`（缺陷/功能）、`.github/PULL_REQUEST_TEMPLATE.md`、`CODE_OF_CONDUCT.md`、`SECURITY.md` | 已提交 |
+| 发布说明 | `docs/deploy/OPEN_SOURCE_RELEASE_NOTES.md`（开源版 Release 草稿） | 已提交 |
+| 仓库自检 | 远端 `mxh678988/opscompass` 内容干净：无凭据、无构建产物；`backups/` `data/` `logs/` 仅跟踪 `.gitkeep` 与示例 CSV | 通过 |
+
+### 2. 待决项
+
+| 编号 | 事项 | 说明 |
+|---|---|---|
+| D1 | 仓库可见性 | 远端仓库当前为私有，尚未公开。转公开不可逆，需产品负责人授权后执行 |
+| D2 | 部分开源落地方式 | A：当前仓库直接公开（代码全量，含商业化模块）；B：另建裁剪后的开源仓库；当前选择 C：暂缓公开，先在私有仓库完善社区文件 |
+| D3 | 许可证与使用限制冲突 | 本文档第一章表格中「开源版使用限制：非商业用途」与 Apache License 2.0（允许商业使用）冲突。已按 Apache 2.0 落地，未在 README 写入非商业限制；若确需限制商用，须改用其它许可证 |
+| D4 | README 合规标识 | `README.md` 顶部含 AIGC 标识元数据、末尾含「内容由AI生成，仅供参考」，公开前需确认是否保留 |
