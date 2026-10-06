@@ -231,6 +231,12 @@
 > 说明：GitHub Actions 校验与本地 `scripts/ci.ps1` 口径一致——本地脚本面向 Windows + Docker 全流程，
 > Actions 侧只跑其中不依赖容器与运行实例的项（版本一致性、依赖可复现、语法编译、接口契约、单测、前端构建与 lint）。
 > README 的 CI 徽章待仓库公开后再补（私有仓库徽章对外不可见）。
+>
+> 运行记录（2026-10-06）：
+> - run #1 [`37400302564`](https://github.com/mxh678988/opscompass/actions/runs/37400302564)（df137dd）1m37s，三个 job 全绿；
+> - 升级 actions 依赖至 node24 运行时（`checkout@v5` / `setup-python@v6` / `setup-node@v5`）后，
+>   run #2 [`37400937316`](https://github.com/mxh678988/opscompass/actions/runs/37400937316)（c72e976）43s，全绿，Node.js 20 弃用告警已消除。
+> - 残留非阻塞提示：`ubuntu-latest` 自 2026-10-19 起迁移至 Ubuntu 26 镜像（actions/runner-images#14748），不影响当前构建。
 
 ### 2. 待决项
 
