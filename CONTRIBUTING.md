@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_53072337c11911f1884b525400cd780f
+    ReservedCode1: IJ/uvon7aVsSYF+vmVn5QDZBK/1FRzbOMyWN/KJF4k38TBNlX+uMckgLOeUFFybvfSp7KIKX0nvGjLxVnEbG8InCtj0fcDtxL0vQr6iZ3pCTmzlFRbie19Udt5KCGNqfIH6pMHp5XTA1GfzeTEjizHz/1WDQUkBH0VNJo/9m0KBgOxLzaXHOlLRtUCo=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_53072337c11911f1884b525400cd780f
+    ReservedCode2: IJ/uvon7aVsSYF+vmVn5QDZBK/1FRzbOMyWN/KJF4k38TBNlX+uMckgLOeUFFybvfSp7KIKX0nvGjLxVnEbG8InCtj0fcDtxL0vQr6iZ3pCTmzlFRbie19Udt5KCGNqfIH6pMHp5XTA1GfzeTEjizHz/1WDQUkBH0VNJo/9m0KBgOxLzaXHOlLRtUCo=
+---
+
 # 贡献指南 · Contributing to OpsCompass
 
 感谢你有兴趣为「运营智脑 OpsCompass」贡献代码、文档或想法。本指南说明参与方式与协作规范，请在提交 Issue / Pull Request 前阅读。
@@ -82,3 +93,4 @@ PR 应尽量小而聚焦，便于审查；关联 Issue 的 PR 会优先处理。
 ---
 
 BY LAOMENG 网络工作室 · 老孟（孟祥辉）
+*（内容由AI生成，仅供参考）*
