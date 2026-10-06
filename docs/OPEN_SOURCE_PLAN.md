@@ -226,6 +226,11 @@
 | 社区文件 | `.github/ISSUE_TEMPLATE/`（缺陷/功能）、`.github/PULL_REQUEST_TEMPLATE.md`、`CODE_OF_CONDUCT.md`、`SECURITY.md` | 已提交 |
 | 发布说明 | `docs/deploy/OPEN_SOURCE_RELEASE_NOTES.md`（开源版 Release 草稿） | 已提交 |
 | 仓库自检 | 远端 `mxh678988/opscompass` 内容干净：无凭据、无构建产物；`backups/` `data/` `logs/` 仅跟踪 `.gitkeep` 与示例 CSV | 通过 |
+| 持续集成 | `.github/workflows/ci.yml`（push/PR 自动校验）+ `scripts/check_versions.py`（五源版本一致性）、`scripts/check_openapi.py`（接口契约基线），均为零 Docker 依赖的跨平台离线校验 | 已提交 |
+
+> 说明：GitHub Actions 校验与本地 `scripts/ci.ps1` 口径一致——本地脚本面向 Windows + Docker 全流程，
+> Actions 侧只跑其中不依赖容器与运行实例的项（版本一致性、依赖可复现、语法编译、接口契约、单测、前端构建与 lint）。
+> README 的 CI 徽章待仓库公开后再补（私有仓库徽章对外不可见）。
 
 ### 2. 待决项
 
@@ -234,4 +239,4 @@
 | D1 | 仓库可见性 | 远端仓库当前为私有，尚未公开。转公开不可逆，需产品负责人授权后执行 |
 | D2 | 部分开源落地方式 | A：当前仓库直接公开（代码全量，含商业化模块）；B：另建裁剪后的开源仓库；当前选择 C：暂缓公开，先在私有仓库完善社区文件 |
 | D3 | 许可证与使用限制冲突 | 本文档第一章表格中「开源版使用限制：非商业用途」与 Apache License 2.0（允许商业使用）冲突。已按 Apache 2.0 落地，未在 README 写入非商业限制；若确需限制商用，须改用其它许可证 |
-| D4 | README 合规标识 | `README.md` 顶部含 AIGC 标识元数据、末尾含「内容由AI生成，仅供参考」，公开前需确认是否保留 |
+| D4 | 合规标识（AIGC） | 合规流程已为 `README.md`、`CODE_OF_CONDUCT.md`、`SECURITY.md`、`.github/` 下三个模板、`OPEN_SOURCE_RELEASE_NOTES.md` 写入 AIGC 元数据块与「内容由AI生成，仅供参考」声明；`docs/changelog.md` 亦含同类元数据。**其中 Issue 模板的 `name/about/title/labels` 曾被元数据块整体覆盖导致模板失效，已修复为「GitHub 必需字段 + AIGC 块共存于同一 front matter」**。剩余待决：公开前是否保留全部 AIGC 标识（涉及品牌呈现与合规要求，需产品负责人确认） |

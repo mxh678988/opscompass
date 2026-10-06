@@ -1,0 +1,100 @@
+name: CI
+
+# 开源协作基线：任何 push 到 main 或针对 main 的 PR 都必须通过
+# - 五源版本一致性、依赖清单可复现性
+# - 后端语法编译、接口契约基线、后端单元测试
+# - 前端类型检查与生产构建、lint
+# 全部校验均可在无 Docker 的干净 runner 上离线执行。
+# 本地等价入口：powershell -ExecutionPolicy Bypass -File scripts/ci.ps1
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  consistency:
+    name: 版本一致性与依赖可复现性
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 五源版本一致性
+        run: python scripts/check_versions.py
+
+      - name: 依赖清单结构自检（离线）
+        run: python scripts/verify_requirements.py --offline
+
+      - name: 依赖 pin 是否真实存在于 PyPI
+        run: python scripts/verify_requirements.py
+
+  backend:
+    name: 后端编译、契约与单测
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: 安装后端依赖
+        run: pip install -r backend/requirements.txt
+
+      - name: 语法编译
+        run: python -m compileall -q backend/app
+
+      - name: 接口契约基线（快照 docs/openapi.json）
+        run: python scripts/check_openapi.py
+
+      - name: 单元测试
+        working-directory: backend
+        run: python -m pytest -q tests --no-header
+
+  frontend:
+    name: 前端类型检查与构建
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 类型检查与生产构建
+        run: npm run build
+
+      - name: lint
+        run: npm run lint
