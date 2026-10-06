@@ -126,7 +126,9 @@ npm run dev
 
 ## 开源说明
 
-本项目采用 [Apache License 2.0](LICENSE) 开源。开源范围包括前端、后端、部署配置、文档与测试；商业化模块、数字人模块及高级功能暂不开源。
+本项目采用 [Apache License 2.0](LICENSE) 开源。以下说明**仅限开源版**内容。
+
+---
 
 | 项目 | 开源版 | 商业版 |
 |---|---|---|
@@ -140,6 +142,8 @@ npm run dev
 - 行为准则：[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - 安全策略：[SECURITY.md](SECURITY.md)
 - 版权归属：[NOTICE](NOTICE)
+
+---
 
 ## 文档
 
