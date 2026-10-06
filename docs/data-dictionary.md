@@ -18,8 +18,8 @@ AIGC:
 | 项 | 值 |
 |---|---|
 | 数据库 | PostgreSQL 16（postgres:16-alpine） |
-| 业务表总数 | 59 |
-| 字段总数 | 765 |
+| 业务表总数 | 54 |
+| 字段总数 | 686 |
 |  Alembic 版本表 | alembic_version |
 | 表命名规范 | `oc_` 前缀 + 业务域 + 实体名 |
 
@@ -35,7 +35,6 @@ AIGC:
 | 学习进化 | 4 | `oc_learn_case`, `oc_learn_experiment`, `oc_learn_feedback`, `oc_learn_policy_weight` |
 | 审计与安全 | 1 | `oc_audit_log` |
 | 指标 | 5 | `oc_metric`, `oc_metric_category`, `oc_metric_dimension`, `oc_metric_dimension_rel`, `oc_metric_value` |
-| 数字人（一键生成） | 5 | `oc_dh_avatar`, `oc_dh_project`, `oc_dh_task`, `oc_dh_voice`, `oc_dh_workflow` |
 | 用户与权限 | 5 | `oc_permission`, `oc_role`, `oc_role_permission`, `oc_user`, `oc_user_role` |
 | 营销渠道 | 2 | `oc_channel_campaign`, `oc_channel_event` |
 | 采集调度 | 2 | `oc_collect_run`, `oc_collect_task` |
@@ -960,122 +959,6 @@ AIGC:
 | dims_hash | character varying | NO | 64 | ''::character varying | - |
 | value | numeric | NO | - | '0'::numeric | - |
 | created_at | timestamp with time zone | NO | - | now() | - |
-
-## 数字人（一键生成）
-
-### `oc_dh_avatar`
-
-当前行数：**2**
-
-| 字段 | 类型 | 可空 | 长度 | 默认值 | 键 |
-|---|---|---|---|---|---|
-| id | integer | NO | - | nextval('oc_dh_avatar_id_seq'::regclass) | PK |
-| tenant_id | integer | NO | - | - | - |
-| name | character varying | NO | 128 | - | - |
-| avatar_type | character varying | NO | 16 | 'preset'::character varying | - |
-| gender | character varying | NO | 16 | 'neutral'::character varying | - |
-| style | character varying | NO | 64 | ''::character varying | - |
-| preview_url | character varying | NO | 512 | ''::character varying | - |
-| source_url | character varying | NO | 512 | ''::character varying | - |
-| engine | character varying | NO | 64 | ''::character varying | - |
-| status | character varying | NO | 16 | 'ready'::character varying | - |
-| remark | text | NO | - | ''::text | - |
-| created_at | timestamp with time zone | NO | - | now() | - |
-| updated_at | timestamp with time zone | YES | - | now() | - |
-
-### `oc_dh_project`
-
-当前行数：**1**
-
-| 字段 | 类型 | 可空 | 长度 | 默认值 | 键 |
-|---|---|---|---|---|---|
-| id | integer | NO | - | nextval('oc_dh_project_id_seq'::regclass | PK |
-| tenant_id | integer | NO | - | - | - |
-| name | character varying | NO | 255 | - | - |
-| topic | text | NO | - | ''::text | - |
-| source_text | text | NO | - | ''::text | - |
-| script | text | NO | - | ''::text | - |
-| segments | json | YES | - | - | - |
-| avatar_id | integer | YES | - | - | - |
-| voice_id | integer | YES | - | - | - |
-| workflow_id | integer | YES | - | - | - |
-| resolution | character varying | NO | 16 | '720x1280'::character varying | - |
-| aspect_ratio | character varying | NO | 16 | '9:16'::character varying | - |
-| duration_sec | integer | NO | - | 0 | - |
-| subtitle_enabled | boolean | NO | - | true | - |
-| bgm | character varying | NO | 255 | ''::character varying | - |
-| status | character varying | NO | 16 | 'draft'::character varying | - |
-| progress | integer | NO | - | 0 | - |
-| video_url | character varying | NO | 512 | ''::character varying | - |
-| audio_url | character varying | NO | 512 | ''::character varying | - |
-| cover_url | character varying | NO | 512 | ''::character varying | - |
-| simulated | boolean | NO | - | false | - |
-| ai_model | character varying | NO | 128 | ''::character varying | - |
-| error | text | NO | - | ''::text | - |
-| remark | text | NO | - | ''::text | - |
-| created_at | timestamp with time zone | NO | - | now() | - |
-| updated_at | timestamp with time zone | YES | - | now() | - |
-
-### `oc_dh_task`
-
-当前行数：**4**
-
-| 字段 | 类型 | 可空 | 长度 | 默认值 | 键 |
-|---|---|---|---|---|---|
-| id | integer | NO | - | nextval('oc_dh_task_id_seq'::regclass) | PK |
-| tenant_id | integer | NO | - | - | - |
-| project_id | integer | NO | - | - | - |
-| stage | character varying | NO | 16 | - | - |
-| stage_name | character varying | NO | 64 | ''::character varying | - |
-| seq | integer | NO | - | 0 | - |
-| status | character varying | NO | 16 | 'pending'::character varying | - |
-| progress | integer | NO | - | 0 | - |
-| engine | character varying | NO | 64 | ''::character varying | - |
-| input_brief | text | NO | - | ''::text | - |
-| output_url | character varying | NO | 512 | ''::character varying | - |
-| output_text | text | NO | - | ''::text | - |
-| message | text | NO | - | ''::text | - |
-| duration_ms | integer | NO | - | 0 | - |
-| started_at | timestamp with time zone | YES | - | - | - |
-| finished_at | timestamp with time zone | YES | - | - | - |
-| created_at | timestamp with time zone | NO | - | now() | - |
-
-### `oc_dh_voice`
-
-当前行数：**2**
-
-| 字段 | 类型 | 可空 | 长度 | 默认值 | 键 |
-|---|---|---|---|---|---|
-| id | integer | NO | - | nextval('oc_dh_voice_id_seq'::regclass) | PK |
-| tenant_id | integer | NO | - | - | - |
-| name | character varying | NO | 128 | - | - |
-| engine | character varying | NO | 32 | 'edge-tts'::character varying | - |
-| voice_id | character varying | NO | 128 | ''::character varying | - |
-| language | character varying | NO | 32 | 'zh-CN'::character varying | - |
-| gender | character varying | NO | 16 | 'neutral'::character varying | - |
-| speed | character varying | NO | 16 | '1.0'::character varying | - |
-| sample_url | character varying | NO | 512 | ''::character varying | - |
-| status | character varying | NO | 16 | 'ready'::character varying | - |
-| remark | text | NO | - | ''::text | - |
-| created_at | timestamp with time zone | NO | - | now() | - |
-| updated_at | timestamp with time zone | YES | - | now() | - |
-
-### `oc_dh_workflow`
-
-当前行数：**1**
-
-| 字段 | 类型 | 可空 | 长度 | 默认值 | 键 |
-|---|---|---|---|---|---|
-| id | integer | NO | - | nextval('oc_dh_workflow_id_seq'::regclas | PK |
-| tenant_id | integer | NO | - | - | - |
-| name | character varying | NO | 128 | - | - |
-| description | text | NO | - | ''::text | - |
-| steps | json | YES | - | - | - |
-| is_default | boolean | NO | - | false | - |
-| enabled | boolean | NO | - | true | - |
-| run_count | integer | NO | - | 0 | - |
-| created_at | timestamp with time zone | NO | - | now() | - |
-| updated_at | timestamp with time zone | YES | - | now() | - |
 
 ## 用户与权限
 

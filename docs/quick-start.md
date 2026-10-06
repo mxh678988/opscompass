@@ -67,12 +67,6 @@ docker compose ps
 2. 按分档建议选择模型（本地 Ollama 或云端 OpenAI 兼容接口）。
 3. 在 `.env` 中配置 `AI_ENABLED`、`AI_MODE`、`AI_API_BASE_URL`、`AI_API_KEY`、`AI_API_MODEL` 后重启 backend 容器。
 
-**数字人一键生成**
-
-1. 「数字人」页面依次维护形象库、音色库。
-2. 选用或新建工作流模板（`script → voice → avatar → compose` 四阶段）。
-3. 提交任务，跟踪四阶段进度与结果。
-
 ## 6. 常用命令
 
 | 目的 | 命令 |

@@ -24,8 +24,6 @@ const links = [
   { to: '/security-log', label: '安全日志' },
   { to: '/ai-governance', label: 'AI 治理' },
   { to: '/learning', label: '学习进化' },
-  { to: '/digital-human', label: '数字人' },
-  { to: '/commercial', label: '商业化' },
 ]
 
 /** 登录页不展示导航栏 */

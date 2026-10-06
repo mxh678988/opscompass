@@ -14,9 +14,7 @@ from app.api.v1.endpoints import (
     audit,
     auth,
     collect,
-    commercial,
     datasources,
-    digital_human,
     health,
     ingest,
     learning,
@@ -112,21 +110,5 @@ api_router.include_router(
     prefix="/learning",
     tags=["learning"],
     dependencies=[Depends(require_module_access("learning"))],
-)
-
-# 数字人一键生成：形象库 / 音色库 / 生成项目 / 四阶段编排 / 工作流模板
-api_router.include_router(
-    digital_human.router,
-    prefix="/digital-human",
-    tags=["digital-human"],
-    dependencies=[Depends(require_module_access("digital_human"))],
-)
-
-# 商业化中心（P10）：套餐定价 / 授权证书与数字签名校验 / 订单 / 用量配额
-api_router.include_router(
-    commercial.router,
-    prefix="/commercial",
-    tags=["commercial"],
-    dependencies=[Depends(require_module_access("commercial"))],
 )
 

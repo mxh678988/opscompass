@@ -52,16 +52,15 @@ AIGC:
 | 审计 | `audit:view` / `audit:export` | 导出会留痕，建议限管理员 |
 | 模型中心 | `model:view` / `model:config` | 模型接入配置 |
 | 学习进化 | `learning:view` / `learning:manage` | 策略权重与经验案例管理 |
-| 数字人 | `digital_human:view` / `digital_human:manage` | 形象、音色、工作流与任务 |
 
 **建议角色模板**
 
 | 角色 | 权限点建议 |
 |---|---|
-| 超级管理员 | 全部 50 个 |
-| 运营负责人 | `system:view`、`metric:*`、`ops:*`、`marketing:*`、`learning:*`、`digital_human:*`、`ai:view`、`ai:analyze` |
+| 超级管理员 | 全部 48 个 |
+| 运营负责人 | `system:view`、`metric:*`、`ops:*`、`marketing:*`、`learning:*`、`ai:view`、`ai:analyze` |
 | 数据分析员 | `datasource:view`、`datasource:sync`、`metric:view`、`ingest:*`、`collect:view`、`ai:view`、`ai:analyze` |
-| 内容运营 | `digital_human:*`、`marketing:view`、`learning:view` |
+| 内容运营 | `marketing:view`、`learning:view` |
 | 只读观察者 | 各模块 `*:view` |
 
 ## 4. 安全配置（`.env` 关键项）

@@ -133,7 +133,7 @@ Tenant (oc_tenant)
 - **初始化**：`python -m app.init_db` 建表，`python -m app.seed_demo` 写入演示数据（默认租户 + 演示数据源 + 4 个核心指标 + 近 31 天指标值）。
 - **迁移**：开发阶段用 `create_all`，进入 Phase 2 前引入 Alembic 管理增量迁移。
 
-## 5. 表清单速查（v0.10.1，共 64 张）
+## 5. 表清单速查（v0.10.1，共 54 张）
 
 > 全量字段级定义见 `docs/data-dictionary.md`；表数量以 `python -m app.init_db` 输出为准。
 
@@ -155,17 +155,7 @@ Tenant (oc_tenant)
 | oc_channel_event | 9 | 7 |
 | oc_collect_run | 16 | 1 |
 | oc_collect_task | 22 | 1 |
-| oc_com_license | 19 | 8 |
-| oc_com_license_event | 8 | 29 |
-| oc_com_order | 17 | 4 |
-| oc_com_plan | 20 | 7 |
-| oc_com_usage | 11 | 2 |
 | oc_data_source | 15 | 2 |
-| oc_dh_avatar | 13 | 2 |
-| oc_dh_project | 26 | 1 |
-| oc_dh_task | 17 | 4 |
-| oc_dh_voice | 13 | 2 |
-| oc_dh_workflow | 10 | 1 |
 | oc_doc_index | 11 | 9 |
 | oc_geo_task | 11 | 10 |
 | oc_import_task | 22 | 5 |
@@ -206,27 +196,4 @@ Tenant (oc_tenant)
 | oc_website_ai_config | 9 | 1 |
 | oc_website_page | 17 | 2 |
 
-### 5.2 数字人模块五表（P6，0.9.0）
-
-| 表名 | 用途 |
-|---|---|
-| oc_dh_avatar | 数字人形象库（名称、预览图、风格标签、状态） |
-| oc_dh_voice | 音色库（名称、语言、性别、引擎参数） |
-| oc_dh_workflow | 工作流模板（步骤序列、是否默认） |
-| oc_dh_project | 生成项目（口播稿、绑定形象/音色/工作流） |
-| oc_dh_task | 生成任务与四阶段状态（script→voice→avatar→compose） |
-
-> 数字人四阶段编排在引擎不可用时自动降级为演练模式（任务留痕，不产出真实媒体文件）。
-
-### 5.3 商业化模块五表（P10，0.10.0）
-
-| 表名 | 用途 |
-|---|---|
-| oc_com_plan | 套餐定义（编码、名称、授权形态 local / saas / market、计费周期、价格、功能权益 JSON、配额 JSON、状态） |
-| oc_com_license | 授权实例（授权码、绑定套餐、主体信息、机器指纹、生效 / 到期时间、签发状态、HMAC-SHA256 签名、离线可复核） |
-| oc_com_order | 订单（订单号、套餐、金额、支付渠道、支付状态、下单 / 支付时间、外部交易号） |
-| oc_com_usage | 用量计量（授权 × 计量项 × 统计周期的累计用量与配额，用于超限判断） |
-| oc_com_license_event | 授权事件流（签发 / 激活 / 校验 / 续期 / 吊销 / 过期等动作留痕，含结果与备注） |
-
-> 授权校验走 `POST /commercial/license/verify`，本地私有化场景可用内置公钥 / 密钥离线复核签名，不依赖联网回源。
 *（内容由AI生成，仅供参考）*

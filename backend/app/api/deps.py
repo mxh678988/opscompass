@@ -251,18 +251,6 @@ MODULE_PERMISSION_MAP: dict = {
         "write": ["learning:manage"],
         "delete": ["learning:manage"],
     },
-    # 数字人一键生成：形象库 / 音色库 / 生成项目 / 阶段任务 / 工作流模板
-    "digital_human": {
-        "read": ["digital_human:view"],
-        "write": ["digital_human:manage"],
-        "delete": ["digital_human:manage"],
-    },
-    # 商业化中心（P10）：套餐定价 / 授权证书 / 订单 / 用量配额
-    "commercial": {
-        "read": ["commercial:view"],
-        "write": ["commercial:manage"],
-        "delete": ["commercial:manage"],
-    },
 }
 
 

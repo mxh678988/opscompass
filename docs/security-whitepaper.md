@@ -35,7 +35,7 @@ AIGC:
 
 ## 3. 访问控制
 
-- **模型**：RBAC（角色—权限点—用户），权限点共 **50 个**，按 15 个模块划分（system、tenant、datasource、metric、ingest、ai、ops、user、role、marketing、collect、audit、model、learning、digital_human）。
+- **模型**：RBAC（角色—权限点—用户），权限点共 **48 个**，按 14 个模块划分（system、tenant、datasource、metric、ingest、ai、ops、user、role、marketing、collect、audit、model、learning）。
 - **校验位置**：路由层以依赖注入方式声明所需权限点，未授权请求返回 403；未认证返回 401。
 - **高危操作**：`ai:config`、`model:config`、`marketing:authorize`、`user:reset_password`、`audit:export`、`tenant:delete` 建议仅授予管理员。
 - **租户隔离**：多租户场景下按租户维度隔离数据访问范围。

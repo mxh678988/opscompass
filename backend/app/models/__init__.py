@@ -19,33 +19,7 @@ from app.models.auth import (  # noqa: F401
 )
 from app.models.base import Base  # noqa: F401
 from app.models.collect import CollectRun, CollectTask  # noqa: F401
-from app.models.commercial import (  # noqa: F401
-    COM_BILLING_CYCLES,
-    COM_LICENSE_ACTIONS,
-    COM_LICENSE_STATUSES,
-    COM_LICENSE_TYPES,
-    COM_ORDER_STATUSES,
-    COM_USAGE_STATUSES,
-    ComLicense,
-    ComLicenseEvent,
-    ComOrder,
-    ComPlan,
-    ComUsage,
-)
 from app.models.datasource import DataSource  # noqa: F401
-from app.models.digital_human import (  # noqa: F401
-    DH_AVATAR_TYPES,
-    DH_PROJECT_STATUSES,
-    DH_RESOLUTIONS,
-    DH_STAGES,
-    DH_TASK_STATUSES,
-    DH_TTS_ENGINES,
-    DhAvatar,
-    DhProject,
-    DhTask,
-    DhVoice,
-    DhWorkflow,
-)
 from app.models.import_task import ImportTask  # noqa: F401
 from app.models.metric import (  # noqa: F401
     Metric,
@@ -151,26 +125,4 @@ __all__ = [
     "CASE_STATUSES",
     "EXPERIMENT_STATUSES",
     "EXPERIMENT_WINNERS",
-    "DhAvatar",
-    "DhVoice",
-    "DhProject",
-    "DhTask",
-    "DhWorkflow",
-    "DH_STAGES",
-    "DH_PROJECT_STATUSES",
-    "DH_TASK_STATUSES",
-    "DH_AVATAR_TYPES",
-    "DH_TTS_ENGINES",
-    "DH_RESOLUTIONS",
-    "ComPlan",
-    "ComLicense",
-    "ComOrder",
-    "ComUsage",
-    "ComLicenseEvent",
-    "COM_LICENSE_TYPES",
-    "COM_BILLING_CYCLES",
-    "COM_LICENSE_STATUSES",
-    "COM_ORDER_STATUSES",
-    "COM_USAGE_STATUSES",
-    "COM_LICENSE_ACTIONS",
 ]

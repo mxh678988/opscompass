@@ -218,35 +218,6 @@ SEO/GEO 任务与 AI 分析默认走本地模型（`mode=local`），执行结�
 
 站内预览（`/crawl`）是 P3 内置浏览器的后端能力：仅允许抓取站点自身同域地址，跨域、内网与保留地址（10.x / 192.168.x / 169.254.x / 元数据地址）一律拒绝，不支持 http/https 以外的协议；单次读取上限 512KB、超时 10s、不跟随跨域跳转。返回标题、描述、H1/H2、正文字数、canonical、og:title 与 `ok|warn|error` 三级 SEO 诊断。
 
-## 商业化（`/api/v1/commercial`，权限模块 `commercial`）
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | `/api/v1/commercial/overview` | 商业化总览（套餐 / 授权 / 订单 / 收入 / 用量告警 / 上架门槛清单） |
-| GET | `/api/v1/commercial/plans` | 套餐列表 |
-| POST | `/api/v1/commercial/plans` | 新建套餐 |
-| POST | `/api/v1/commercial/plans/seed` | 重建内置套餐（社区版 / 专业版 / 旗舰版 / SaaS 订阅） |
-| PATCH | `/api/v1/commercial/plans/{plan_id}` | 修改套餐 |
-| DELETE | `/api/v1/commercial/plans/{plan_id}` | 删除套餐（已签发授权的套餐不可删） |
-| GET | `/api/v1/commercial/licenses` | 授权列表 |
-| POST | `/api/v1/commercial/licenses` | 签发授权证书（自动写入数字签名） |
-| POST | `/api/v1/commercial/licenses/{license_id}/activate` | 激活授权（绑定机器码） |
-| POST | `/api/v1/commercial/licenses/{license_id}/renew` | 续期授权并重算签名 |
-| POST | `/api/v1/commercial/licenses/{license_id}/revoke` | 吊销授权 |
-| POST | `/api/v1/commercial/license/verify` | 校验授权（签名 / 状态 / 有效期 / 机器码四重校验） |
-| GET | `/api/v1/commercial/events` | 授权事件留痕（签发 / 激活 / 续期 / 吊销 / 校验失败） |
-| GET | `/api/v1/commercial/orders` | 订单列表 |
-| POST | `/api/v1/commercial/orders` | 创建订单 |
-| POST | `/api/v1/commercial/orders/{order_id}/pay` | 订单支付（成功后自动签发授权） |
-| POST | `/api/v1/commercial/orders/{order_id}/cancel` | 取消订单 |
-| GET | `/api/v1/commercial/usage` | 用量列表（可按账期过滤） |
-| POST | `/api/v1/commercial/usage` | 登记 / 更新用量（自动判定告警与超额） |
-| GET | `/api/v1/commercial/entitlement` | 当前租户权益（生效授权 + 套餐限额 + 本月用量对账） |
-
-权限与准入：整模块由 `require_module_access("commercial")` 统一把关，读写权限点 `commercial:view`（查询类）/ `commercial:manage`（签发 / 修改 / 删除类）；自动登记的两个权限点已随 P10 写入 `oc_permission`。
-
-凭据与签名安全：授权证书签名使用 HMAC-SHA256，签名内容为授权码 / 套餐 / 主体 / 机器码 / 有效期等字段的规范化串，签名值随授权落库，任何响应不返回签名密钥；`license/verify` 支持离线复核，签名不匹配、状态非法、超期、机器码不符四类情况一律返回 `valid=false` 并写明 `message`，事件同步写入 `oc_com_license_event`。订单支付为本地状态机流转（支付成功后签发授权），不接第三方支付网关，不涉及真实扣款。
-
 ## 约定
 
 - 新增业务域：在 `app/api/v1/endpoints/` 下新建模块，并在 `app/api/v1/router.py` 注册。
@@ -256,7 +227,7 @@ SEO/GEO 任务与 AI 分析默认走本地模型（`mode=local`），执行结�
 
 ## 接口全量索引（v0.10.1，自动生成）
 
-> 由 `docs/openapi.json` 实时导出：共 225 个操作 / 166 条路径；226 个数据模型。接口契约以 OpenAPI 为准。
+> 由 `docs/openapi.json` 实时导出：共 183 个操作 / 138 条路径；207 个数据模型。接口契约以 OpenAPI 为准。
 ### ai（30）
 
 | 方法 | 路径 | 说明 |
@@ -330,31 +301,6 @@ SEO/GEO 任务与 AI 分析默认走本地模型（`mode=local`），执行结�
 | POST | `/api/v1/collect/scheduler/scan` | Scan Due |
 | GET | `/api/v1/collect/runs` | List Runs |
 
-### commercial/商业化（20）
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | `/api/v1/commercial/overview` | 商业化总览（含上架门槛清单） |
-| POST | `/api/v1/commercial/plans/seed` | 重建内置套餐 |
-| GET | `/api/v1/commercial/plans` | 套餐列表 |
-| POST | `/api/v1/commercial/plans` | 新建套餐 |
-| PATCH | `/api/v1/commercial/plans/{plan_id}` | 修改套餐 |
-| DELETE | `/api/v1/commercial/plans/{plan_id}` | 删除套餐 |
-| GET | `/api/v1/commercial/licenses` | 授权列表 |
-| POST | `/api/v1/commercial/licenses` | 签发授权证书 |
-| POST | `/api/v1/commercial/licenses/{license_id}/activate` | 激活授权（绑定机器码） |
-| POST | `/api/v1/commercial/licenses/{license_id}/renew` | 续期授权 |
-| POST | `/api/v1/commercial/licenses/{license_id}/revoke` | 吊销授权 |
-| POST | `/api/v1/commercial/license/verify` | 校验授权（四重校验） |
-| GET | `/api/v1/commercial/events` | 授权事件留痕 |
-| GET | `/api/v1/commercial/orders` | 订单列表 |
-| POST | `/api/v1/commercial/orders` | 创建订单 |
-| POST | `/api/v1/commercial/orders/{order_id}/pay` | 订单支付（自动签发授权） |
-| POST | `/api/v1/commercial/orders/{order_id}/cancel` | 取消订单 |
-| GET | `/api/v1/commercial/usage` | 用量列表 |
-| POST | `/api/v1/commercial/usage` | 登记 / 更新用量 |
-| GET | `/api/v1/commercial/entitlement` | 当前租户权益 |
-
 ### datasources（5）
 
 | 方法 | 路径 | 说明 |
@@ -364,33 +310,6 @@ SEO/GEO 任务与 AI 分析默认走本地模型（`mode=local`），执行结�
 | GET | `/api/v1/datasources/{code}` | 数据源详情 |
 | PUT | `/api/v1/datasources/{code}` | 更新数据源 |
 | DELETE | `/api/v1/datasources/{code}` | 删除数据源 |
-
-### digital-human（22）
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | `/api/v1/digital-human/overview` | 数字人总览（形象/音色/项目计数、成功率、引擎状态） |
-| GET | `/api/v1/digital-human/engines` | 生成引擎可用性探测（脚本/配音/驱动/合成） |
-| GET | `/api/v1/digital-human/avatars` | 形象库列表 |
-| POST | `/api/v1/digital-human/avatars` | 新建数字人形象 |
-| PATCH | `/api/v1/digital-human/avatars/{avatar_id}` | 修改数字人形象 |
-| DELETE | `/api/v1/digital-human/avatars/{avatar_id}` | 删除数字人形象 |
-| GET | `/api/v1/digital-human/voices` | 音色库列表 |
-| POST | `/api/v1/digital-human/voices` | 新建音色 |
-| PATCH | `/api/v1/digital-human/voices/{voice_id}` | 修改音色 |
-| DELETE | `/api/v1/digital-human/voices/{voice_id}` | 删除音色 |
-| GET | `/api/v1/digital-human/projects` | 生成项目列表 |
-| POST | `/api/v1/digital-human/projects` | 新建生成项目（自动绑定默认工作流） |
-| GET | `/api/v1/digital-human/projects/{project_id}` | 项目详情（含四阶段任务留痕） |
-| PATCH | `/api/v1/digital-human/projects/{project_id}` | 修改项目 / 手工编辑口播稿 |
-| DELETE | `/api/v1/digital-human/projects/{project_id}` | 删除生成项目 |
-| POST | `/api/v1/digital-human/projects/{project_id}/script` | 生成/重写口播稿（含分镜） |
-| POST | `/api/v1/digital-human/projects/{project_id}/generate` | 一键生成（脚本->配音->驱动->合成） |
-| GET | `/api/v1/digital-human/workflows` | 工作流模板列表 |
-| POST | `/api/v1/digital-human/workflows` | 新建工作流模板 |
-| PATCH | `/api/v1/digital-human/workflows/{workflow_id}` | 修改工作流模板 |
-| DELETE | `/api/v1/digital-human/workflows/{workflow_id}` | 删除工作流模板（默认模板不可删） |
-| POST | `/api/v1/digital-human/workflows/{workflow_id}/run` | 按指定工作流执行一键生成 |
 
 ### ingest（7）
 

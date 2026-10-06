@@ -71,10 +71,6 @@ PERMISSION_DEFINITIONS: list[tuple[str, str, str, str]] = [
     ("model:config", "配置模型", "model", "配置 AI 模型端点、连通性自检与一键接入"),
     ("learning:view", "查看学习进化", "learning", "查看学习进化总览、反馈、策略权重、案例与实验"),
     ("learning:manage", "管理学习进化", "learning", "登记反馈、重算权重、维护案例与 A/B 对照实验"),
-    ("digital_human:view", "查看数字人", "digital_human", "查看数字人形象库、音色库、生成项目与工作流模板"),
-    ("digital_human:manage", "管理数字人", "digital_human", "维护形象与音色、生成口播稿、执行一键生成与工作流"),
-    ("commercial:view", "查看商业化", "commercial", "查看套餐定价、授权证书、订单与用量配额"),
-    ("commercial:manage", "管理商业化", "commercial", "维护套餐、签发/激活/续期/吊销授权、下单支付与登记用量"),
 ]
 
 ALL_PERMISSION_CODES: list[str] = [c for c, _, _, _ in PERMISSION_DEFINITIONS]
@@ -94,7 +90,6 @@ _OPERATOR_CODES = set(_VIEW_ONLY) | {
     "marketing:update",
     "marketing:authorize",
     "collect:run",
-    "digital_human:manage",
 }
 _ADMIN_CODES = set(ALL_PERMISSION_CODES) - {"role:delete", "user:delete", "audit:export"}
 

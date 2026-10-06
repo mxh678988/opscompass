@@ -89,18 +89,6 @@ const router = createRouter({
       component: () => import('@/views/Learning.vue'),
       meta: { title: '学习进化' },
     },
-    {
-      path: '/digital-human',
-      name: 'digital-human',
-      component: () => import('@/views/DigitalHuman.vue'),
-      meta: { title: '数字人' },
-    },
-    {
-      path: '/commercial',
-      name: 'commercial',
-      component: () => import('@/views/CommercialCenter.vue'),
-      meta: { title: '商业化' },
-    },
   ],
 })
 
