@@ -15,41 +15,27 @@ AIGC:
 
 ## [Unreleased]
 
+> 以下变更已归入 [0.10.1]。
+
+## [0.10.1] - 2026-10-06（首个开源版本）
+
 ### 新增
 
-- **PWA 能力补齐（P0）**：新增 `frontend/public/manifest.webmanifest`、`sw.js`（导航 network-first、同源静态 stale-while-revalidate、`/api` 与跨域不拦截；缓存名 `opscompass-static-v0.10.1`）、`offline.html` 离线兜底页与全套图标（192 / 512 / maskable / apple-touch / 32）；`index.html` 注入 manifest 与 PWA meta；`main.ts` 仅在生产构建注册 SW，并支持新版本检测与自动激活。详见 `docs/deploy/PWA_GUIDE.md`。
-
-- **应用内安装引导**：新增 `src/composables/usePwaInstall.ts` 与 `src/components/PwaInstallPrompt.vue`——接管 `beforeinstallprompt` 事件，在顶部导航下方展示「立即安装 / 暂不」引导条；「暂不」写入 localStorage 持久化，独立窗口（standalone）运行时不再打扰。
-
-- **隐私政策页**：新增 `frontend/public/privacy.html` 静态页（联系邮箱 mxh6789@live.cn），已于 2026-10-03 托管上线（`https://opscompass.pages.dev/privacy`），商店后台可直接填用。
-
-- **Cloudflare Pages 发布链路（P1）**：新增 `deploy/scripts/deploy-cloudflare-pages.ps1`（本地构建 + Wrangler 直传，凭据走环境变量）与 `docs/deploy/CLOUDFLARE_PAGES_GUIDE.md`（路线 A/B 与验证清单）。
-
-- **微软商店上架素材**：新增 `docs/deploy/STORE_LISTING.md`——中英双语描述、功能要点、搜索关键词、素材清单与合规声明；`MSSTORE_GUIDE.md` 素材项与排期、`PUBLISH_CHECKLIST.md` 商店条目同步更新。
-
-- **生产部署编排（形态 C）**：新增根目录 `docker-compose.prod.yml`——镜像直用型免构建编排，服务器不再需要 Node / 构建工具链。与开发编排的三点差异：① 只引用已发布版本镜像（`opscompass-backend/frontend:${OPS_VERSION:-0.10.1}`），不挂载 `./backend` 与 `./frontend/dist`，避免生产被宿主目录覆盖；② 仅前端 80 端口对外，`postgres` / `redis` / `backend` 不向宿主机暴露端口，仅容器网络内可达；③ `restart: always` + 容器日志轮转（10~20MB × 5），适配无人值守长期运行。配套新增 HTTPS 叠加文件 `deploy/docker/docker-compose.prod.https.yml`（80 → 443 跳转 + `/api/` 反代 `backend:8000`）。
-
-- **离线镜像打包 / 载入链路（形态 D）**：新增 `deploy/scripts/pack-images.ps1`（构建机执行，自动读取 `config.py` 的 `APP_VERSION` 或 `-Version` 指定版本，校验镜像就绪后 `docker save` 导出，可选一并打包 postgres / redis 基础镜像，并生成 `.sha256` 校验文件）与 `deploy/scripts/load-images.sh`（服务器执行，载入前校验 SHA256，校验失败以退出码 3 中止；支持 `SKIP_CHECK=1` 显式跳过）。服务于无外网交付场景。
+- **PWA 能力**：`manifest.webmanifest`、`sw.js`（导航 network-first、静态 stale-while-revalidate、`/api` 与跨域不拦截）、`offline.html` 离线兜底页与全套图标（192 / 512 / maskable / apple-touch / 32）；`main.ts` 仅生产构建注册 SW，支持新版本检测与自动激活。
+- **应用内安装引导**：`usePwaInstall.ts` + `PwaInstallPrompt.vue`，接管 `beforeinstallprompt` 事件，「暂不」持久化。
+- **生产部署编排（形态 C）**：`docker-compose.prod.yml`——镜像直用型免构建编排，不暴露数据库/缓存端口到宿主机，适配无人值守长期运行。配套 HTTPS 叠加文件。
+- **离线镜像打包 / 载入链路（形态 D）**：`pack-images.ps1` + `load-images.sh`，校验 SHA256 后导入，服务于无外网交付场景。
+- **本地 CI 五源版本一致性**：`scripts/ci.ps1` 第 1 项新增 `docker-compose.prod.yml` 中 `OPS_VERSION` 默认版本号校验。
 
 ### 变更
 
-- **本地 CI 版本一致性由四源扩为五源**：`scripts/ci.ps1` 第 1 项新增 `docker-compose.prod.yml` 中 `OPS_VERSION` 默认版本号校验（该值出现多次且不一致时报错），确保发布新版本时生产编排不会漏改。
+- 部署文档：`docs/deployment-manual.md` 形态总览扩为四类（新增形态 C），`deploy/README.md` 补充生产编排与离线包使用说明。
 
-- **部署文档同步**：`docs/deployment-manual.md` 形态总览由三类扩为四类（新增「C 生产镜像直用」，原应用市场离线并列为「D」），新增形态 C 完整部署步骤（联网 / 离线两条路径、HTTPS 叠加、验收标准）与生产升级流程；`deploy/README.md` 补充生产编排与离线包的使用说明。
+### 修复
 
-- **忽略 Wrangler 本地状态**：`.gitignore` 新增 `.wrangler/`，避免 Cloudflare Wrangler 的本地缓存与登录态（`.wrangler/cache/pages.json`、`wrangler-account.json`）误入版本库；该目录已存在于工作区但未被跟踪。
-
-### 发布
-
-- **Cloudflare Pages 公网托管上线（P1，2026-10-03）**：站点与隐私页经 Wrangler 直传上线至 Cloudflare Pages 项目 `opscompass`（Production@main，源提交 ff57379；上传 47 文件 / 0.75 MB，部署 ID 39bfc4c8）。生产地址 `https://opscompass.pages.dev/`，隐私政策 `https://opscompass.pages.dev/privacy`（`/privacy.html` 为 308 跳转）。实测 `/`、`/privacy`、`manifest.webmanifest`、`sw.js`、`offline.html` 均返回 200。发布脚本新增 `wrangler whoami` 登录态前置校验与 `$LASTEXITCODE` 退出码校验，规避「认证失败仍报完成」的假成功。`PUBLISH_CHECKLIST.md` 9.1/9.2/9.3、`STORE_LISTING.md`、`MSSTORE_GUIDE.md`、`CLOUDFLARE_PAGES_GUIDE.md` 已同步回填。
-
-- **微软商店上架 P3 打包实测完成（2026-10-03）**：PWABuilder 对 `https://opscompass.pages.dev/` 报告卡校验全部通过——可安装性 / 可打包性通过（Manifest 28/46，Required 字段齐备）、图标 192 / 512 / maskable-512 实测尺寸与声明一致、Service Worker 实测 1 条 active 注册（`/sw.js`，缓存 `opscompass-static-v0.10.1`）、HTTPS 安全上下文有效；待补项（`screenshots` / `related_applications` / `iarc_rating_id` 及若干推荐能力项）均为**不阻塞打包**的可选增强项。已产出并下载 Windows 安装包（`运营智脑.msixbundle` + `.sideload.msix` + `.classic.appxbundle` + `install.ps1`）。**阻断点**：包内 Identity 三项（`Package/Identity/Name` = `MyCompany.OpsCompass`、`Package/Identity/Publisher` = `CN=3a54a224-05dd-42aa-85bd-3f3c1478fdca`、`PublisherDisplayName` = `My Company Inc`）均为 PWABuilder 预填占位值，须待 Partner Center（P2）预留产品名称并回填真实标识后**重新打包**方可提交，本次未编造任何标识；PWABuilder 免登录即可打包，无登录墙阻断。商店截图已采集 2 张公开可达页（登录页 / 隐私页，实测 1366×768），`/terms`、`/about`、`/register`、`/dashboard` 因需登录一律重定向至 `/login`，暂不可作为公开素材。`MSSTORE_GUIDE.md` 第五章排期状态与新增 5.1 实测结论、`PUBLISH_CHECKLIST.md` 概览表 / 6.1 / 七、版本发布历史 / 9.1 / 9.2 / 9.3 已同步回填。
-
-- **微软商店上架 P2 产品预留完成（2026-10-03）**：账号 `mxh6789@live.cn` 已完成实名；在 Partner Center 新建「MSIX 或 PWA 应用」产物并预留产品名称「运营智脑 OpsCompass」（一次通过，未启用备选名），**Store ID `9NVPQCMPZGLN`**，产品当前为**草稿状态**（未提交认证、未配置定价）；页面要求**三个月内**提交，名称保留截止约 **2027-01-03**。产品标识页读回三项真实值并登记：`Package/Identity/Name` = `LAOMENG.OpsCompass`、`Package/Identity/Publisher` = `CN=A65E517F-EADC-4803-B9C4-E753441561FC`、`Package/Properties/PublisherDisplayName` = `LAOMENG 网络工作室`，另附 Package Family Name `LAOMENG.OpsCompass_9wp8gzp9rz5xa`、Store URL `https://apps.microsoft.com/detail/9NVPQCMPZGLN`。全程未编造标识，登录由用户手动完成（含 MFA），未代填任何凭据。
-
-- **微软商店正式包重打完成（P3 收尾，2026-10-03）**：以 PWABuilder 对 `https://opscompass.pages.dev/` 使用真实标识重新生成 Windows 包，产出 `OpsCompass-9NVPQCMPZGLN.msixbundle`（2,175.5 KB）及配套 `sideload.msix`（2,173.8 KB）/ `classic.appxbundle`（2,217.7 KB）/ `install.ps1` / `pwainstaller.exe`；解包核验 `AppxManifest.xml`，`Identity` 的 Name / Publisher / Version `1.0.1.0` 与 `Properties/PublisherDisplayName` 四项与 Partner Center 真实值完全一致，**该包可直接用于 P4 提交**；PWABuilder 全程未要求登录。上一轮的占位身份包 `OpsCompass.msixbundle`（`MyCompany.OpsCompass` / `CN=3a54a224-…` / `My Company Inc`）已弃用，不得上传。`docs/deploy/MSSTORE_SUBMISSION_FORM.md`（新增 §7.0 P2 完成记录，§7.1 / §7.2 / §7.3 与总览表全部改为真实值）、`MSSTORE_GUIDE.md`（排期表 P2/P3/P4 与新增 5.2 结论）、`PUBLISH_CHECKLIST.md`（概览表 / 6.1 / 七、版本发布历史 / 9.1 / 9.2 / 9.3）已同步回填。
-
-- **微软商店上架 P4 待启动（2026-10-03）**：S1 标识类硬阻塞已全部解除，剩余动作为上传正式包 `OpsCompass-9NVPQCMPZGLN.msixbundle` 并提交审核（商店页面信息 + 截图 + 隐私 URL + IARC 分级问卷，问卷生成的 `iarc_rating_id` 需回填 manifest 与商店元数据）。**须在名称保留截止约 2027-01-03 前完成提交**，否则将丢失已保留的产品名称「运营智脑 OpsCompass」（Store ID `9NVPQCMPZGLN`，当前草稿态）。提审表单填写稿见 `docs/deploy/MSSTORE_SUBMISSION_FORM.md`，待办汇总见其 §八。
+- **Hive 方言名修正**：`hive://` 误拼导致连接串畸形的连接失败，修正为 `hive` 对齐其他三类驱动。
+- **依赖清单可复现修复**：`pymysql==2.2.8`（版本不存在）改为 `pymysql==1.2.3`；新增 `scripts/verify_requirements.py` 作为 CI 第 9 项校验。
+- **版本号单点化**：`/api/v1/system/info` 返回读取 `config.py` 的 `APP_VERSION`，版本号单点维护。
 
 ## [0.10.1] - 2026-09-30
 
