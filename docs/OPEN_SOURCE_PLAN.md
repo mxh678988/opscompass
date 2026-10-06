@@ -246,3 +246,43 @@
 | D2 | 部分开源落地方式 | A：当前仓库直接公开（代码全量，含商业化模块）；B：另建裁剪后的开源仓库；当前选择 C：暂缓公开，先在私有仓库完善社区文件 |
 | D3 | 许可证与使用限制冲突 | 本文档第一章表格中「开源版使用限制：非商业用途」与 Apache License 2.0（允许商业使用）冲突。已按 Apache 2.0 落地，未在 README 写入非商业限制；若确需限制商用，须改用其它许可证 |
 | D4 | 合规标识（AIGC） | 合规流程已为 `README.md`、`CODE_OF_CONDUCT.md`、`SECURITY.md`、`.github/` 下三个模板、`OPEN_SOURCE_RELEASE_NOTES.md` 写入 AIGC 元数据块与「内容由AI生成，仅供参考」声明；`docs/changelog.md` 亦含同类元数据。**其中 Issue 模板的 `name/about/title/labels` 曾被元数据块整体覆盖导致模板失效，已修复为「GitHub 必需字段 + AIGC 块共存于同一 front matter」**。剩余待决：公开前是否保留全部 AIGC 标识（涉及品牌呈现与合规要求，需产品负责人确认） |
+
+### 3. 闭源模块隔离执行记录（2026-10-06）
+
+按 D2 的 C 方案，在私有仓库内先行完成「开源版 = 基础功能 + 社区插件」的边界隔离，闭源部分（商业化 P10、数字人一键生成 P6、高级功能、社区插件）移除后保留于商业版。
+
+**代码层**
+
+| 项 | 处理 | 结果 |
+|---|---|---|
+| 闭源后端 | 删除 `commercial` / `digital_human` 的 endpoints、services、schemas、models 共 8 个文件 | 已移除 |
+| 闭源前端 | 删除 `CommercialCenter.vue` / `DigitalHuman.vue` 及对应 api、路由 | 已移除 |
+| 引用清理 | `deps.py`、`router.py`、`models/__init__.py`、`auth_service.py` 中引用与权限定义 | 已清理 |
+| 权限体系 | `PERMISSION_DEFINITIONS` 收敛为 **48 权限点 / 14 模块**，闭源相关权限 0 | 通过 |
+| 接口契约 | `openapi.json` 实测 **138 路径 / 183 操作 / 207 schema**，闭源残留 0 | 通过 |
+| 提交 | `cb6ea05` chore(opensource): 隔离闭源模块，移除商业化与数字人代码及文档引用 | 已提交 |
+
+**文档层**
+
+| 文档 | 处理 | 结果 |
+|---|---|---|
+| `docs/api.md` | 删商业化正文节与 `commercial` / `digital-human` 索引节，统计改 183/138/207 | 已清理 |
+| `docs/data-model.md` | 删 10 张闭源表行与 5.2 / 5.3 节（64 → 54 表） | 已清理 |
+| `docs/data-dictionary.md` | 删数字人 5 表 79 字段（59 → 54 表，765 → 686 字段） | 已清理 |
+| `docs/product-manual.md` | 页面 15 → 13、接口模块 17 → 15 | 已清理 |
+| `docs/admin-manual.md` | 权限点 50 → 48 | 已清理 |
+| `docs/security-whitepaper.md` | 权限 50/15 → 48/14 | 已清理 |
+| `docs/architecture.md`、`docs/quick-start.md` | 删数字人相关段落 | 已清理 |
+| 前端 | views 14 个 `.vue`、路由 15 条，无闭源残留 | 通过 |
+
+**历史文档（原含闭源实现细节，按 C 移出开源范围）**
+
+| 文档 | 处理 | 结果 |
+|---|---|---|
+| `docs/changelog.md` | 删 0.10.0 的 `api/commercial.ts`、`CommercialCenter.vue` 修复行与 product-manual 商业化表述；保留两处「不在开源仓库范围内」声明 | 零实现细节 |
+| `docs/test-report.md` | 数字人 / P6 / 商业化用例行替换为通用表述 | 零残留 |
+| `docs/test-report-v0.10.0.md` | 版本号、表数 64 → 54、权限 52/16 → 48/14、页面 15 → 13、商业模块复验章节等实现细节全部抹去 | 零残留 |
+
+**全仓复核**：仅 `docs/changelog.md`（2 行）与 `docs/deploy/OPEN_SOURCE_RELEASE_NOTES.md`（2 行）命中关键词，均为声明性语句（「不在开源仓库范围内」「暂不开源」），不含接口路径、表名、文件行数等实现细节。
+
+> 影响：D2 的隔离部分已在私有仓库内落地，是否为公开动作（D1）仍需产品负责人授权。

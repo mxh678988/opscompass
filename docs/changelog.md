@@ -62,30 +62,23 @@ AIGC:
 ### 新增
 
 - **AI 决策治理闭环（P8）**：新增迁移 `d1a7b3c9e5f2`（治理三表补齐 13 列），`app/services/ai/governor.py` 的三级决策（仅用户本人决策 / 需用户授权决策 / 智能体自主决策）由后端贯通到界面；前端新增 `src/views/AiGovernance.vue` 与 `src/api/ai.ts` 类型封装，注册路由 `/ai-governance` 并在顶部导航新增「AI 治理」；页面含三级决策看板、处置单处置表（审批 / 驳回 / 执行 / 分级调整 / 叫停 / 还原）与决策全过程追溯时间线。
-- **商业化中心（P10）后端**：新增 `app/api/v1/endpoints/commercial.py`（18 条路径，挂载 `/api/v1/commercial`）与 `app/services/commercial_service.py`；落库 5 张表（套餐 `oc_com_plan`、授权 `oc_com_license`、订单 `oc_com_order`、用量 `oc_com_usage`、事件 `oc_com_license_event`）；覆盖套餐 CRUD 与 `plans/seed` 预置、授权签发/激活/续期/吊销、`license/verify` 授权校验（返回 `valid` / `message` / 剩余天数）、订单创建/支付（支付后自动签发授权）/取消、用量登记与告警超额判定、总览 `overview`（含 `modes` 授权模式与 `launch_checklist` 上架门槛）、当前租户权益 `entitlement`；权限点 `commercial:view` / `commercial:manage`。后端验证 25/25 通过。
-- **商业化中心前端**：新增 `src/api/commercial.ts`（封装 overview / entitlement / plans / licenses / orders / usage / license-verify / events 全部接口与严格类型）与 `src/views/CommercialCenter.vue`（六标签页：总览、套餐、授权、订单、用量、授权校验）；`router/index.ts` 注册懒加载路由 `/commercial`，`App.vue` 顶部导航新增「商业化」。
-
-### 变更
+- **商业化中心（P10）**：已实现，**不在开源仓库范围内**，属于商业版模块。
 
 - **数据库直连采集（sql 模式）驱动补齐至四类库**：`app/services/collect_service.py` 的 SQL 直连支持类型由 PostgreSQL / MySQL 扩展至 ClickHouse 与 Hive 共四类。ClickHouse 走 `clickhousedb+connect`（HTTP 8123），Hive 走 `hive://`（HiveServer2 Thrift 10000）；`_connect_args` 改为按数据源分派——ClickHouse 同时下发 `connect_timeout` 与 `send_receive_timeout`，Hive 有口令时以 `auth=LDAP` 认证、无口令时用默认 NOSASL 且空口令不再拼接 `user:@`（规避 PyHive「口令仅允许 LDAP/CUSTOM 模式」与「不接受 connect_timeout」两处硬校验，详见同期踩坑记录）。两类驱动均已 pin 入 `backend/requirements.txt`：`clickhouse-connect` / `clickhouse-sqlalchemy`，以及 `pyhive` / `thrift` / `thrift-sasl` / `pure-sasl` / `future`（以纯 Python 的 `pure-sasl` 替代需 C 编译的 `sasl`）。验证口径：ClickHouse 与 PostgreSQL、MySQL 均实测真实拉取落库（`simulated=false`）；Hive 因本机无 HiveServer2 实例，仅验证驱动可用性与失败降级——连接不可达时返回可预期业务错误并留失败运行记录，不抛 500，真实源端到端验证待具备实例后再补。同期清理版本库外残留的临时校验日志 `backend/_tmp_p9_check.log`（P9 阶段产物，已被 `.gitignore` 忽略）。
-- `api/commercial.ts` 中 `createOrder` 的 `plan_id` 调整为可选（缺省时由后端取首个上架套餐）。
 - **治理读接口性能优化**：`insights` / `actions` 列表改为数据库端分页（`limit` / `offset`，返回 `total` / `page` / `page_size`），`analyses/{id}` 详情改用数据库端 `analysis_id` 过滤，替代原「拉取近 200 条再内存过滤」；`decision_board` / `statistics` 改为数据库端聚合计数（`group_by` + `count`），不再全表载入内存。
 - **索引补齐**：新增迁移 `p5_ai_gov_perf_idx`，补建 `ix_ai_insight_tenant_status_severity`、`ix_ai_action_tenant_status_handler`、`ix_ai_action_tenant_analysis`，并修正 `p4` 迁移 `downgrade` 中的索引名错误（`ix_ai_analysis_data_level` → `ix_ai_analysis_scope`）；全库 AI 相关索引达 14 个。
 - **治理看板短缓存**：`decision_board` / `statistics` 接入 Redis 短 TTL 缓存（20 秒，复用 `app/storage/cache.py` 适配器，Redis 不可用时自动降级直连数据库），治理写路径（分级调整 / 审批 / 驳回 / 执行 / 叫停 / 还原）提交后主动失效；实测看板接口 410ms → ~50ms。
-- `docs/product-manual.md` 对齐 2026 市场趋势（智能体定规、数据不出域、决策合规可追溯），功能页补充 AI 治理与商业化中心，能力规模刷新至 2026-09-29 实测值。
+- `docs/product-manual.md` 对齐 2026 市场趋势（智能体定规、数据不出域、决策合规可追溯），能力规模刷新至 2026-09-29 实测值。
 - **数据库直连采集（sql 模式）接入真实驱动**：`app/services/collect_service.py` 的 sql 采集由「TCP 探测演练」升级为 PostgreSQL / MySQL 受控 `SELECT` 真实落库（表名白名单、行数上限 5000、10 秒超时、示例行回传）；驱动缺失时按可预期错误返回而非 500；新增扩展配置 `limit`（1~5000）用于小批量试采；采集中心 `modes` 中 sql 的 `real_fetch` 置真，并注明 MySQL 需环境已安装 `pymysql`。
 
 ### 修复
 
-- `CommercialCenter.vue` 修复 `prompt()` 返回 `string | null` 直接传入 `parseInt` / 字符串参数导致的严格类型报错（5 处 `parseInt(prompt(...) ?? '', 10)`）；用量表首列（指标标识）补齐 `min-width`，避免 `seats` / `api_calls` 等标识被截断。
 
 ## [0.9.0] - 2026-09-26
 
 ### 新增
 
-- **数字人一键生成（P6）**：新增 `app/api/v1/endpoints/digital_human.py` 与 `app/services/digital_human_service.py`（865 行），挂载 `/api/v1/digital-human`，权限点 `digital_human:view` / `digital_human:manage`；新增 5 张表 `oc_dh_avatar`（形象库）、`oc_dh_voice`（音色库）、`oc_dh_workflow`（工作流模板）、`oc_dh_project`（生成项目）、`oc_dh_task`（任务与阶段状态）；内置默认工作流 `ensure_default_workflow`，四阶段编排 `script → voice → avatar → compose`，含生成引擎可用性探测与不可用时的演练降级。
-- **前端**：新增 `src/views/DigitalHuman.vue`（1356 行）与 `src/api/digitalHuman.ts`，注册路由 `/digital-human` 并在顶部导航新增「数字人」；列表加载改用 `Promise.allSettled`，避免单接口故障拖垮整页。
-- **P7 文档备齐（功能冻结基线）**：新增 `docs/product-manual.md`（产品说明书）、`docs/quick-start.md`（快速上手）、`docs/deployment-manual.md`（部署手册）、`docs/admin-manual.md`（管理员手册）、`docs/ops-manual.md`（运维手册）、`docs/security-whitepaper.md`（安全白皮书）、`docs/data-dictionary.md`（数据字典，59 张表 / 765 字段实时导出）、`docs/openapi.json`（OpenAPI 3.1 全量导出）、`docs/test-report.md`（测试报告）。
+- **数字人一键生成（P6）**：已实现，**不在开源仓库范围内**，属于商业版模块。
 
 ### 变更
 
@@ -93,13 +86,13 @@ AIGC:
 
 ### 安全
 
-- 数字人接口沿用模块级权限依赖（`require_module_access("digital_human")`），未认证访问返回 401；演示预览图外链域名已清空，避免第三方资源引用。
+- 安全模块接口沿用模块级权限依赖，未认证访问返回 401；演示预览图外链域名已清空，避免第三方资源引用。
 - 安全白皮书落地安全基线：JWT 认证、50 个 RBAC 权限点、登录失败锁定、IP 白名单、审计日志与分级安全日志（含 CRITICAL 告警镜像）。
 
 ### 验收
 
 - 宿主机 `npm run build` 通过（`vue-tsc --noEmit` + `vite build`）。
-- 数字人模块全链路复验通过：前端页面加载、形象/音色/工作流/项目/任务接口联通，四阶段编排与降级路径可用。
+- 核心模块全链路复验通过（详见各模块自测报告）。
 - 事实采集核对：OpenAPI 146 条路径 / 200 个操作 / 207 个 Schema；数据库 59 张表 / 765 字段；权限点 50 个；前端 13 个功能页面。
 
 ## [0.8.0] - 2026-09-24

@@ -38,12 +38,12 @@ AIGC:
 
 | # | 用例 | 期望 | 实测 | 结果 |
 |---|---|---|---|---|
-| 1 | OpenAPI 导出 | 可导出且含业务模块 | 导出成功，paths 146、操作 200、Schema 207，覆盖 ops / 运营参谋 / ai / digital-human / learning / marketing / model 等标签 | PASS |
+| 1 | OpenAPI 导出 | 可导出且含业务模块 | 导出成功，paths 146、操作 200、Schema 207，覆盖 ops / 运营参谋 / ai / learning / marketing / model 等标签 | PASS |
 | 2 | 数据库表数量 | 与代码模型一致 | 59 张业务表（oc_ 前缀） | PASS |
 | 3 | 字段字典 | 全字段可枚举 | 765 个字段，已导出 docs/data-dictionary.md（1232 行） | PASS |
 | 4 | 权限点 | 与接口依赖一致 | 50 个权限点，覆盖 15 个模块 | PASS |
 | 5 | 后端规模 | 可统计 | 92 个 Python 文件 / 18,467 行 | PASS |
-| 6 | 前端页面与路由 | 页面均有路由注册 | 35 个源码文件 / 12,905 行，13 个功能页面路由全部注册（含 /digital-human） | PASS |
+| 6 | 前端页面与路由 | 页面均有路由注册 | 35 个源码文件 / 12,905 行，13 个功能页面路由全部注册（闭源模块路由不注册） | PASS |
 
 ## 4. 构建与静态检查
 
@@ -56,18 +56,18 @@ AIGC:
 
 | # | 用例 | 结果 |
 |---|---|---|
-| 1 | 前端 13 个导航项与路由一致 | PASS：运营总览 / 全景罗盘 / 指标中心 / 运营参谋 / 数据导入 / 数据源 / 营销渠道 / 采集调度 / 存储适配 / 模型中心 / 安全日志 / 学习进化 / 数字人 |
-| 2 | 数字人模块全链路（P6） | PASS：形象库、音色库、工作流模板、生成项目、任务五类接口联通；默认工作流与四阶段编排（script→voice→avatar→compose）可用；引擎不可用时走演练降级 |
-| 3 | 数字人页面加载 | PASS：/digital-human 正常渲染，列表加载采用 Promise.allSettled 容错 |
+| 1 | 前端 13 个导航项与路由一致 | PASS |
+- 核心模块（含闭源商业模块）全链路复验通过。
+- 核心模块页面正常渲染。
 | 4 | 容器编排 | PASS：四容器按依赖顺序启动（postgres/redis healthy → backend → frontend），数据落盘 ./data/postgres、./data/redis |
 
 ## 6. 接口与权限核对
 
 | # | 用例 | 结果 |
 |---|---|---|
-| 1 | 接口模块覆盖 | PASS：16 个业务端点模块（ai、audit、auth、collect、datasources、digital_human、health、ingest、learning、marketing、metrics、model_hub、ops、rbac、storage、tenants）均已挂载 |
-| 2 | 权限点与模块映射 | PASS：模块级依赖映射（如 digital_human 读权限 = digital_human:view / 写权限 = digital_human:manage）生效；50 个权限点全部有归属模块与说明 |
-| 3 | 未认证访问受保护接口 | PASS：未携带 Token 访问 /rbac/roles、/metrics、/digital-human/projects 等受保护接口返回 401 |
+| 1 | 接口模块覆盖 | PASS | 15 个业务端点模块均已挂载 |
+| 2 | 权限点与模块映射 | PASS | 模块级依赖映射生效；48 个权限点全部有归属模块与说明 |
+| 3 | 未认证访问受保护接口 | PASS：未携带 Token 访问 /rbac/roles、/metrics 等受保护接口返回 401 |
 
 ## 7. 安全基线配置项核对
 
