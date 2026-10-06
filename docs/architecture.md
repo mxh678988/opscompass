@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_27fba000b59f11f1a816525400cd780f
-    ReservedCode1: e3x4YcQBrNGQMNiy3GpxM69FU6g0Yy/uj/pQwuEdmnhWCDkTgjJvnDdoOzsfrLfCoAnEJER5yJnQ0G2GB0FhM61IK0qsmOQHLINJDyudV0UDxRBbY7dpDTwW9jIaf9n/4roqhvfvbn3PD5ozOkL0dFyJFLLx12KCoam4A/rQvL3dMyWpePJbbLo3JEc=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_27fba000b59f11f1a816525400cd780f
-    ReservedCode2: e3x4YcQBrNGQMNiy3GpxM69FU6g0Yy/uj/pQwuEdmnhWCDkTgjJvnDdoOzsfrLfCoAnEJER5yJnQ0G2GB0FhM61IK0qsmOQHLINJDyudV0UDxRBbY7dpDTwW9jIaf9n/4roqhvfvbn3PD5ozOkL0dFyJFLLx12KCoam4A/rQvL3dMyWpePJbbLo3JEc=
----
 
 # 架构设计
 

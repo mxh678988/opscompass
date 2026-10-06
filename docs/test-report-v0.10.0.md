@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_e036c44cbbd111f1a526525400cd780f
-    ReservedCode1: 1BqxXmB/toyb/rQQ6SjmPnmioHbaBxMR7ajmprqI6xtJ1QsLq5ENOMPQXBf8HL4sClwzqHdHrWIlLM/aF5dIpG0iJwRZm8w95MLLg5yXClIqB23odwmCb0oL4oOVpjhgO1I1aisSxl2r/fEGRDtV6A/lDp4QIc6UpWXvB+lj9JHEgf9WMwZSUrToKM8=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_e036c44cbbd111f1a526525400cd780f
-    ReservedCode2: 1BqxXmB/toyb/rQQ6SjmPnmioHbaBxMR7ajmprqI6xtJ1QsLq5ENOMPQXBf8HL4sClwzqHdHrWIlLM/aF5dIpG0iJwRZm8w95MLLg5yXClIqB23odwmCb0oL4oOVpjhgO1I1aisSxl2r/fEGRDtV6A/lDp4QIc6UpWXvB+lj9JHEgf9WMwZSUrToKM8=
----
 
 # 运营智脑 OpsCompass 测试报告（v0.10.0）
 

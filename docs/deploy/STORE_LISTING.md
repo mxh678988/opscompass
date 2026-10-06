@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_632c6d8fbe6511f1884b525400cd780f
-    ReservedCode1: 8zWEvHD1liTp2RuZTFezLkyOERztqdylwekR5w3JmS/d9kQ1vQIkAydktKCzItmhgbomISyr52CADPP6UbNN9/SVfw0VLwiulDQgkC9rAADMZ67ENuurP/TfRXUceSR/HnaUGYCd19xd99o+8bl2Bvw2QF9YtjMy2mOjPhhinwMbZNQ/JKRsWCef/Z8=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_632c6d8fbe6511f1884b525400cd780f
-    ReservedCode2: 8zWEvHD1liTp2RuZTFezLkyOERztqdylwekR5w3JmS/d9kQ1vQIkAydktKCzItmhgbomISyr52CADPP6UbNN9/SVfw0VLwiulDQgkC9rAADMZ67ENuurP/TfRXUceSR/HnaUGYCd19xd99o+8bl2Bvw2QF9YtjMy2mOjPhhinwMbZNQ/JKRsWCef/Z8=
----
 
 # 微软商店上架素材（Microsoft Store / Partner Center）
 

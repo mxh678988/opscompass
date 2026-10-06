@@ -1,12 +1,4 @@
 ﻿---
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_815392aec11f11f1887c525400de85a5
-    ReservedCode1: yGaFfbtR68xa+cnzERx6sa8rejdExA5umIl0J/UoEFE7PPHKpUuLHl4wdfACTFK34rQTIt9GuCeDPAKK47j7Jt6K9KPRk8/CksBZYGxQnaeJo5bWNc9QiSIJ21gb1Dji/CXf/jL/OjYOXGm5R6CgZUjkbqRHiopsy6V3pLELDmh/ehukEseJpOidwYM=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_815392aec11f11f1887c525400de85a5
-    ReservedCode2: yGaFfbtR68xa+cnzERx6sa8rejdExA5umIl0J/UoEFE7PPHKpUuLHl4wdfACTFK34rQTIt9GuCeDPAKK47j7Jt6K9KPRk8/CksBZYGxQnaeJo5bWNc9QiSIJ21gb1Dji/CXf/jL/OjYOXGm5R6CgZUjkbqRHiopsy6V3pLELDmh/ehukEseJpOidwYM=
 ---
 
 # 运营智脑 OpsCompass v0.10.1 开源版发布说明

@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_5a86212fb9a111f1b172525400248c00
-    ReservedCode1: 3SCEhHSlp3zSed62EEpdsmGyv3hdcUySVQCIFLT51ggVUWmhJH8fvhp+x/xko0xXGy1NXWxzcJa3pGw7kCrqV48N4LpgX2n6XJliQOveA/WDbWXOB3Vdza7qjg7wNanFF5RnPccbx0UgyrvqbbTNIIpVJXXmuHHXPGhAXl/yonWTbEEflZz674rTPec=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_5a86212fb9a111f1b172525400248c00
-    ReservedCode2: 3SCEhHSlp3zSed62EEpdsmGyv3hdcUySVQCIFLT51ggVUWmhJH8fvhp+x/xko0xXGy1NXWxzcJa3pGw7kCrqV48N4LpgX2n6XJliQOveA/WDbWXOB3Vdza7qjg7wNanFF5RnPccbx0UgyrvqbbTNIIpVJXXmuHHXPGhAXl/yonWTbEEflZz674rTPec=
----
 
 # 运营智脑（OpsCompass）数据字典
 

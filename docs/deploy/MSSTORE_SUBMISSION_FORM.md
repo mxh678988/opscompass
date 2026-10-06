@@ -1,14 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_057260adbecb11f1884b525400cd780f
-    ReservedCode1: oN65DiqDGs+0GonDCHBgDYTvZr2mDD1gYOlaj6FnmpvGS1kIvN7NeGZaH/uxY+3ftVZyWXmVA9KgnW4z5ejxZ+HOeWtZMk55PsZG5QeE7jFFsCav5BpPSEZbrhskoxxy0uNoRqDYPxY1awnB276N8ivfaPIdfqO7j3z6indsZsfKzfVYuCiynSmnLgg=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_057260adbecb11f1884b525400cd780f
-    ReservedCode2: oN65DiqDGs+0GonDCHBgDYTvZr2mDD1gYOlaj6FnmpvGS1kIvN7NeGZaH/uxY+3ftVZyWXmVA9KgnW4z5ejxZ+HOeWtZMk55PsZG5QeE7jFFsCav5BpPSEZbrhskoxxy0uNoRqDYPxY1awnB276N8ivfaPIdfqO7j3z6indsZsfKzfVYuCiynSmnLgg=
----
-
 
 
 # 运营智脑 OpsCompass · Microsoft Store（Partner Center）提审表单填写稿

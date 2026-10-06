@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_269dd171b59f11f183e7525400de85a5
-    ReservedCode1: zNtnUxIpuKHpKPb2oNnLID2zSjknPFG3gVOv49rUTfA4t6OxS6VmW8SOj61AwQFEuNku+/bjbRPhJjJDKg+tQFRFwGIUn0K3jfAPqpzzSxNqatmK/MjGEF/oDO7N2h1c+rfxPIbjqeso03gfAVo0xylnR711lkoVlpMNoNk1HAcu8b4ylFacihH+mk0=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_269dd171b59f11f183e7525400de85a5
-    ReservedCode2: zNtnUxIpuKHpKPb2oNnLID2zSjknPFG3gVOv49rUTfA4t6OxS6VmW8SOj61AwQFEuNku+/bjbRPhJjJDKg+tQFRFwGIUn0K3jfAPqpzzSxNqatmK/MjGEF/oDO7N2h1c+rfxPIbjqeso03gfAVo0xylnR711lkoVlpMNoNk1HAcu8b4ylFacihH+mk0=
----
 
 # 运营智脑
 

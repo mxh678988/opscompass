@@ -1,14 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_ef874132b61311f188f9525400248c00
-    ReservedCode1: gwOlNeUkrnRgtoCtxnu45Vrq5BwqFV8/9cVMCGGSkP9V/RT4kqdyllW2eDwT2HFhKeCYFqYr8TmMW0LuXDa4geQ/L6kn8QxWtdlY98jrlB5LtKmkS9ocmZ6Orofs6PzZbyoX3imYPVnkkHfXEUHB/qGO6hitFqvML+wpnrSef3YtVsWipnHQK3qHy40=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_ef874132b61311f188f9525400248c00
-    ReservedCode2: gwOlNeUkrnRgtoCtxnu45Vrq5BwqFV8/9cVMCGGSkP9V/RT4kqdyllW2eDwT2HFhKeCYFqYr8TmMW0LuXDa4geQ/L6kn8QxWtdlY98jrlB5LtKmkS9ocmZ6Orofs6PzZbyoX3imYPVnkkHfXEUHB/qGO6hitFqvML+wpnrSef3YtVsWipnHQK3qHy40=
----
-
 
 
 # 数据模型设计

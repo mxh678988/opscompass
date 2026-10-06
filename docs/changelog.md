@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_2a1a44b9b59f11f183e7525400de85a5
-    ReservedCode1: 3FzDa0fgRGfztHLiLOKADzKF3XL0jMpXxhLVPdw+A1CjQMbEzLDFCUNqQBvo06GWhexpJVID8MTugZlNVX4Z0FihO2dtbW7h/ZsKKQGz2iLJAmjT5W2354DP+71eSf8ySEkjhKc+7bMaajuDxjAv21u6/PgKX5Nx9iUP3qOgAEyuUYTYdl1/fD2J5tA=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_2a1a44b9b59f11f183e7525400de85a5
-    ReservedCode2: 3FzDa0fgRGfztHLiLOKADzKF3XL0jMpXxhLVPdw+A1CjQMbEzLDFCUNqQBvo06GWhexpJVID8MTugZlNVX4Z0FihO2dtbW7h/ZsKKQGz2iLJAmjT5W2354DP+71eSf8ySEkjhKc+7bMaajuDxjAv21u6/PgKX5Nx9iUP3qOgAEyuUYTYdl1/fD2J5tA=
----
 
 # 更新日志
 
@@ -72,7 +62,6 @@ AIGC:
 - **数据库直连采集（sql 模式）接入真实驱动**：`app/services/collect_service.py` 的 sql 采集由「TCP 探测演练」升级为 PostgreSQL / MySQL 受控 `SELECT` 真实落库（表名白名单、行数上限 5000、10 秒超时、示例行回传）；驱动缺失时按可预期错误返回而非 500；新增扩展配置 `limit`（1~5000）用于小批量试采；采集中心 `modes` 中 sql 的 `real_fetch` 置真，并注明 MySQL 需环境已安装 `pymysql`。
 
 ### 修复
-
 
 ## [0.9.0] - 2026-09-26
 

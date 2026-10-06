@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_2504c994be5b11f1887c525400de85a5
-    ReservedCode1: 8uorGbPFIuVnGRxdMZRLLPs8/ZYWKs8rjd4VCMfeOcmMmk10sPR1b2mB1+IgPR39Rfxrs73ZFvAU0b8eJGeRzSTyvxau3+0LRW09ZGVCwOl9RGfPa12aLXGTgShjCtwv617ks1xYhPZfmwIoHff48SLxNBWbIXguwv7rnQvm7Z3/4ilBYXy4SK+K+cw=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_2504c994be5b11f1887c525400de85a5
-    ReservedCode2: 8uorGbPFIuVnGRxdMZRLLPs8/ZYWKs8rjd4VCMfeOcmMmk10sPR1b2mB1+IgPR39Rfxrs73ZFvAU0b8eJGeRzSTyvxau3+0LRW09ZGVCwOl9RGfPa12aLXGTgShjCtwv617ks1xYhPZfmwIoHff48SLxNBWbIXguwv7rnQvm7Z3/4ilBYXy4SK+K+cw=
----
 
 # 运营智脑 PWA 站点托管方案（Cloudflare Pages）
 

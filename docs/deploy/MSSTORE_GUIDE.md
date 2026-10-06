@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_9b019f39be4811f1887c525400de85a5
-    ReservedCode1: NA7mUIFpC0Uzg78YIZS5Db+mI2c1rDR631BDVG8TjTs6TMMNG3KVO8ArmcUT8OtvbKCext1mGsqM5ggVN8tXeCzcGNcjyausfnyJrSNOil8EnTW1ztsNNvfJBAj+dMeBMAssAaz1EAuJoRKkcGer95oB6cfpt8ASHdxrPGR0qGlX1N4JfoaHCGlfU2c=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_9b019f39be4811f1887c525400de85a5
-    ReservedCode2: NA7mUIFpC0Uzg78YIZS5Db+mI2c1rDR631BDVG8TjTs6TMMNG3KVO8ArmcUT8OtvbKCext1mGsqM5ggVN8tXeCzcGNcjyausfnyJrSNOil8EnTW1ztsNNvfJBAj+dMeBMAssAaz1EAuJoRKkcGer95oB6cfpt8ASHdxrPGR0qGlX1N4JfoaHCGlfU2c=
----
 
 # 运营智脑 OpsCompass · Microsoft Store 上架方案
 

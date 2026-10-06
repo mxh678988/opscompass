@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_7e742db5c11f11f1887c525400de85a5
-    ReservedCode1: YFY2XOj/OvS9FYjd9KIvfYKhScM9GuFl9AgtYublpnclWcLi4KwjY4l78iHTsc9kapm9LzGRkcPLZO00iuDhSp5rc7UmnRajA7Px7vcgqoaizzW8BpfbENBlFTV5vHP+bT7EBZYNoyaFw7RrHCaHOcy0Y9fiYc196TZVEi8GmqzCZxPDO/ioSljP/7g=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_7e742db5c11f11f1887c525400de85a5
-    ReservedCode2: YFY2XOj/OvS9FYjd9KIvfYKhScM9GuFl9AgtYublpnclWcLi4KwjY4l78iHTsc9kapm9LzGRkcPLZO00iuDhSp5rc7UmnRajA7Px7vcgqoaizzW8BpfbENBlFTV5vHP+bT7EBZYNoyaFw7RrHCaHOcy0Y9fiYc196TZVEi8GmqzCZxPDO/ioSljP/7g=
----
 
 # 行为准则 · Code of Conduct
 

@@ -4,17 +4,7 @@ about: 提出新功能或改进想法
 title: "[Feature] "
 labels: enhancement
 assignees: ''
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_7bc7f3a5c11f11f1884b525400cd780f
-    ReservedCode1: UDhwlPuFj2LtLv2ZsMnv4vyoioV/3HMLjSv5DYKHe5wyqezeSkkyjUirbu/ejmlHx7Pa3ErccOqPKW3Df93sYbGEXw4Z9pA0wu6ZEsiwUxBFWLyF09u7nc7PpQSa6sIeWfQZaq/ltsfWI7dzVWAuT0FC8FTkVqWXxG7pQSMC+v7KiKBuUM2p1mWNh+M=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_7bc7f3a5c11f11f1884b525400cd780f
-    ReservedCode2: UDhwlPuFj2LtLv2ZsMnv4vyoioV/3HMLjSv5DYKHe5wyqezeSkkyjUirbu/ejmlHx7Pa3ErccOqPKW3Df93sYbGEXw4Z9pA0wu6ZEsiwUxBFWLyF09u7nc7PpQSa6sIeWfQZaq/ltsfWI7dzVWAuT0FC8FTkVqWXxG7pQSMC+v7KiKBuUM2p1mWNh+M=
 ---
-
-
 
 ## 使用场景
 

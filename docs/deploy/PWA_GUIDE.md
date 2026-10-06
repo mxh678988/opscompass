@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_23d10391be5b11f1887c525400de85a5
-    ReservedCode1: Cc/vHF5bKIpwwxuWr7z+zaaHzQ26N1b/psB7W+I8amnE1SCRLJb8o3iYwkm7dMqkkDv/fzm5wOUYaovO2NTuXTDkiSudEYBznnyqNHy5VatJWOEl1atU78ekUSKKj7/Hlnwb+Nd8CpcyU/H9Ua6SKwHfaFaoVLf5kb9BnAwt32NydfhBzOaJzTmGUKI=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_23d10391be5b11f1887c525400de85a5
-    ReservedCode2: Cc/vHF5bKIpwwxuWr7z+zaaHzQ26N1b/psB7W+I8amnE1SCRLJb8o3iYwkm7dMqkkDv/fzm5wOUYaovO2NTuXTDkiSudEYBznnyqNHy5VatJWOEl1atU78ekUSKKj7/Hlnwb+Nd8CpcyU/H9Ua6SKwHfaFaoVLf5kb9BnAwt32NydfhBzOaJzTmGUKI=
----
 
 # 运营智脑 PWA 能力说明（P0 已落地）
 
