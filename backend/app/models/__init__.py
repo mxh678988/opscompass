@@ -61,6 +61,12 @@ from app.models.marketing import (  # noqa: F401
     MarketingChannel,
 )
 from app.models.tenant import Tenant  # noqa: F401
+from app.models.kernel import (  # noqa: F401
+    EVENT_STATUSES,
+    CoreEvent,
+    CoreEventCursor,
+    CoreEventDead,
+)
 from app.models.storage import (  # noqa: F401
     DATA_KINDS,
     MATCH_FIELDS,
@@ -73,6 +79,10 @@ from app.models.storage import (  # noqa: F401
 __all__ = [
     "Base",
     "Tenant",
+    "CoreEvent",
+    "CoreEventDead",
+    "CoreEventCursor",
+    "EVENT_STATUSES",
     "DataSource",
     "ImportTask",
     "MetricCategory",

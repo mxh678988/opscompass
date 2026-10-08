@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_3a01eef4c2fc11f18019525400248c00
+    ReservedCode1: hE2skPqlPsVnxnL3RoyfQYQSl2ngjnet85lMNKJVIRsObCZ1tlwtwVqaPX2pCZd+r27M7+gL8IoRh66piFvKtR3mEydjCBX51rlX9wxzXUZQQMA7YNEuDEsPsmE8taz2wg46lfDUUZUM4El1cENDsB4EiZmyxQHVS50Az3VbTASH6wnkFiIVBUvVwIw=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_3a01eef4c2fc11f18019525400248c00
+    ReservedCode2: hE2skPqlPsVnxnL3RoyfQYQSl2ngjnet85lMNKJVIRsObCZ1tlwtwVqaPX2pCZd+r27M7+gL8IoRh66piFvKtR3mEydjCBX51rlX9wxzXUZQQMA7YNEuDEsPsmE8taz2wg46lfDUUZUM4El1cENDsB4EiZmyxQHVS50Az3VbTASH6wnkFiIVBUvVwIw=
+---
+
 # 运营智脑 OpsCompass · OS 内核设计（v0.11.0）
 
 > 版本：v1.0（草案） | 日期：2026-10-08 | 归属：开源范围 | 关联：docs/OPEN_SOURCE_PLAN.md 第九章
@@ -251,6 +262,15 @@ ui:
 
 **关键前置**：M2 的 `plugin.yaml` 与 SDK 接口一旦冻结，M3–M7 才可并行开工。
 
+**落地顺序决策（D8 已决，2026-10-08）**：按 **M1 → M2** 顺序开工，不采用「先做 M7 试点反向验证」。
+
+理由：
+1. M1 是唯一被其余全部能力依赖的底座，推迟则 M4 任务 SLA、M5 工作流引擎均无法开工，总工期反而拉长；
+2. M2 未落地时 M7 试点无处挂载，试点只能退化为「内核内置」，与插件化目标相悖；
+3. 反向验证的诉求可由 M1/M2 自身验收覆盖（A2 隔离性、A3 事件可靠性），无需等到业务域才验证。
+
+**M1 进展**：已完成——`app/core/bus/`（发布/派发/退避重试/死信/重放/租约回收/位点/积压统计）、`app/models/kernel.py`、迁移 `a1f2c3d4e5b6`、单测 `tests/test_event_bus.py` 9 项通过。
+
 ## 9. 验收标准
 
 | 编号 | 验收项 | 通过条件 |
@@ -276,6 +296,7 @@ ui:
 ---
 
 **下一步（待决）**
-1. M1/M2 是否按上述顺序开工，或先做 M7 试点反向验证设计；
+1. ~~M1/M2 是否按上述顺序开工，或先做 M7 试点反向验证设计~~ —— 已决：按 M1 → M2 顺序开工，M1 已落地（见第 8 节）；
 2. 插件签名方案采用何种密钥体系（影响 official 包分发）；
 3. 商业插件（舆情/危机）是否在 v0.12.0 直接以插件形态交付，不走内核内置。
+*（内容由AI生成，仅供参考）*
