@@ -271,6 +271,12 @@ ui:
 
 **M1 进展**：已完成——`app/core/bus/`（发布/派发/退避重试/死信/重放/租约回收/位点/积压统计）、`app/models/kernel.py`、迁移 `a1f2c3d4e5b6`、单测 `tests/test_event_bus.py` 9 项通过。
 
+**M2 进展**：已完成——清单校验 `app/core/plugin/manifest_validator.py`（id/版本/入口/命名空间/权限点/事件名/官方签名七类规则）、注册表与生命周期 `registry.py`（INSTALLED→ENABLED⇄DISABLED→UNINSTALLED，非法转换拦截）、运行时装配 `runtime.py`（能力回调注入 PluginContext、单插件失败不阻断整体）、SDK `app/sdk/`（`context.py` 十类门面 + `exceptions.py`）、数据模型 `app/models/plugin.py`（`oc_core_plugin` / `oc_core_plugin_config`）、迁移 `b2e3f4a5c6d7`、单测 `tests/test_plugin_runtime.py` 14 项通过（后端全量 75 项通过）。
+
+**SDK 分区落地说明**：接口一次性冻结、能力分期交付。已落地——`db.assert_table` / `bus`（发布需自身前缀、订阅允许自身前缀或 `core.*`）/ `config`（按 `plugin_id` 分区、插件间互不可见）/ `log` / `job`（仅登记声明，内核统一调度）/ `ui`（菜单与路由声明）。未落地能力调用时抛 `NotAvailableError` 并回填计划版本：`auth`→M3、`task`→M4、`storage`→M5、`model`→M6。
+
+**下一步**：M3 统一身份治理（权限点注册、角色模板、数据权限注入），依赖 M2 的清单解析与命名空间声明。
+
 ## 9. 验收标准
 
 | 编号 | 验收项 | 通过条件 |

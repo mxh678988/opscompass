@@ -44,6 +44,12 @@ from app.models.learning import (  # noqa: F401
     LearnFeedback,
     LearnPolicyWeight,
 )
+from app.models.plugin import (  # noqa: F401
+    PLUGIN_KINDS,
+    PLUGIN_STATES,
+    CorePlugin,
+    CorePluginConfig,
+)
 from app.models.ops_compass import (
     Website,
     WebsitePage,
@@ -83,6 +89,10 @@ __all__ = [
     "CoreEventDead",
     "CoreEventCursor",
     "EVENT_STATUSES",
+    "CorePlugin",
+    "CorePluginConfig",
+    "PLUGIN_STATES",
+    "PLUGIN_KINDS",
     "DataSource",
     "ImportTask",
     "MetricCategory",

@@ -23,11 +23,16 @@
 - **M1 事件总线落地**：新增 `app/core/bus/`（发布、派发、指数退避重试、死信、重放、租约回收、订阅位点、积压统计）、`app/models/kernel.py`（`oc_core_event` / `oc_core_event_dead` / `oc_core_event_cursor`）与迁移 `a1f2c3d4e5b6_p6_os_kernel_event_bus`；新增单测 `tests/test_event_bus.py`（9 项），后端全量 61 项通过。
   - 投递语义为「至少一次」，消费方按事件 ID 幂等；无人订阅的事件直接完结，避免无谓积压。
   - 插件订阅受命名空间约束：仅允许 `core.*` 与自身 `插件ID.*`，越权订阅直接拒绝；插件禁用时其订阅被摘除。
+- **M2 插件运行时 + SDK 落地**：新增 `app/core/plugin/`（`manifest_validator.py` 七类清单规则校验、`registry.py` 插件注册表与生命周期状态机、`runtime.py` 能力装配与上下文注入）、`app/sdk/`（`context.py` 十类门面 + `exceptions.py`）、`app/models/plugin.py`（`oc_core_plugin` / `oc_core_plugin_config`）与迁移 `b2e3f4a5c6d7_p7_os_kernel_plugins`；新增单测 `tests/test_plugin_runtime.py`（14 项），后端全量 75 项通过。
+  - 清单校验覆盖：id 命名与 `core` 前缀禁用、语义化版本、`min_kernel_version` 门槛、`entry` 的 `module:func` 格式、`namespace` 三类前缀格式与占用冲突、权限点三段式、事件名格式、官方包签名缺失告警。
+  - 生命周期仅允许 INSTALLED→ENABLED⇄DISABLED→UNINSTALLED，非法转换与重复启用直接抛错；卸载同时回收上下文。
+  - SDK 门面强制命名空间：发布事件须自身前缀，订阅允许自身前缀或 `core.*`；表名须落在插件表前缀内，越界抛 `NamespaceViolation`；配置按 `plugin_id` 分区，插件间互不可见。
+  - 未落地能力按分期抛 `NotAvailableError` 并回填计划版本（`auth`→M3、`task`→M4、`storage`→M5、`model`→M6），避免插件作者误用半成品；`job`/`ui` 仅登记声明，由内核统一执行。
 - **落地顺序决策（D8 已决）**：按 M1 → M2 顺序开工，不采用「先做 M7 试点反向验证」（理由见 `docs/os-kernel-design.md` 第 8 节）。
 
 ### 计划（v0.11.0 后续）
 
-- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 → M6 模型路由 → M7 风险域试点插件 推进（M1 已完成）。
+- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 → M6 模型路由 → M7 风险域试点插件 推进（M1、M2 已完成）。
 - 插件 SDK 与 `plugin.yaml` 清单规范冻结后，内核公开接口文档对外发布。
 
 ## [0.10.1] - 2026-10-06（首个开源版本）
