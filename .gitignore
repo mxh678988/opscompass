@@ -79,3 +79,6 @@ deploy/installers/
 
 # ---------- Cloudflare Wrangler（本地缓存与登录态，禁止入库） ----------
 .wrangler/
+
+# ---------- 商业插件设计文档（闭源，禁止入库；详见 docs/OPEN_SOURCE_PLAN.md 第九章） ----------
+docs_business/
