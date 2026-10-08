@@ -66,23 +66,23 @@
 |---|---|
 | 前端 | Vue 3 + TypeScript + Vite，单页应用，Token 路由守卫，Nginx 托管静态产物 |
 | 后端 | FastAPI + SQLAlchemy 2.x + Pydantic + Alembic，异步中间件链（CORS / 安全头 / 审计 / 链路） |
-| 数据 | PostgreSQL 16（业务库，59 张表）、Redis 7（缓存/队列） |
+| 数据 | PostgreSQL 16（业务库，54 张表）、Redis 7（缓存/队列） |
 | 部署 | Docker Compose 四容器：postgres / redis / backend / frontend，桥接网络 opscompass-net |
 | 硬件适配 | WMI + nvidia-smi 探测 CPU/内存/显卡，按显存分档推荐本地模型 |
 | 安全 | RBAC + JWT + 审计日志 + 安全日志分级 + 登录失败锁定 + IP/端口白名单 |
 | AI 治理 | 三级决策分级（user_only / user_authorized / agent_autonomous）+ 策略引擎权限内自动执行 + 一键叫停/还原 + 决策全程追溯 |
 
-### 4.1 能力规模（2026-09-29 实测）
+### 4.1 能力规模（2026-09-29 实测，闭源隔离后）
 
 | 指标 | 数值 |
 |---|---|
-| HTTP 接口路径 | 166 |
-| 接口操作数（含多方法） | 225 |
-| OpenAPI Schema 定义 | 226 |
+| HTTP 接口路径 | 138 |
+| 接口操作数（含多方法） | 183 |
+| OpenAPI Schema 定义 | 207 |
 | 后端 Python 文件 / 行数 | 96 / 20,544 |
 | 前端源码文件 / 行数 | 38 / 15,068 |
-| 数据库表 / 字段 | 64 / 857 |
-| 权限点 | 52 |
+| 数据库表 / 字段 | 54 / 686 |
+| 权限点 | 48 |
 | AI 治理相关索引 | 14 |
 | 数据库迁移版本 | `p5_ai_gov_perf_idx`（head） |
 
