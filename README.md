@@ -144,5 +144,6 @@ npm run dev
 - [接口说明](docs/api.md)
 - [更新日志](docs/changelog.md)
 - [开源方案](docs/OPEN_SOURCE_PLAN.md)
+- [OS 内核设计](docs/os-kernel-design.md)
 - [贡献指南](CONTRIBUTING.md)
 *（内容由AI生成，仅供参考）*
