@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 350ab7144af9618434cdce7bfa6d84e8_9abcf179c44011f197b3525400248c00
+    ReservedCode1: kK1G+gQSF6i1FyLfp/Uox9ay4GXBYeCdgqrSulGifpFAIEIzfDFozxUDiIxYWU5TRTMvtckWG8NkKTv9LVmXd14VJiodvKmn3HcMGTuc2RyKDTDZ7njAgiLj6fWJs30FOt5SK2kUQ4XhlZAG1Mo1ZS6uPopet7yC9xWkyEcKlHSI7H1TNWQ8bTyLVkw=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 350ab7144af9618434cdce7bfa6d84e8_9abcf179c44011f197b3525400248c00
+    ReservedCode2: kK1G+gQSF6i1FyLfp/Uox9ay4GXBYeCdgqrSulGifpFAIEIzfDFozxUDiIxYWU5TRTMvtckWG8NkKTv9LVmXd14VJiodvKmn3HcMGTuc2RyKDTDZ7njAgiLj6fWJs30FOt5SK2kUQ4XhlZAG1Mo1ZS6uPopet7yC9xWkyEcKlHSI7H1TNWQ8bTyLVkw=
+---
+
 
 # 更新日志
 
@@ -34,10 +45,14 @@
   - 委派为自身权限子集授权、单次最长 90 天、全程审计留痕；交接一次完成角色转移 + 在途委派撤销。
   - 新增单测 `tests/test_identity_governance.py`（24 项），后端全量 99 项通过。
 - **落地顺序决策（D8 已决）**：按 M1 → M2 顺序开工，不采用「先做 M7 试点反向验证」（理由见 `docs/os-kernel-design.md` 第 8 节）。
+- **M4 任务 SLA 落地**：新增 `app/core/sla/`（`calendar.py` 工作日历 + `engine.py` 事件驱动计时引擎）、`app/models/sla.py`（`oc_core_sla` / `oc_core_sla_event`）与迁移 `d4e5f6a7b8c9_p9_os_kernel_sla`；SDK `task` 门面完成 M4 装配（`TaskFacade` 接收内核注入的 `task_fn` 回调），`PluginRuntime` 增加 `sla_engine` / `_make_task` 并在 `build_context` 注入 `task_fn`；新增单测 `tests/test_sla.py`（54 项），后端全量 153 项通过。
+  - 计时模型：以绝对截止 `deadline_at` 为基准，暂停/恢复通过累计 `paused_seconds` 冻结计时，`effective_deadline = deadline_at + paused_seconds`；可选 `WorkingCalendar`（工作时段 + 节假日 + 周末 off）按工作时间展开截止时刻。
+  - 节点评估：临期提醒（剩余 1/3 或 30 分钟取更晚）、最终提醒（默认剩余 5 分钟）、逾期、逾期升级（责任人 → 上级 → 值班长，缺位自动跳级，升级写 `oc_audit_log`）；评估幂等靠事件表去重，重复扫描不重复触发，事件表同时承担审计留痕。
+  - 引擎时区修正：SQLite `DateTime(timezone=True)` 回读为 naive，统一经 `_as_utc` 转 aware 后再做相减/比较，修复 `resume_sla` 暂停时长累计与 `evaluate_sla` 节点比较的 naive/aware 报错。
 
 ### 计划（v0.11.0 后续）
 
-- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 → M6 模型路由 → M7 风险域试点插件 推进（M1、M2、M3 已完成）。
+- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 → M6 模型路由 → M7 风险域试点插件 推进（M1、M2、M3、M4 已完成）。
 - 插件 SDK 与 `plugin.yaml` 清单规范冻结后，内核公开接口文档对外发布。
 
 ## [0.10.1] - 2026-10-06（首个开源版本）
@@ -217,4 +232,5 @@
 - Docker Compose 编排：PostgreSQL 16、Redis 7、后端、前端四服务。
 - 环境变量模板 `.env.example`、`.gitignore`、`.editorconfig`。
 - 开发脚本：`start_dev.ps1`、`init_db.py`、`backup.ps1`。
+*（内容由AI生成，仅供参考）*
 *（内容由AI生成，仅供参考）*

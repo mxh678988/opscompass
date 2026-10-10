@@ -229,7 +229,7 @@ def test_unavailable_capabilities_report_phase() -> None:
 
     with pytest.raises(NotAvailableError) as e2:
         ctx.task.create("复核预警")
-    assert e2.value.planned_in == "M4"
+    assert e2.value.planned_in == "M4 装配完成"
 
     with pytest.raises(NotAvailableError) as e3:
         ctx.model.run("emotion.classify", {"text": "x"})

@@ -45,6 +45,12 @@ from app.models.learning import (  # noqa: F401
     LearnPolicyWeight,
 )
 from app.models.identity import DELEGATION_STATUSES, CoreDelegation  # noqa: F401
+from app.models.sla import (  # noqa: F401
+    SLA_EVENT_TYPES,
+    SLA_STATUSES,
+    CoreSla,
+    CoreSlaEvent,
+)
 from app.models.plugin import (  # noqa: F401
     PLUGIN_KINDS,
     PLUGIN_STATES,
@@ -96,6 +102,10 @@ __all__ = [
     "PLUGIN_KINDS",
     "CoreDelegation",
     "DELEGATION_STATUSES",
+    "CoreSla",
+    "CoreSlaEvent",
+    "SLA_STATUSES",
+    "SLA_EVENT_TYPES",
     "DataSource",
     "ImportTask",
     "MetricCategory",

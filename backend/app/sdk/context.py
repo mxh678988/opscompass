@@ -244,10 +244,25 @@ class StorageFacade:
 
 
 class TaskFacade:
-    """待办门面：自动挂 SLA 与升级链（M4 任务 SLA 落地）。"""
+    """待办门面：自动挂 SLA 与升级链（M4 任务 SLA 落地）。
+
+    内核在装载插件时注入 ``task_fn`` 回调（基于内核 ``create_for_plugin``
+    构造），插件调用 ``create`` 即在内核创建带 SLA 的待办；未注入时抛
+    ``NotAvailableError`` 指明 M4，防止插件误以为已装配。
+    """
+
+    def __init__(
+        self,
+        plugin_id: str,
+        task_fn: Optional[Callable[..., Any]] = None,
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._task_fn = task_fn
 
     def create(self, title: str, sla: Any = None, **kwargs: Any) -> Any:
-        raise NotAvailableError("task.create", "M4")
+        if self._task_fn is None:
+            raise NotAvailableError("task.create", "M4 装配完成")
+        return self._task_fn(self._plugin_id, title, sla, **kwargs)
 
 
 class UIFacade:
@@ -284,6 +299,7 @@ class PluginContext:
         config_store: Optional[ConfigStore] = None,
         trace_id: Optional[str] = None,
         authorize_fn: Optional[Callable[..., bool]] = None,
+        task_fn: Optional[Callable[..., Any]] = None,
     ) -> None:
         self.plugin_id = plugin_id
         self.plugin_version = plugin_version
@@ -301,7 +317,7 @@ class PluginContext:
         self.model = ModelFacade()
         self.job = JobFacade(plugin_id)
         self.storage = StorageFacade()
-        self.task = TaskFacade()
+        self.task = TaskFacade(plugin_id, task_fn)
         self.ui = UIFacade(plugin_id)
 
     def declarations(self) -> dict[str, list[dict[str, Any]]]:
@@ -328,6 +344,7 @@ def create_context(
     config_store: Optional[ConfigStore] = None,
     trace_id: Optional[str] = None,
     authorize_fn: Optional[Callable[..., bool]] = None,
+    task_fn: Optional[Callable[..., Any]] = None,
 ) -> PluginContext:
     """内核侧创建插件上下文（插件作者通常不直接调用）。"""
     return PluginContext(
@@ -340,4 +357,5 @@ def create_context(
         config_store=config_store,
         trace_id=trace_id,
         authorize_fn=authorize_fn,
+        task_fn=task_fn,
     )

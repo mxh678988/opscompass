@@ -1,0 +1,23 @@
+id: sentiment
+name: 舆情插件
+version: 0.1.0
+kind: community
+min_kernel_version: 0.11.0
+entry: main:register
+namespace:
+  tables: os_sentiment_
+  events: "sentiment."
+  permissions: "sentiment:"
+permissions:
+  - code: sentiment:task:create
+    name: 创建舆情任务
+roles:
+  - code: sentiment:analyst
+    name: 舆情分析师
+    permissions:
+      - sentiment:task:create
+events:
+  publish:
+    - sentiment.task.created
+  subscribe:
+    - core.metric.written

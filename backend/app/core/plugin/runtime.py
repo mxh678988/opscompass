@@ -38,6 +38,7 @@ class PluginRuntime:
         permissions: Any = None,
         role_templates: Any = None,
         authorizer: Optional[Callable[..., bool]] = None,
+        sla_engine: Any = None,
     ) -> None:
         self.registry = registry
         self._session_factory = session_factory
@@ -46,6 +47,7 @@ class PluginRuntime:
         self._permissions = permissions
         self._role_templates = role_templates
         self._authorizer = authorizer
+        self._sla_engine = sla_engine
         self._contexts: dict[str, PluginContext] = {}
 
     # ---- 装配：把内核能力包成 SDK 回调 ----
@@ -76,6 +78,31 @@ class PluginRuntime:
             return make_permission_authorizer(self._permissions)
         raise RuntimeError(f"鉴权能力未注入，无法装配插件: {plugin_id}")
 
+    def _make_task(self, plugin_id: str) -> Optional[Callable[..., Any]]:
+        """构造待办/SLA 回调（M4）：优先显式注入的 SLA 引擎，否则基于会话工厂装配。
+
+        返回的回调签名与 ``TaskFacade.create`` 一致：
+        ``fn(plugin_id, title, sla, **kwargs)``；未注入引擎且无会话工厂时返回
+        ``None``（插件侧 task.create 抛 NotAvailableError，不假装可用）。
+        """
+        if self._sla_engine is not None:
+            engine = self._sla_engine
+        elif self._session_factory is not None:
+            from app.core.sla.engine import create_for_plugin
+
+            engine = create_for_plugin
+        else:
+            return None
+
+        def task_fn(pid: str, title: str, sla: Any, **kwargs: Any) -> Any:
+            db = self._session_factory()
+            try:
+                return engine(db, pid, title, sla, **kwargs)
+            finally:
+                db.close()
+
+        return task_fn
+
     def build_context(self, plugin_id: str) -> PluginContext:
         """为指定插件装配上下文（不改变插件状态）。"""
         meta = self.registry.get(plugin_id)
@@ -102,6 +129,7 @@ class PluginRuntime:
                 if (self._authorizer is not None or self._permissions is not None)
                 else None
             ),
+            task_fn=self._make_task(meta.plugin_id),
         )
         self._contexts[plugin_id] = ctx
         return ctx
