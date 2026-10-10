@@ -28,11 +28,16 @@
   - 生命周期仅允许 INSTALLED→ENABLED⇄DISABLED→UNINSTALLED，非法转换与重复启用直接抛错；卸载同时回收上下文。
   - SDK 门面强制命名空间：发布事件须自身前缀，订阅允许自身前缀或 `core.*`；表名须落在插件表前缀内，越界抛 `NamespaceViolation`；配置按 `plugin_id` 分区，插件间互不可见。
   - 未落地能力按分期抛 `NotAvailableError` 并回填计划版本（`auth`→M3、`task`→M4、`storage`→M5、`model`→M6），避免插件作者误用半成品；`job`/`ui` 仅登记声明，由内核统一执行。
+- **M3 统一身份治理落地**：新增 `app/core/identity/`（`permissions.py` 权限点注册中心 + `roles.py` 角色模板 + `data_scope.py` 数据权限 + `delegation.py` 委派代理与离职交接 + `make_permission_authorizer` 鉴权回调）、`app/models/identity.py`（`oc_core_delegation`）与迁移 `c3f4a5b6d7e8_p8_os_kernel_identity`；插件运行时注入 `sync_permissions` / `_release_identity`，插件 SDK `auth` 门面完成 M3 装配（越界权限点抛 `NamespaceViolation`，未装配时按分期抛 `NotAvailableError`）。
+  - 权限点强制三段式小写命名，插件权限点必须落在自身命名空间前缀内，内核/插件同码冲突与批次内重复整体回滚。
+  - 数据权限四级（全量/租户/组织/本人）统一注入行级隔离，缺列显式报错不静默放行。
+  - 委派为自身权限子集授权、单次最长 90 天、全程审计留痕；交接一次完成角色转移 + 在途委派撤销。
+  - 新增单测 `tests/test_identity_governance.py`（24 项），后端全量 99 项通过。
 - **落地顺序决策（D8 已决）**：按 M1 → M2 顺序开工，不采用「先做 M7 试点反向验证」（理由见 `docs/os-kernel-design.md` 第 8 节）。
 
 ### 计划（v0.11.0 后续）
 
-- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 → M6 模型路由 → M7 风险域试点插件 推进（M1、M2 已完成）。
+- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 → M6 模型路由 → M7 风险域试点插件 推进（M1、M2、M3 已完成）。
 - 插件 SDK 与 `plugin.yaml` 清单规范冻结后，内核公开接口文档对外发布。
 
 ## [0.10.1] - 2026-10-06（首个开源版本）

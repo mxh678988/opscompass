@@ -46,6 +46,7 @@ class PluginMeta:
     entry: str
     namespace: dict[str, str]  # tables / events / permissions 前缀
     permissions: list[dict[str, str]]
+    roles: list[dict[str, Any]] = field(default_factory=list)  # 插件推荐角色（M3 身份治理）
     state: PluginState = PluginState.UNINSTALLED
 
 
@@ -118,6 +119,7 @@ class PluginRegistry:
             entry=str(data.get("entry", "")),
             namespace=data.get("namespace", {}),
             permissions=data.get("permissions", []),
+            roles=data.get("roles", []) or [],
             state=PluginState.INSTALLED,
         )
 

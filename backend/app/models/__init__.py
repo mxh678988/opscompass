@@ -44,6 +44,7 @@ from app.models.learning import (  # noqa: F401
     LearnFeedback,
     LearnPolicyWeight,
 )
+from app.models.identity import DELEGATION_STATUSES, CoreDelegation  # noqa: F401
 from app.models.plugin import (  # noqa: F401
     PLUGIN_KINDS,
     PLUGIN_STATES,
@@ -93,6 +94,8 @@ __all__ = [
     "CorePluginConfig",
     "PLUGIN_STATES",
     "PLUGIN_KINDS",
+    "CoreDelegation",
+    "DELEGATION_STATUSES",
     "DataSource",
     "ImportTask",
     "MetricCategory",

@@ -35,11 +35,17 @@ class PluginRuntime:
         session_factory: Optional[Callable[[], Any]] = None,
         bus: Any = None,
         config_store: Any = None,
+        permissions: Any = None,
+        role_templates: Any = None,
+        authorizer: Optional[Callable[..., bool]] = None,
     ) -> None:
         self.registry = registry
         self._session_factory = session_factory
         self._bus = bus
         self._config_store = config_store
+        self._permissions = permissions
+        self._role_templates = role_templates
+        self._authorizer = authorizer
         self._contexts: dict[str, PluginContext] = {}
 
     # ---- 装配：把内核能力包成 SDK 回调 ----
@@ -59,6 +65,16 @@ class PluginRuntime:
             return self._bus.subscribe(name, handler, **kwargs)
 
         return subscribe
+
+    def _make_authorize(self, plugin_id: str) -> Callable[..., bool]:
+        """构造插件鉴权回调：优先注入的统一授权器，否则基于权限注册中心生成。"""
+        if self._authorizer is not None:
+            return self._authorizer
+        if self._permissions is not None:
+            from app.core.identity.delegation import make_permission_authorizer
+
+            return make_permission_authorizer(self._permissions)
+        raise RuntimeError(f"鉴权能力未注入，无法装配插件: {plugin_id}")
 
     def build_context(self, plugin_id: str) -> PluginContext:
         """为指定插件装配上下文（不改变插件状态）。"""
@@ -81,9 +97,48 @@ class PluginRuntime:
             publish_fn=self._make_publish(meta.plugin_id),
             subscribe_fn=self._make_subscribe(meta.plugin_id),
             config_store=self._config_store,
+            authorize_fn=(
+                self._make_authorize(meta.plugin_id)
+                if (self._authorizer is not None or self._permissions is not None)
+                else None
+            ),
         )
         self._contexts[plugin_id] = ctx
         return ctx
+
+    # ---- M3 统一身份治理：权限点 / 推荐角色同步 ----
+
+    def sync_permissions(self, plugin_id: str) -> None:
+        """把插件清单声明的权限点/推荐角色登记进身份注册中心（幂等）。
+
+        ``_permissions`` / ``_role_templates`` 未注入（旧内核）时静默跳过，
+        保证 M2 行为不被破坏；权限点强制三段式且须落在插件命名空间内，
+        越界条目由注册中心拒绝并抛 ``NamespaceViolation``。
+        """
+        meta = self.registry.get(plugin_id)
+        if meta is None:
+            raise KeyError(f"插件未注册: {plugin_id}")
+        ns_data = meta.namespace or {}
+        prefix = str(ns_data.get("permissions", "") or f"{plugin_id}:")
+        if self._permissions is not None:
+            self._permissions.register_plugin(
+                plugin_id,
+                list(meta.permissions or []),
+                namespace_prefix=prefix,
+            )
+        if self._role_templates is not None:
+            self._role_templates.register_plugin_roles(
+                plugin_id,
+                list(meta.roles or []),
+                namespace_prefix=prefix,
+            )
+
+    def _release_identity(self, plugin_id: str) -> None:
+        """卸载插件：收回其登记的权限点与推荐角色（只删插件声明，不碰用户数据）。"""
+        if self._permissions is not None:
+            self._permissions.unregister_plugin(plugin_id)
+        if self._role_templates is not None:
+            self._role_templates.unregister_plugin(plugin_id)
 
     # ---- 生命周期 ----
 
@@ -99,19 +154,21 @@ class PluginRuntime:
         return registered
 
     def activate(self, plugin_id: str) -> PluginContext:
-        """启用插件并返回其上下文。"""
+        """启用插件并返回其上下文（先登记权限点/推荐角色，再装配上下文）。"""
+        self.sync_permissions(plugin_id)
         ctx = self.build_context(plugin_id)
         self.registry.enable(plugin_id)
         return ctx
 
     def deactivate(self, plugin_id: str) -> None:
-        """禁用插件（保留数据），回收上下文。"""
+        """禁用插件（保留数据与权限声明），回收上下文。"""
         self.registry.disable(plugin_id)
         self._contexts.pop(plugin_id, None)
 
     def uninstall(self, plugin_id: str) -> None:
-        """卸载插件，回收上下文。数据清理由调用方按策略决定。"""
+        """卸载插件，回收上下文并收回权限点/推荐角色。数据清理由调用方按策略决定。"""
         self.registry.uninstall(plugin_id)
+        self._release_identity(plugin_id)
         self._contexts.pop(plugin_id, None)
 
     def context(self, plugin_id: str) -> Optional[PluginContext]:

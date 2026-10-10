@@ -142,13 +142,47 @@ class DbFacade:
 
 
 class AuthFacade:
-    """权限门面：统一鉴权，插件不得自行实现（M3 统一身份治理落地）。"""
+    """权限门面：统一鉴权，插件不得自行实现（M3 统一身份治理落地）。
 
-    def require(self, perm_code: str) -> None:
-        raise NotAvailableError("auth.require", "M3")
+    未注入 ``authorize_fn``（内核未装配）时，``require`` / ``check`` 一律抛
+    ``NotAvailableError`` 并标注计划版本 M3，明确告知插件身份治理尚未就绪，
+    防止插件误以为已受控；装配后先校验权限点落在插件自身命名空间内
+    （越界抛 ``NamespaceViolation``），再交给内核注入的鉴权回调判定。
+    """
+
+    def __init__(
+        self,
+        plugin_id: str,
+        namespace_permissions: str = "",
+        authorize_fn: Optional[Callable[..., bool]] = None,
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._prefix = namespace_permissions or f"{plugin_id}:"
+        self._authorize = authorize_fn
+
+    def _require_authorize(self, feature: str) -> Callable[..., bool]:
+        if self._authorize is None:
+            raise NotAvailableError(feature, "M3 装配完成")
+        return self._authorize
+
+    def _check_prefix(self, perm_code: str) -> None:
+        if not perm_code.startswith(self._prefix):
+            raise NamespaceViolation(
+                self._plugin_id, "权限点", perm_code, f"{self._prefix}*"
+            )
+
+    def require(self, perm_code: str, user: Any = None) -> None:
+        """校验当前用户是否具备权限点；不具备抛 PermissionError。"""
+        authorize = self._require_authorize("auth.require")
+        self._check_prefix(perm_code)
+        if not authorize(perm_code, user, plugin_id=self._plugin_id):
+            raise PermissionError(f"权限不足: {perm_code}")
 
     def check(self, user: Any, perm_code: str) -> bool:
-        raise NotAvailableError("auth.check", "M3")
+        """布尔式鉴权（不抛权限异常）；未装配同样抛 NotAvailableError。"""
+        authorize = self._require_authorize("auth.check")
+        self._check_prefix(perm_code)
+        return bool(authorize(perm_code, user, plugin_id=self._plugin_id))
 
 
 class ConfigFacade:
@@ -249,6 +283,7 @@ class PluginContext:
         subscribe_fn: Optional[Callable[..., Any]] = None,
         config_store: Optional[ConfigStore] = None,
         trace_id: Optional[str] = None,
+        authorize_fn: Optional[Callable[..., bool]] = None,
     ) -> None:
         self.plugin_id = plugin_id
         self.plugin_version = plugin_version
@@ -261,7 +296,7 @@ class PluginContext:
             publish_fn or _missing_publish,
             subscribe_fn or _missing_subscribe,
         )
-        self.auth = AuthFacade()
+        self.auth = AuthFacade(plugin_id, self.namespace.permissions, authorize_fn)
         self.config = ConfigFacade(plugin_id, config_store)
         self.model = ModelFacade()
         self.job = JobFacade(plugin_id)
@@ -292,6 +327,7 @@ def create_context(
     subscribe_fn: Optional[Callable[..., Any]] = None,
     config_store: Optional[ConfigStore] = None,
     trace_id: Optional[str] = None,
+    authorize_fn: Optional[Callable[..., bool]] = None,
 ) -> PluginContext:
     """内核侧创建插件上下文（插件作者通常不直接调用）。"""
     return PluginContext(
@@ -303,4 +339,5 @@ def create_context(
         subscribe_fn=subscribe_fn,
         config_store=config_store,
         trace_id=trace_id,
+        authorize_fn=authorize_fn,
     )

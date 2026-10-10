@@ -222,9 +222,10 @@ def test_config_facade_partition() -> None:
 
 def test_unavailable_capabilities_report_phase() -> None:
     ctx = _context()
+    # M3 已落地鉴权门面：内核未注入鉴权回调时仍显式报错，插件不得以为已受控
     with pytest.raises(NotAvailableError) as e1:
         ctx.auth.require("sentiment:task:create")
-    assert e1.value.planned_in == "M3"
+    assert e1.value.planned_in == "M3 装配完成"
 
     with pytest.raises(NotAvailableError) as e2:
         ctx.task.create("复核预警")
