@@ -40,6 +40,7 @@ class PluginRuntime:
         authorizer: Optional[Callable[..., bool]] = None,
         sla_engine: Any = None,
         workflow_engine: Any = None,
+        model_router: Any = None,
     ) -> None:
         self.registry = registry
         self._session_factory = session_factory
@@ -50,6 +51,7 @@ class PluginRuntime:
         self._authorizer = authorizer
         self._sla_engine = sla_engine
         self._workflow_engine = workflow_engine
+        self._model_router = model_router
         self._contexts: dict[str, PluginContext] = {}
 
     # ---- 装配：把内核能力包成 SDK 回调 ----
@@ -133,6 +135,7 @@ class PluginRuntime:
             ),
             task_fn=self._make_task(meta.plugin_id),
             workflow_engine=self._workflow_engine,
+            model_router=self._model_router,
         )
         self._contexts[plugin_id] = ctx
         return ctx

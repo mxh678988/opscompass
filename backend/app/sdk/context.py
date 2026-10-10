@@ -208,10 +208,72 @@ class ConfigFacade:
 
 
 class ModelFacade:
-    """模型门面：只声明能力，不指定模型（M6 模型路由落地）。"""
+    """模型门面：只声明能力，不指定模型（M6 模型路由落地）。
+
+    内核在装载插件时注入 ``model_router``（``app.core.model_router.routing``
+    模块）与会话工厂，插件调用 ``run`` 即在内核完成「能力声明 → 路由决策 →
+    降级/兜底 → 计量/缓存」；未注入时抛 ``NotAvailableError`` 指明 M6，
+    防止插件误以为已装配。敏感能力由内核强制本地，插件不可绕过。
+    """
+
+    def __init__(
+        self,
+        plugin_id: str,
+        model_router: Any = None,
+        session_factory: Optional[Callable[[], Any]] = None,
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._router = model_router
+        self._session_factory = session_factory
+
+    def _require(self, feature: str) -> Any:
+        if self._router is None or self._session_factory is None:
+            raise NotAvailableError(feature, "M6 装配完成")
+        return self._router
+
+    def _db(self) -> Any:
+        return self._session_factory()
 
     def run(self, capability: str, input: Any, **opts: Any) -> Any:
-        raise NotAvailableError("model.run", "M6")
+        """路由并执行一次模型调用，返回 ``ModelRouteResult``。
+
+        可选参数（opts）：tenant_id / sensitive / force_local / model /
+        temperature / max_tokens / skip_cache。
+        """
+        router = self._require("model.run")
+        db = self._db()
+        try:
+            return router.route_model(db, capability, input, **opts)
+        finally:
+            db.close()
+
+    def declare(self, capability: str, **opts: Any) -> Any:
+        """登记/更新能力声明（kind/description/sensitive/fallback_cloud/
+        cost_cap/cache_ttl_seconds/enabled）。"""
+        router = self._require("model.declare")
+        db = self._db()
+        try:
+            return router.upsert_capability(db, capability=capability, **opts)
+        finally:
+            db.close()
+
+    def stats(self, **opts: Any) -> dict[str, Any]:
+        """调用计量汇总（tenant_id/capability/since/limit_days 过滤）。"""
+        router = self._require("model.stats")
+        db = self._db()
+        try:
+            return router.route_log_stats(db, **opts)
+        finally:
+            db.close()
+
+    def set_global_degrade(self, degrade_all: bool) -> None:
+        """一键全局降级（进程内生效；运维故障时快速止损）。"""
+        router = self._require("model.degrade")
+        router.set_global_degrade(degrade_all)
+
+    def is_degraded(self) -> bool:
+        router = self._require("model.is_degraded")
+        return router.is_degraded()
 
 
 class JobFacade:
@@ -418,6 +480,7 @@ class PluginContext:
         authorize_fn: Optional[Callable[..., bool]] = None,
         task_fn: Optional[Callable[..., Any]] = None,
         workflow_engine: Any = None,
+        model_router: Any = None,
     ) -> None:
         self.plugin_id = plugin_id
         self.plugin_version = plugin_version
@@ -433,11 +496,11 @@ class PluginContext:
         )
         self.auth = AuthFacade(plugin_id, self.namespace.permissions, authorize_fn)
         self.config = ConfigFacade(plugin_id, config_store)
-        self.model = ModelFacade()
         self.job = JobFacade(plugin_id)
         self.storage = StorageFacade()
         self.task = TaskFacade(plugin_id, task_fn)
         self.workflow = WorkflowFacade(plugin_id, workflow_engine, session_factory)
+        self.model = ModelFacade(plugin_id, model_router, session_factory)
         self.ui = UIFacade(plugin_id)
 
     def declarations(self) -> dict[str, list[dict[str, Any]]]:
@@ -466,6 +529,7 @@ def create_context(
     authorize_fn: Optional[Callable[..., bool]] = None,
     task_fn: Optional[Callable[..., Any]] = None,
     workflow_engine: Any = None,
+    model_router: Any = None,
 ) -> PluginContext:
     """内核侧创建插件上下文（插件作者通常不直接调用）。"""
     return PluginContext(
@@ -480,4 +544,5 @@ def create_context(
         authorize_fn=authorize_fn,
         task_fn=task_fn,
         workflow_engine=workflow_engine,
+        model_router=model_router,
     )

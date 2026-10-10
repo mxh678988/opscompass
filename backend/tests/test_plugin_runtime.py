@@ -233,7 +233,7 @@ def test_unavailable_capabilities_report_phase() -> None:
 
     with pytest.raises(NotAvailableError) as e3:
         ctx.model.run("emotion.classify", {"text": "x"})
-    assert e3.value.planned_in == "M6"
+    assert e3.value.planned_in == "M6 装配完成"
 
 
 def test_declarations_and_log() -> None:
@@ -281,4 +281,56 @@ def test_runtime_broken_plugin_does_not_block(plugins_dir: Path) -> None:
     runtime = PluginRuntime(registry, bus=StubBus(), config_store=DictConfigStore())
 
     assert runtime.load_all() == ["sentiment"]
+
+
+def test_model_facade_assembled_forwards_to_router() -> None:
+    """M6 模型路由装配：注入 router + session_factory 后 run/declare/stats 转发内核。"""
+    calls: list[str] = []
+
+    class FakeRouter:
+        def route_model(self, db, capability, input, **opts):
+            calls.append(f"route_model:{capability}")
+            assert db is not None
+            return {"mode": "local", "model": "llama", "text": "ok"}
+
+        def upsert_capability(self, db, **opts):
+            calls.append(f"upsert:{opts['capability']}")
+            return object()
+
+        def route_log_stats(self, db, **opts):
+            calls.append("stats")
+            return {"total": 0}
+
+        def is_degraded(self):
+            calls.append("is_degraded")
+            return False
+
+    closed = []
+
+    def session_factory():
+        class _S:
+            def close(self):
+                closed.append(1)
+
+        return _S()
+
+    runtime = PluginRuntime(
+        PluginRegistry(Path(".")),
+        session_factory=session_factory,
+        model_router=FakeRouter(),
+    )
+    ctx = create_context(
+        plugin_id="sentiment",
+        plugin_version="0.1.0",
+        session_factory=session_factory,
+        model_router=FakeRouter(),
+    )
+    res = ctx.model.run("emotion.classify", {"text": "x"}, tenant_id=1)
+    assert res["mode"] == "local"
+    assert calls[0] == "route_model:emotion.classify"
+    ctx.model.declare(capability="emotion.classify", sensitive=False)
+    assert calls[1] == "upsert:emotion.classify"
+    assert ctx.model.stats(capability="emotion.classify") == {"total": 0}
+    assert ctx.model.is_degraded() is False
+    assert len(closed) == 3  # run/declare/stats 各自打开并关闭会话
     assert "broken" not in runtime.registry.plugins
