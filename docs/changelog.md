@@ -49,10 +49,14 @@ AIGC:
   - 计时模型：以绝对截止 `deadline_at` 为基准，暂停/恢复通过累计 `paused_seconds` 冻结计时，`effective_deadline = deadline_at + paused_seconds`；可选 `WorkingCalendar`（工作时段 + 节假日 + 周末 off）按工作时间展开截止时刻。
   - 节点评估：临期提醒（剩余 1/3 或 30 分钟取更晚）、最终提醒（默认剩余 5 分钟）、逾期、逾期升级（责任人 → 上级 → 值班长，缺位自动跳级，升级写 `oc_audit_log`）；评估幂等靠事件表去重，重复扫描不重复触发，事件表同时承担审计留痕。
   - 引擎时区修正：SQLite `DateTime(timezone=True)` 回读为 naive，统一经 `_as_utc` 转 aware 后再做相减/比较，修复 `resume_sla` 暂停时长累计与 `evaluate_sla` 节点比较的 naive/aware 报错。
+- **M5 工作流引擎落地**：新增 `app/core/workflow/`（`dsl.py` DSL 解析与校验 + `engine.py` 状态机引擎）、`app/models/workflow.py`（`oc_core_workflow_instance` / `oc_core_workflow_step`，`UniqueConstraint(instance_id, seq)` 步骤幂等键）与迁移 `e5f6a7b8c9d0_p10_os_kernel_workflow`；SDK `workflow` 门面完成 M5 装配（`WorkflowFacade` 接收内核注入的 `workflow_engine` 模块与会话工厂），`PluginRuntime` 增加 `workflow_engine` 注入并在 `build_context` 透传；新增单测 `tests/test_workflow.py`（31 项），后端全量 184 项通过。
+  - DSL 支持 `task` / `branch` / `parallel` / `wait` / `retry` 五类节点：校验节点类型、`next` 引用、分支条件与 `wait_key` 唯一性；`YAML` / `JSON` / `dict` 三源解析，保留 `def_key` 供检索建普通索引。
+  - 引擎函数式 API 接收 `db` 会话：`create_instance` / `run`（created/running 续跑推进）/ `confirm_wait_step` / `timeout_wait_step` / `scan_waiting_timeouts` / `pause_instance` / `resume_instance` / `cancel_instance` / `list_waiting_steps` / `step_status_counts` / `register_compensate`。
+  - 状态机语义：`ctx` 回写实例 `context`；失败落 `inst.error` 并把后继 `pending` 步骤标记 `skipped`；`branch` 按 `next` 可达链跳过后继分支；`cancel` 仅跳过 `pending`/`running` 不跳 `waiting`；`confirm`/`timeout`/`scan`/`resume` 支持 `handlers` 透传（插件业务回调）与 `sla_creator` 透传（对接 M4 待办 SLA）；实例可中断续跑（从 `pending` 步骤恢复推进）。
 
 ### 计划（v0.11.0 后续）
 
-- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 → M6 模型路由 → M7 风险域试点插件 推进（M1、M2、M3、M4 已完成）。
+- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 → M6 模型路由 → M7 风险域试点插件 推进（M1、M2、M3、M4、M5 已完成）。
 - 插件 SDK 与 `plugin.yaml` 清单规范冻结后，内核公开接口文档对外发布。
 
 ## [0.10.1] - 2026-10-06（首个开源版本）

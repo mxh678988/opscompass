@@ -51,6 +51,13 @@ from app.models.sla import (  # noqa: F401
     CoreSla,
     CoreSlaEvent,
 )
+from app.models.workflow import (  # noqa: F401
+    WORKFLOW_NODE_TYPES,
+    WORKFLOW_STATUSES,
+    WORKFLOW_STEP_STATUSES,
+    CoreWorkflowInstance,
+    CoreWorkflowStep,
+)
 from app.models.plugin import (  # noqa: F401
     PLUGIN_KINDS,
     PLUGIN_STATES,

@@ -273,9 +273,11 @@ ui:
 
 **M2 进展**：已完成——清单校验 `app/core/plugin/manifest_validator.py`（id/版本/入口/命名空间/权限点/事件名/官方签名七类规则）、注册表与生命周期 `registry.py`（INSTALLED→ENABLED⇄DISABLED→UNINSTALLED，非法转换拦截）、运行时装配 `runtime.py`（能力回调注入 PluginContext、单插件失败不阻断整体）、SDK `app/sdk/`（`context.py` 十类门面 + `exceptions.py`）、数据模型 `app/models/plugin.py`（`oc_core_plugin` / `oc_core_plugin_config`）、迁移 `b2e3f4a5c6d7`、单测 `tests/test_plugin_runtime.py` 14 项通过（后端全量 75 项通过）。
 
-**SDK 分区落地说明**：接口一次性冻结、能力分期交付。已落地——`db.assert_table` / `bus`（发布需自身前缀、订阅允许自身前缀或 `core.*`）/ `config`（按 `plugin_id` 分区、插件间互不可见）/ `log` / `job`（仅登记声明，内核统一调度）/ `ui`（菜单与路由声明）。未落地能力调用时抛 `NotAvailableError` 并回填计划版本：`auth`→M3、`task`→M4、`storage`→M5、`model`→M6。
+**SDK 分区落地说明**：接口一次性冻结、能力分期交付。已落地——`db.assert_table` / `bus`（发布需自身前缀、订阅允许自身前缀或 `core.*`）/ `config`（按 `plugin_id` 分区、插件间互不可见）/ `log` / `job`（仅登记声明，内核统一调度）/ `ui`（菜单与路由声明）/ `task`（M4 装配完成，`TaskFacade` 注入 `task_fn` 回调）/ `workflow`（M5 装配完成，`WorkflowFacade` 注入 `workflow_engine` 模块与会话工厂）。未落地能力调用时抛 `NotAvailableError` 并回填计划版本：`storage`→M5（当前内核已具备工作流持久化，插件侧 `storage` 门面按 M5 剩余排期交付）、`model`→M6。
 
-**下一步**：M3 统一身份治理（权限点注册、角色模板、数据权限注入），依赖 M2 的清单解析与命名空间声明。
+**M5 进展**：已完成——DSL 解析与校验 `app/core/workflow/dsl.py`（task/branch/parallel/wait/retry 五类节点、next 引用与分支条件校验、YAML/JSON/dict 三源解析）、状态机引擎 `app/core/workflow/engine.py`（create_instance/run/confirm_wait_step/timeout_wait_step/scan_waiting_timeouts/pause_instance/resume_instance/cancel_instance/list_waiting_steps/step_status_counts/register_compensate，函数式 API 接收 db 会话）、数据模型 `app/models/workflow.py`（`oc_core_workflow_instance` / `oc_core_workflow_step`，`UniqueConstraint(instance_id, seq)` 步骤幂等键）、迁移 `e5f6a7b8c9d0`、SDK `workflow` 门面装配（`WorkflowFacade`，`PluginRuntime` 注入 `workflow_engine`）、单测 `tests/test_workflow.py` 31 项通过（后端全量 184 项通过）。
+
+**下一步**：M6 模型路由（模型降级/路由与规则兜底，对接既有模型调用链），依赖 M1 事件总线与 M4 待办 SLA。
 
 ## 9. 验收标准
 

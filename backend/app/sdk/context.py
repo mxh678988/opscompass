@@ -265,6 +265,123 @@ class TaskFacade:
         return self._task_fn(self._plugin_id, title, sla, **kwargs)
 
 
+class WorkflowFacade:
+    """工作流门面：创建/推进/人工确认/暂停恢复取消实例（M5 工作流引擎落地）。
+
+    内核在装载插件时注入 ``workflow_engine``（``app.core.workflow.engine``
+    模块）与会话工厂，插件调用即在内核执行工作流操作；未注入时抛
+    ``NotAvailableError`` 指明 M5，防止插件误以为已装配。
+    """
+
+    def __init__(
+        self,
+        plugin_id: str,
+        workflow_engine: Any = None,
+        session_factory: Optional[Callable[[], Any]] = None,
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._engine = workflow_engine
+        self._session_factory = session_factory
+
+    def _require(self, feature: str) -> Any:
+        if self._engine is None or self._session_factory is None:
+            raise NotAvailableError(feature, "M5 装配完成")
+        return self._engine
+
+    def _db(self) -> Any:
+        return self._session_factory()
+
+    def create_instance(
+        self,
+        defn: dict,
+        *,
+        title: Optional[str] = None,
+        context: Optional[dict] = None,
+        created_by: Optional[int] = None,
+    ) -> Any:
+        """创建实例并物化全部步骤（状态 created，未启动）。"""
+        engine = self._require("workflow.create")
+        db = self._db()
+        try:
+            return engine.create_instance(
+                db, defn, title=title, context=context, created_by=created_by
+            )
+        finally:
+            db.close()
+
+    def run(self, instance_id: int, **kwargs: Any) -> Any:
+        """启动/续跑实例：状态 created/running 时推进，返回最新实例状态。"""
+        engine = self._require("workflow.run")
+        db = self._db()
+        try:
+            return engine.run(db, instance_id, **kwargs)
+        finally:
+            db.close()
+
+    def confirm_wait_step(self, instance_id: int, seq: int, **kwargs: Any) -> Any:
+        """人工确认 wait 步骤：置 completed，写入确认信息，按 confirm 继续推进。"""
+        engine = self._require("workflow.confirm")
+        db = self._db()
+        try:
+            return engine.confirm_wait_step(db, instance_id, seq, **kwargs)
+        finally:
+            db.close()
+
+    def timeout_wait_step(self, instance_id: int, seq: int, **kwargs: Any) -> Any:
+        """wait 超时兜底：置 completed 并标记 timeout，按 timeout_next 继续推进。"""
+        engine = self._require("workflow.timeout")
+        db = self._db()
+        try:
+            return engine.timeout_wait_step(db, instance_id, seq, **kwargs)
+        finally:
+            db.close()
+
+    def pause(self, instance_id: int, reason: Optional[str] = None) -> Any:
+        """暂停实例（created/running/waiting 可暂停）。"""
+        engine = self._require("workflow.pause")
+        db = self._db()
+        try:
+            return engine.pause_instance(db, instance_id, reason=reason)
+        finally:
+            db.close()
+
+    def resume(self, instance_id: int, **kwargs: Any) -> Any:
+        """恢复暂停实例并继续推进。"""
+        engine = self._require("workflow.resume")
+        db = self._db()
+        try:
+            return engine.resume_instance(db, instance_id, **kwargs)
+        finally:
+            db.close()
+
+    def cancel(self, instance_id: int, reason: Optional[str] = None) -> Any:
+        """取消实例：pending/running 步骤标记 skipped，终态不可取消。"""
+        engine = self._require("workflow.cancel")
+        db = self._db()
+        try:
+            return engine.cancel_instance(db, instance_id, reason=reason)
+        finally:
+            db.close()
+
+    def list_waiting_steps(self, **kwargs: Any) -> list[Any]:
+        """待办查询：全部 waiting 步骤，可按 wait_key / assigned_to 过滤。"""
+        engine = self._require("workflow.list_waiting")
+        db = self._db()
+        try:
+            return engine.list_waiting_steps(db, **kwargs)
+        finally:
+            db.close()
+
+    def step_status_counts(self, instance_id: int) -> dict[str, int]:
+        """实例步骤状态统计（进度看板）。"""
+        engine = self._require("workflow.status_counts")
+        db = self._db()
+        try:
+            return engine.step_status_counts(db, instance_id)
+        finally:
+            db.close()
+
+
 class UIFacade:
     """前端门面：菜单与路由声明，由内核动态注入。"""
 
@@ -300,10 +417,12 @@ class PluginContext:
         trace_id: Optional[str] = None,
         authorize_fn: Optional[Callable[..., bool]] = None,
         task_fn: Optional[Callable[..., Any]] = None,
+        workflow_engine: Any = None,
     ) -> None:
         self.plugin_id = plugin_id
         self.plugin_version = plugin_version
         self.namespace = namespace or PluginNamespace()
+        self._session_factory = session_factory
         self.log = LogFacade(plugin_id, trace_id)
         self.db = DbFacade(plugin_id, self.namespace.tables, session_factory)
         self.bus = EventBusFacade(
@@ -318,6 +437,7 @@ class PluginContext:
         self.job = JobFacade(plugin_id)
         self.storage = StorageFacade()
         self.task = TaskFacade(plugin_id, task_fn)
+        self.workflow = WorkflowFacade(plugin_id, workflow_engine, session_factory)
         self.ui = UIFacade(plugin_id)
 
     def declarations(self) -> dict[str, list[dict[str, Any]]]:
@@ -345,6 +465,7 @@ def create_context(
     trace_id: Optional[str] = None,
     authorize_fn: Optional[Callable[..., bool]] = None,
     task_fn: Optional[Callable[..., Any]] = None,
+    workflow_engine: Any = None,
 ) -> PluginContext:
     """内核侧创建插件上下文（插件作者通常不直接调用）。"""
     return PluginContext(
@@ -358,4 +479,5 @@ def create_context(
         trace_id=trace_id,
         authorize_fn=authorize_fn,
         task_fn=task_fn,
+        workflow_engine=workflow_engine,
     )
