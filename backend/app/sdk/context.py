@@ -296,13 +296,38 @@ class JobFacade:
 
 
 class StorageFacade:
-    """存储门面：插件私有空间（M5 统一文件服务落地）。"""
+    """存储门面：插件私有文件空间（M5 统一文件服务落地）。
+
+    内核在装载插件时注入 ``storage_fn``（读写插件私有 ``storage`` 目录）；
+    未注入时抛 ``NotAvailableError`` 指明 M5，防止插件误以为拥有持久空间。
+    """
+
+    def __init__(
+        self, plugin_id: str, storage_fn: Optional[Callable[..., Any]] = None
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._storage = storage_fn
+
+    def _require(self, op: str) -> Callable[..., Any]:
+        if self._storage is None:
+            raise NotAvailableError(f"storage.{op}", "M5 装配完成")
+        return self._storage
 
     def save(self, path: str, data: Any) -> Any:
-        raise NotAvailableError("storage.save", "M5")
+        """写入插件私有存储，返回规范化相对路径。"""
+        return self._require("save")(op="save", path=path, data=data)
 
     def read(self, path: str) -> Any:
-        raise NotAvailableError("storage.read", "M5")
+        """读取插件私有文件（文本）；二进制场景由内核回调按需扩展。"""
+        return self._require("read")(op="read", path=path)
+
+    def delete(self, path: str) -> Any:
+        """删除插件私有文件；不存在返回 False。"""
+        return self._require("delete")(op="delete", path=path)
+
+    def list(self, prefix: Optional[str] = None) -> list[str]:
+        """列出插件私有存储文件（相对路径）；支持前缀过滤。"""
+        return self._require("list")(op="list", path="", prefix=prefix)
 
 
 class SigningFacade:
@@ -512,6 +537,7 @@ class PluginContext:
         task_fn: Optional[Callable[..., Any]] = None,
         workflow_engine: Any = None,
         model_router: Any = None,
+        storage_fn: Optional[Callable[..., Any]] = None,
         signing_verify_fn: Optional[Callable[[], Any]] = None,
         signing_key_query_fn: Optional[Callable[[], Any]] = None,
     ) -> None:
@@ -530,7 +556,7 @@ class PluginContext:
         self.auth = AuthFacade(plugin_id, self.namespace.permissions, authorize_fn)
         self.config = ConfigFacade(plugin_id, config_store)
         self.job = JobFacade(plugin_id)
-        self.storage = StorageFacade()
+        self.storage = StorageFacade(plugin_id, storage_fn)
         self.task = TaskFacade(plugin_id, task_fn)
         self.workflow = WorkflowFacade(plugin_id, workflow_engine, session_factory)
         self.model = ModelFacade(plugin_id, model_router, session_factory)
@@ -566,6 +592,7 @@ def create_context(
     task_fn: Optional[Callable[..., Any]] = None,
     workflow_engine: Any = None,
     model_router: Any = None,
+    storage_fn: Optional[Callable[..., Any]] = None,
     signing_verify_fn: Optional[Callable[[], Any]] = None,
     signing_key_query_fn: Optional[Callable[[], Any]] = None,
 ) -> PluginContext:
@@ -583,6 +610,7 @@ def create_context(
         task_fn=task_fn,
         workflow_engine=workflow_engine,
         model_router=model_router,
+        storage_fn=storage_fn,
         signing_verify_fn=signing_verify_fn,
         signing_key_query_fn=signing_key_query_fn,
     )

@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from app.core.plugin.registry import PluginMeta, PluginRegistry, PluginState
+from app.core.plugin.storage import PluginStorageEngine
 from app.sdk.context import PluginContext, PluginNamespace, create_context
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,7 @@ class PluginRuntime:
         workflow_engine: Any = None,
         model_router: Any = None,
         signing_service: Any = None,
+        storage_engine: Any = None,
     ) -> None:
         self.registry = registry
         self._session_factory = session_factory
@@ -54,6 +56,7 @@ class PluginRuntime:
         self._workflow_engine = workflow_engine
         self._model_router = model_router
         self._signing_service = signing_service
+        self._storage_engine = storage_engine
         self._contexts: dict[str, PluginContext] = {}
 
     # ---- 装配：把内核能力包成 SDK 回调 ----
@@ -130,6 +133,33 @@ class PluginRuntime:
 
         return verify_fn, key_query_fn
 
+    def _make_storage(self, plugin_id: str) -> Optional[Callable[..., Any]]:
+        """构造存储门面回调（M5）：基于插件私有 storage 根目录的读写删列。
+
+        未显式注入引擎时按 ``registry.plugins_dir`` 自动装配
+        ``PluginStorageEngine``；registry 无插件目录时返回 None，
+        插件侧 storage.* 抛 NotAvailableError，不假装有持久空间。
+        """
+        if self._storage_engine is None:
+            base = getattr(self.registry, "plugins_dir", None)
+            if base is None:
+                return None
+            self._storage_engine = PluginStorageEngine(base)
+        engine = self._storage_engine
+
+        def storage_fn(*, op: str, path: str, data: Any = None, prefix: Optional[str] = None) -> Any:
+            if op == "save":
+                return engine.write(plugin_id, path, data)
+            if op == "read":
+                return engine.read(plugin_id, path)
+            if op == "delete":
+                return engine.delete(plugin_id, path)
+            if op == "list":
+                return engine.list(plugin_id, prefix)
+            raise ValueError(f"未知存储操作: {op}")
+
+        return storage_fn
+
     def build_context(self, plugin_id: str) -> PluginContext:
         """为指定插件装配上下文（不改变插件状态）。"""
         meta = self.registry.get(plugin_id)
@@ -161,6 +191,7 @@ class PluginRuntime:
             task_fn=self._make_task(meta.plugin_id),
             workflow_engine=self._workflow_engine,
             model_router=self._model_router,
+            storage_fn=self._make_storage(meta.plugin_id),
             signing_verify_fn=signing_verify,
             signing_key_query_fn=signing_query,
         )
