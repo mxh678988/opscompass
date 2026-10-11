@@ -32,6 +32,7 @@ AIGC:
   - 验收：宿主机 `npm run build` 通过（vue-tsc 类型检查 + vite build，152 modules，7.26s）；后端全量测试 253 passed；浏览器实测 `/login` 渲染正常、`/sentiment` `/collect` `/model` 登录守卫跳转正常，console 无 JS 报错。
 - **审计日志页（M11 前端）**：新增 `AuditCenter.vue`（近 7 日统计卡 + 事件类型/状态/用户名/关键词/日期筛选 + 分页操作记录表格，样式全部令牌化），`api/audit.ts` 追加审计日志封装（`fetchAuditLogs` / `fetchAuditStats` / `fetchAuditEventTypes` / `purgeAuditLogs`，路径 `/audit/logs`、`/audit/stats`、`/audit/event-types`、`/audit/purge`），`router/index.ts` 新增 `/audit` 路由，`App.vue` 顶栏导航追加「审计日志」。
   - 验收：宿主机 `npm run build` 通过（vue-tsc 类型检查 + vite build 全绿，dist 生成 AuditCenter chunk）；浏览器实测 `/audit` 未登录访问被守卫重定向 `/login?redirect=/audit`，登录页渲染正常，console 无 JS 报错。
+  - 容器化实测（E 盘副本 `E:\opscompass` 同步源码后重建 dist，Docker 全套环境验证）：`admin / OpsCompass@2026` 登录成功跳转首页；`/audit` 真实数据完整渲染——统计卡近 7 日总操作 29（成功 22 / 失败 7 / 4 种事件类型）、操作记录共 782 条、分页第 1/34 页每页 20 条、9 列表头齐全，含本次登录产生的 `login_success`（POST /api/v1/auth/login，IP 172.18.0.3）、`access_denied`、`login_failed`、`sensitive_operation` 等真实记录；状态筛选「成功(success)」点击查询后记录数 782 → 662 条，表格行状态全部为 success，统计卡独立于筛选保持不变。三场景截图 `audit_logged.png` / `audit_list.png` / `audit_filter.png` 留存。
 
 ### 实现（v0.11.0 内核）
 
