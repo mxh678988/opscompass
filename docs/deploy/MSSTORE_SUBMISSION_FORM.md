@@ -2,7 +2,7 @@
 
 # 运营智脑 OpsCompass · Microsoft Store（Partner Center）提审表单填写稿
 
-> 生成时间：2026-10-03 | 最后更新：2026-10-09（补 6 张 1920×1080 功能界面截图；官网 / 支持 URL 改为免登录介绍页 `/intro`） | 适用版本：v0.10.1+ | 对应流程阶段：S1-P4（提交审核）
+> 生成时间：2026-10-03 | 最后更新：2026-10-12（补 1 张插件市场 1920×1080 截图，更新版本号 v0.10.1 → v0.12.0；官网 / 支持 URL 改为免登录介绍页 `/intro`） | 适用版本：v0.12.0+ | 对应流程阶段：S1-P4（提交审核）
 > 配套文档：[MSSTORE_GUIDE.md](./MSSTORE_GUIDE.md)（打包与流程）、[STORE_LISTING.md](./STORE_LISTING.md)（双语文案与素材）、[PUBLISH_CHECKLIST.md](./PUBLISH_CHECKLIST.md)（发布清单）
 > 用途：Partner Center「新提交」页面逐字段复制粘贴，避免临场编写。
 > 标记约定：**✅ 可直接照抄** / **⏳ 待 P2 回填**（P2 = 老板本人实名注册 Partner Center 并预留产品名称后，回填产品标识与正式包）——P2 已于 **2026-10-03 完成**，本表单已无 ⏳ 回填项，剩余 ⏳ 项均为 P4 提交动作（上传包 / IARC 问卷）。
@@ -22,7 +22,7 @@
 | 7 | Store listing | 版权与商标 | ✅ | 见 §3.4 |
 | 8 | Store listing | 系统要求 | ✅ | 见 §3.5（含 Docker 依赖声明） |
 | 9 | Store listing | 商店图标（300×300） | ✅ | `docs/deploy/store-assets/icon-512-300x300.png` |
-| 10 | Store listing | 截图（1–10 张） | ✅ 8 张 | 6 张 1920×1080 功能主界面 + 2 张 1366×768 辅助页，见 §四 |
+| 10 | Store listing | 截图（1–10 张） | ✅ 9 张 | 7 张 1920×1080 功能主界面（含插件市场）+ 2 张 1366×768 辅助页，见 §四 |
 | 11 | Store listing | 隐私政策 URL | ✅ | `https://opscompass.pages.dev/privacy` |
 | 12 | Store listing | 支持联系方式 | ✅ | 邮箱 `mxh6789@live.cn`；支持 URL 见 §六 |
 | 13 | Pricing and availability | 定价 / 市场 / 语言 | ✅ | 免费 / 全球 / zh-CN + en-US |
@@ -173,12 +173,13 @@ Note: this app is a PWA. The Store package launches the app directly; a full sel
 | 4 | 运营参谋 | `D:\OpsCompass\frontend\public\screenshots\ops-1920x1080.png` | `https://opscompass.pages.dev/screenshots/ops-1920x1080.png` | `/screenshots/ops-1920x1080.png` |
 | 5 | 模型中心 | `D:\OpsCompass\frontend\public\screenshots\model-1920x1080.png` | `https://opscompass.pages.dev/screenshots/model-1920x1080.png` | `/screenshots/model-1920x1080.png` |
 | 6 | AI 治理 | `D:\OpsCompass\frontend\public\screenshots\ai-governance-1920x1080.png` | `https://opscompass.pages.dev/screenshots/ai-governance-1920x1080.png` | `/screenshots/ai-governance-1920x1080.png` |
+| 7 | 插件市场 | `D:\OpsCompass\frontend\public\screenshots\plugin-market-1920x1080.png` | `https://opscompass.pages.dev/screenshots/plugin-market-1920x1080.png` | `/screenshots/plugin-market-1920x1080.png` |
 
 **辅助页截图（1366×768，非功能主界面）**
 
 | 序 | 截图内容 | 素材文件 | 关联 URL | manifest 引用 |
 |---|---|---|---|---|
-| 7 | 登录页 | `D:\OpsCompass\frontend\public\screenshots\login-page-1366x768.png`（副本位于 `output\login-page-1366x768.png`） | `https://opscompass.pages.dev/login` | `/screenshots/login-page-1366x768.png` |
+| 8 | 登录页 | `D:\OpsCompass\frontend\public\screenshots\login-page-1366x768.png`（副本位于 `output\login-page-1366x768.png`） | `https://opscompass.pages.dev/login` | `/screenshots/login-page-1366x768.png` |
 | 8 | 隐私政策页 | `D:\OpsCompass\frontend\public\screenshots\privacy-policy-page-1366x768.png`（副本位于 `output\privacy-policy-page-1366x768.png`） | `https://opscompass.pages.dev/privacy` | `/screenshots/privacy-policy-page-1366x768.png` |
 | — | PWABuilder 报告卡 | `output\pwabuilder-reportcard-1366x768.png` | — | **不作为商店截图**，仅作打包校验证据留档 |
 

@@ -1,4 +1,4 @@
-
+﻿
 # 微软商店上架素材（Microsoft Store / Partner Center）
 
 > 配套文档：[MSSTORE_GUIDE.md](./MSSTORE_GUIDE.md)（打包与提交流程）、[PUBLISH_CHECKLIST.md](./PUBLISH_CHECKLIST.md)（发布清单）
@@ -13,7 +13,7 @@
 | --- | --- |
 | 应用名称（保留） | 运营智脑 |
 | 英文名称 | OpsCompass |
-| 版本号 | v0.10.1 |
+| 版本号 | v0.12.0 |
 | 分类 | 商务 / 工作效率（Business / Productivity） |
 | 币种与定价 | 免费（Free） |
 | 支持语言 | 简体中文（主）、英语（英区必备） |
@@ -46,6 +46,7 @@
 - **营销渠道与商业化**：渠道效果对比、投放结构分析与商业化路径梳理。
 - **模型中心与 AI 治理**：统一管理本地大模型接入，提供调用治理、安全日志与合规留痕。
 - **学习进化**：沉淀运营经验，形成可复用的策略与知识库。
+- **插件市场**：应用内插件市场支持社区插件的浏览、安装与启停，开发者可通过 SDK 接入扩展能力。
 - **离线可用**：作为 PWA 应用安装到桌面后，可离线访问已缓存页面。
 
 数据主权：应用默认在本地/自有服务器部署，业务数据不经第三方云端，适合对数据安全敏感的中小团队与个人运营者。
@@ -62,6 +63,7 @@ Key capabilities:
 - Marketing channel and monetization analysis.
 - Model center with AI governance, audit logs and compliance trails.
 - Learning & evolution: turn operations experience into reusable playbooks.
+- Plugin marketplace: browse, install and manage community plugins from within the app; developers can extend via the public SDK.
 - Offline ready: installable as a PWA with cached pages available offline.
 
 Data sovereignty: designed for local or self-hosted deployment; business data stays off third-party clouds.
@@ -73,7 +75,8 @@ Data sovereignty: designed for local or self-hosted deployment; business data st
 3. AI 运营参谋，异动归因与处置建议。
 4. 营销渠道与商业化分析，投放结构一目了然。
 5. 本地模型接入与 AI 治理，全程留痕可审计。
-6. PWA 桌面安装，支持离线访问缓存页面。
+6. 插件市场，社区插件浏览、安装、启停一键完成。
+7. PWA 桌面安装，支持离线访问缓存页面。
 
 ### 4. 搜索关键词（Search terms，5 组以内）
 
@@ -86,7 +89,7 @@ Data sovereignty: designed for local or self-hosted deployment; business data st
 | 素材 | 规格要求 | 状态 |
 | --- | --- | --- |
 | 应用图标 | 300×300 PNG（商店主图），另需 44×44 / 50×50 / 150×150 | ✅ 已导出至 `docs/deploy/store-assets/`：`icon-512-300x300.png`（主图）、`icon-512-150x150.png`、`icon-512-50x50.png`、`icon-512-44x44.png`（源图 `frontend/public/icons/icon-512.png`） |
-| 桌面截图 | 1366×768 或 1920×1080，1–10 张，PNG | ✅ 已备 6 张 1920×1080 功能主界面（运营总览 / 全景罗盘 / 指标中心 / 运营参谋 / 模型中心 / AI 治理），另有 2 张 1366×768 辅助页（登录、隐私政策）；均位于 `frontend/public/screenshots/` |
+| 桌面截图 | 1366×768 或 1920×1080，1–10 张，PNG | ✅ 已备 7 张 1920×1080 功能主界面（运营总览 / 全景罗盘 / 指标中心 / 运营参谋 / 模型中心 / AI 治理 / 插件市场），另有 2 张 1366×768 辅助页（登录、隐私政策）；均位于 `frontend/public/screenshots/` |
 | 商店展示图 | 1920×1080 宣传图（可选） | 待补 |
 | 隐私政策页 | 可公网访问的 HTTPS 链接 | ✅ `https://opscompass.pages.dev/privacy`（2026-10-03 上线；填 `/privacy`，勿填 `/privacy.html`） |
 | 应用包 | MSIX（见 MSSTORE_GUIDE 路线 A/B） | 待 P1 后由 PWABuilder 生成 |
