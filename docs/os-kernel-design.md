@@ -172,7 +172,8 @@ v0.10.1 已具备 13 功能页 / 15 接口模块 / 54 表 / 48 权限点的完�
 | `db` 门面（数据表前缀校验） | M2 | ✅ 已装配 |
 | `bus` 门面（事件发布/订阅） | M2 | ✅ 已装配 |
 | `auth` 门面（权限鉴权） | M3 | ✅ 已装配 |
-| `storage` 门面（文件服务） | M5 | ⏳ 待装配 |
+| `storage` 门面（文件服务） | M5 | ✅ 已装配 |
+| `signing` 门面（签名验签） | M7 | ✅ 已装配 |
 
 ### 3.8 内核能力装配清单
 | 硬件适配 | 复用既有 WMI + nvidia-smi 探测，按显存分档推荐可用模型（3060 12G → 7B–14B 量化） |
@@ -277,26 +278,33 @@ ui:
 | M4 任务 SLA | `core/sla` + 待办接入 | 依赖 M1 |
 | M5 工作流引擎 | `core/workflow` + 3 个内置模板 | 依赖 M1/M4 |
 | M6 模型路由 | `core/model_router` + 降级开关 | 依赖 M2 能力声明 |
-| M7 试点插件 | 用风险域第一份 PRD 做首个官方插件 | 验证全链路 |
+| M7 插件签名密钥体系 | `core/plugin/signing` + 公钥注册表 | 为商业插件分发做验签地基 |
+| M8 试点插件 | 用风险域第一份 PRD 做首个官方插件 | 验证全链路 |
 
-**关键前置**：M2 的 `plugin.yaml` 与 SDK 接口一旦冻结，M3–M7 才可并行开工。
+**关键前置**：M2 的 `plugin.yaml` 与 SDK 接口一旦冻结，M3–M8 才可并行开工。
 
-**落地顺序决策（D8 已决，2026-10-08）**：按 **M1 → M2** 顺序开工，不采用「先做 M7 试点反向验证」。
+**落地顺序决策（D8 已决，2026-10-08）**：按 **M1 → M2** 顺序开工，不采用「先做 M8 试点反向验证」。
 
 理由：
 1. M1 是唯一被其余全部能力依赖的底座，推迟则 M4 任务 SLA、M5 工作流引擎均无法开工，总工期反而拉长；
-2. M2 未落地时 M7 试点无处挂载，试点只能退化为「内核内置」，与插件化目标相悖；
+2. M2 未落地时 M8 试点无处挂载，试点只能退化为「内核内置」，与插件化目标相悖；
 3. 反向验证的诉求可由 M1/M2 自身验收覆盖（A2 隔离性、A3 事件可靠性），无需等到业务域才验证。
 
 **M1 进展**：已完成——`app/core/bus/`（发布/派发/退避重试/死信/重放/租约回收/位点/积压统计）、`app/models/kernel.py`、迁移 `a1f2c3d4e5b6`、单测 `tests/test_event_bus.py` 9 项通过。
 
 **M2 进展**：已完成——清单校验 `app/core/plugin/manifest_validator.py`（id/版本/入口/命名空间/权限点/事件名/官方签名七类规则）、注册表与生命周期 `registry.py`（INSTALLED→ENABLED⇄DISABLED→UNINSTALLED，非法转换拦截）、运行时装配 `runtime.py`（能力回调注入 PluginContext、单插件失败不阻断整体）、SDK `app/sdk/`（`context.py` 十类门面 + `exceptions.py`）、数据模型 `app/models/plugin.py`（`oc_core_plugin` / `oc_core_plugin_config`）、迁移 `b2e3f4a5c6d7`、单测 `tests/test_plugin_runtime.py` 14 项通过（后端全量 75 项通过）。
 
-**SDK 分区落地说明**：接口一次性冻结、能力分期交付。已落地——`db.assert_table` / `bus`（发布需自身前缀、订阅允许自身前缀或 `core.*`）/ `config`（按 `plugin_id` 分区、插件间互不可见）/ `log` / `job`（仅登记声明，内核统一调度）/ `ui`（菜单与路由声明）/ `task`（M4 装配完成，`TaskFacade` 注入 `task_fn` 回调）/ `workflow`（M5 装配完成，`WorkflowFacade` 注入 `workflow_engine` 模块与会话工厂）。未落地能力调用时抛 `NotAvailableError` 并回填计划版本：`storage`→M5（当前内核已具备工作流持久化，插件侧 `storage` 门面按 M5 剩余排期交付）、`model`→M6。
+**SDK 分区落地说明**：接口一次性冻结、能力分期交付。已落地——`db.assert_table` / `bus`（发布需自身前缀、订阅允许自身前缀或 `core.*`）/ `config`（按 `plugin_id` 分区、插件间互不可见）/ `log` / `job`（仅登记声明，内核统一调度）/ `ui`（菜单与路由声明）/ `task`（M4 装配完成，`TaskFacade` 注入 `task_fn` 回调）/ `workflow`（M5 装配完成，`WorkflowFacade` 注入 `workflow_engine` 模块与会话工厂）/ `model`（M6 装配完成，`ModelFacade` 注入 `model_router` 模块与会话工厂）/ `signing`（M7 装配完成，`SigningFacade` 注入 `verify_fn` / `key_query_fn` 回调）/ `storage`（M5 剩余装配完成，`StorageFacade` 注入 `storage_fn` 回调，`PluginStorageEngine` 按 `registry.plugins_dir` 自动装配插件私有空间）。六项能力门面全部装配完成，未落地能力不再存在，插件侧调用越界或未声明能力仍按原约定抛 `NotAvailableError` 与 `NamespaceViolation`。
 
 **M5 进展**：已完成——DSL 解析与校验 `app/core/workflow/dsl.py`（task/branch/parallel/wait/retry 五类节点、next 引用与分支条件校验、YAML/JSON/dict 三源解析）、状态机引擎 `app/core/workflow/engine.py`（create_instance/run/confirm_wait_step/timeout_wait_step/scan_waiting_timeouts/pause_instance/resume_instance/cancel_instance/list_waiting_steps/step_status_counts/register_compensate，函数式 API 接收 db 会话）、数据模型 `app/models/workflow.py`（`oc_core_workflow_instance` / `oc_core_workflow_step`，`UniqueConstraint(instance_id, seq)` 步骤幂等键）、迁移 `e5f6a7b8c9d0`、SDK `workflow` 门面装配（`WorkflowFacade`，`PluginRuntime` 注入 `workflow_engine`）、单测 `tests/test_workflow.py` 31 项通过（后端全量 184 项通过）。
 
-**下一步**：M6 模型路由（模型降级/路由与规则兜底，对接既有模型调用链），依赖 M1 事件总线与 M4 待办 SLA。
+**M6 进展**：已完成——模型能力声明 `app/core/model/declare.py`、路由决策与规则兜底 `app/core/model/router.py`、缓存计量 `app/core/model/metrics.py`、数据模型 `app/models/model.py`（`oc_core_model` / `oc_core_model_route_rule` / `oc_core_model_call_log`）、迁移 `f1e2d3c4b5a6`、SDK `model` 门面装配（`ModelFacade`，`PluginRuntime` 注入 `model_router`）、单测 `tests/test_model_router.py` 42 项通过（后端全量 226 项通过）。
+
+**M7 进展**：已完成——Ed25519 签名验签 `app/core/plugin/signing.py`（密钥对生成、发布包逐文件签名/验签、`PluginSigningService` 公钥注册表）、`oc_core_plugin_key` 表与迁移 `f2e3d4c5a6b7`、SDK `signing` 门面装配（`SigningFacade`，`PluginRuntime` 注入 `signing_service`）、单测 `tests/test_plugin_signing.py` 18 项通过。私钥仅存插件作者侧，内核只持公钥指纹，`official` 清单后续可接强制验签。
+
+**M5 storage 剩余装配进展**：已完成——`PluginStorageEngine` `app/core/plugin/storage.py`（插件私有 `storage` 根目录读写删列：拒绝绝对路径 / `..` 穿越 / 空路径，解析后必须落在插件根内防 symlink 越界，`write` 自动建父目录，文本/二进制双模式，`list` 前缀过滤）、SDK `storage` 门面由占位改为注入 `storage_fn` 回调、`PluginRuntime._make_storage` 自动装配、单测 `tests/test_plugin_storage.py` 21 项通过（后端全量 247 项通过）。
+
+**下一步**：M8 试点插件（用风险域第一份 PRD 做首个官方插件，走签名 + storage + 全链路验证），依赖 M2 清单/SDK 冻结与 M7 签名地基。
 
 ## 9. 验收标准
 

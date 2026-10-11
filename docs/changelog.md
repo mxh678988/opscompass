@@ -53,10 +53,18 @@ AIGC:
   - DSL 支持 `task` / `branch` / `parallel` / `wait` / `retry` 五类节点：校验节点类型、`next` 引用、分支条件与 `wait_key` 唯一性；`YAML` / `JSON` / `dict` 三源解析，保留 `def_key` 供检索建普通索引。
   - 引擎函数式 API 接收 `db` 会话：`create_instance` / `run`（created/running 续跑推进）/ `confirm_wait_step` / `timeout_wait_step` / `scan_waiting_timeouts` / `pause_instance` / `resume_instance` / `cancel_instance` / `list_waiting_steps` / `step_status_counts` / `register_compensate`。
   - 状态机语义：`ctx` 回写实例 `context`；失败落 `inst.error` 并把后继 `pending` 步骤标记 `skipped`；`branch` 按 `next` 可达链跳过后继分支；`cancel` 仅跳过 `pending`/`running` 不跳 `waiting`；`confirm`/`timeout`/`scan`/`resume` 支持 `handlers` 透传（插件业务回调）与 `sla_creator` 透传（对接 M4 待办 SLA）；实例可中断续跑（从 `pending` 步骤恢复推进）。
+- **M6 模型路由落地**：新增 `app/core/model/`（`declare.py` 模型能力声明 + `router.py` 路由决策与规则兜底 + `metrics.py` 缓存计量）、`app/models/model.py`（`oc_core_model` / `oc_core_model_route_rule` / `oc_core_model_call_log`）与迁移 `f1e2d3c4b5a6_p11_os_kernel_model_router`；SDK `model` 门面完成 M6 装配（`ModelFacade` 接收内核注入的 `model_router` 模块与会话工厂），`PluginRuntime` 增加 `model_router` 注入并在 `build_context` 透传；新增单测 `tests/test_model_router.py`（42 项），后端全量 226 项通过。
+  - 能力声明：插件注册模型能力（id / 输入输出描述 / 计费档位 / 延迟上限），内核统一登记；按能力 id 决策路由到已声明模型，未声明走规则兜底。
+  - 规则优先级：精确能力匹配 → 声明路由规则 → 全局兜底；`degrade_all` 一键全局降级（进程内生效，运维故障快速止损）。
+  - 调用计量：成功/失败计数、延迟采样与缓存命中写 `oc_core_model_call_log`，供后续计费与路由调优。
+- **M7 插件签名密钥体系落地**：新增 `app/core/plugin/signing.py`（Ed25519 密钥对生成、发布包逐文件签名/验签、`PluginSigningService` 公钥注册表）、`app/models/plugin.py` 增 `CorePluginKey` 表与迁移 `f2e3d4c5a6b7_p12_os_kernel_plugin_signing`；SDK 增 `signing` 门面（`SigningFacade` 接收内核注入的 `verify_fn` / `key_query_fn`）并接入 `PluginContext` / `create_context`，`PluginRuntime` 注入 `signing_service` 并在 `build_context` 透传；新增单测 `tests/test_plugin_signing.py`（18 项）。
+  - 私钥仅存插件作者侧，内核只持公钥指纹登记表；`official` 清单后续可接强制验签，`community` 先保留可绕过通道。
+  - 指纹为公钥 SHA-256 短指纹，轮换/吊销在注册表内幂等更新。
+- **M5 storage 门面剩余装配落地**：新增 `app/core/plugin/storage.py` `PluginStorageEngine`（插件私有 `storage` 根目录读写删列：拒绝绝对路径 / `..` 穿越 / 空路径，解析后必须落在插件根内防 symlink 越界，`write` 自动建父目录，文本/二进制双模式，`list` 支持前缀过滤）；SDK `storage` 门面由占位改为接收内核注入的 `storage_fn` 回调（`save` / `read` / `delete` / `list`），`PluginRuntime._make_storage` 按 `registry.plugins_dir` 自动装配引擎并在 `build_context` 注入；新增单测 `tests/test_plugin_storage.py`（21 项）。至此 SDK 六项内核能力门面（auth / task / workflow / model / signing / storage）全部装配完成，后端全量 247 项通过。
 
 ### 计划（v0.11.0 后续）
 
-- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 → M6 模型路由 → M7 风险域试点插件 推进（M1、M2、M3、M4、M5 已完成）。
+- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 + storage 门面 → M6 模型路由 → M7 插件签名密钥体系 推进（M1-M7 已完成，六项能力门面全部装配，后端全量 247 项通过）。
 - 插件 SDK 与 `plugin.yaml` 清单规范冻结后，内核公开接口文档对外发布。
 
 ## [0.10.1] - 2026-10-06（首个开源版本）
