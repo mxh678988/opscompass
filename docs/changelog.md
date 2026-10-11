@@ -71,7 +71,8 @@ AIGC:
 ### 计划（v0.11.0 后续）
 
 - 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 + storage 门面 → M6 模型路由 → M7 插件签名密钥体系 → M8 试点插件 推进（M1-M8 已完成，六项能力门面全部装配，官方试点插件骨架落地）。
-- M8 全链路验证已完成，待插件市场 MVP 与分发协议拍板后冻结。
+- M8 全链路验证已完成（注册 → 加载 backend → 监督建表 → 门面调用 → 签名 + storage 走通，test_plugin_backend.py 6 项 + 全量 253 项通过），设计文档状态已同步；待插件市场 MVP 与分发协议拍板后冻结。
+- 后端新增 pytest.ini（asyncio_default_fixture_loop_scope=function），消除 pytest-asyncio 配置告警，全量测试基线不变。
 - 插件 SDK 与 `plugin.yaml` 清单规范冻结后，内核公开接口文档对外发布。
 
 ## [0.10.1] - 2026-10-06（首个开源版本）
