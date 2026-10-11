@@ -174,6 +174,7 @@ v0.10.1 已具备 13 功能页 / 15 接口模块 / 54 表 / 48 权限点的完�
 | `auth` 门面（权限鉴权） | M3 | ✅ 已装配 |
 | `storage` 门面（文件服务） | M5 | ✅ 已装配 |
 | `signing` 门面（签名验签） | M7 | ✅ 已装配 |
+| `sentiment` 门面（舆情监控） | M8 | ✅ 已装配（官方试点插件） |
 
 ### 3.8 内核能力装配清单
 | 硬件适配 | 复用既有 WMI + nvidia-smi 探测，按显存分档推荐可用模型（3060 12G → 7B–14B 量化） |
@@ -304,7 +305,9 @@ ui:
 
 **M5 storage 剩余装配进展**：已完成——`PluginStorageEngine` `app/core/plugin/storage.py`（插件私有 `storage` 根目录读写删列：拒绝绝对路径 / `..` 穿越 / 空路径，解析后必须落在插件根内防 symlink 越界，`write` 自动建父目录，文本/二进制双模式，`list` 前缀过滤）、SDK `storage` 门面由占位改为注入 `storage_fn` 回调、`PluginRuntime._make_storage` 自动装配、单测 `tests/test_plugin_storage.py` 21 项通过（后端全量 247 项通过）。
 
-**下一步**：M8 试点插件（用风险域第一份 PRD 做首个官方插件，走签名 + storage + 全链路验证），依赖 M2 清单/SDK 冻结与 M7 签名地基。
+**M8 进展**：骨架已完成——官方试点插件 `plugins/sentiment/`：`plugin.yaml`（依赖 `event_bus` / `workflow` / `task_sla`，命名空间 `com.laomeng.ops.sentiment`）、`backend/src/database.py`（12 张 `os_sentiment_*` 表）、`backend/src/core.py` `SentimentEngine`（采集 / 情感分析 / 事件归并 / 预警检查 / 分析 / 报告生成，规则预筛 + 实体关键词匹配 MVP）；SDK `sentiment` 门面（`SentimentFacade`）接入 `PluginContext` / `create_context`，`PluginRuntime._make_sentiment` 装配并在 `build_context` 透传；前端 `SentimentCenter.vue` 与 `/sentiment` 路由。待全链路验证：插件注册 → 建表 → 门面调用 → 签名 + storage 走通后冻结。
+
+**下一步**：M8 全链路验证（插件注册 → 建表 → 门面调用 → 签名 + storage 走通后冻结），随后进入 v0.12.0 风险域插件 MVP 与插件市场 MVP。
 
 ## 9. 验收标准
 

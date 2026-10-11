@@ -61,10 +61,12 @@ AIGC:
   - 私钥仅存插件作者侧，内核只持公钥指纹登记表；`official` 清单后续可接强制验签，`community` 先保留可绕过通道。
   - 指纹为公钥 SHA-256 短指纹，轮换/吊销在注册表内幂等更新。
 - **M5 storage 门面剩余装配落地**：新增 `app/core/plugin/storage.py` `PluginStorageEngine`（插件私有 `storage` 根目录读写删列：拒绝绝对路径 / `..` 穿越 / 空路径，解析后必须落在插件根内防 symlink 越界，`write` 自动建父目录，文本/二进制双模式，`list` 支持前缀过滤）；SDK `storage` 门面由占位改为接收内核注入的 `storage_fn` 回调（`save` / `read` / `delete` / `list`），`PluginRuntime._make_storage` 按 `registry.plugins_dir` 自动装配引擎并在 `build_context` 注入；新增单测 `tests/test_plugin_storage.py`（21 项）。至此 SDK 六项内核能力门面（auth / task / workflow / model / signing / storage）全部装配完成，后端全量 247 项通过。
+- **M8 试点插件（舆情监控）骨架落地**：新增 `plugins/sentiment/` 官方试点插件——`plugin.yaml`（声明依赖 `event_bus` / `workflow` / `task_sla`，命名空间 `com.laomeng.ops.sentiment`）、`backend/src/database.py`（12 张 `os_sentiment_*` 表）、`backend/src/core.py` `SentimentEngine`（采集 / 情感分析 / 事件归并 / 预警检查 / 分析 / 报告生成，规则预筛 + 实体关键词匹配 MVP）；SDK 增 `sentiment` 门面（`SentimentFacade` 接收内核注入的 `sentiment_fn` 回调，未注入抛 `NotAvailableError("sentiment.*","M8 装配完成")`），`PluginContext` / `create_context` 接入 `sentiment_fn`，`PluginRuntime._make_sentiment` 装配并在 `build_context` 透传；前端新增 `SentimentCenter.vue` 与 `/sentiment` 路由。
 
 ### 计划（v0.11.0 后续）
 
-- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 + storage 门面 → M6 模型路由 → M7 插件签名密钥体系 推进（M1-M7 已完成，六项能力门面全部装配，后端全量 247 项通过）。
+- 按 M1 事件总线 → M2 插件运行时 + SDK → M3 身份治理 → M4 任务 SLA → M5 工作流引擎 + storage 门面 → M6 模型路由 → M7 插件签名密钥体系 → M8 试点插件 推进（M1-M8 已完成，六项能力门面全部装配，官方试点插件骨架落地）。
+- M8 待全链路验证：插件注册 → 建表 → 门面调用 → 签名 + storage 走通后冻结。
 - 插件 SDK 与 `plugin.yaml` 清单规范冻结后，内核公开接口文档对外发布。
 
 ## [0.10.1] - 2026-10-06（首个开源版本）
