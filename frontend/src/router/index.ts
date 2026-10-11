@@ -72,6 +72,12 @@ const router = createRouter({
       meta: { title: '模型中心' },
     },
     {
+      path: '/plugins',
+      name: 'plugin-market',
+      component: () => import('@/views/PluginMarket.vue'),
+      meta: { title: '插件市场' },
+    },
+    {
       path: '/security-log',
       name: 'security-log',
       component: () => import('@/views/SecurityLog.vue'),

@@ -2,7 +2,7 @@
 
 # 运营智脑 OpsCompass · Microsoft Store（Partner Center）提审表单填写稿
 
-> 生成时间：2026-10-03 | 最后更新：2026-10-03（回填 P2 真实产品标识与产品状态） | 适用版本：v0.10.1+ | 对应流程阶段：S1-P4（提交审核）
+> 生成时间：2026-10-03 | 最后更新：2026-10-09（补 6 张 1920×1080 功能界面截图；官网 / 支持 URL 改为免登录介绍页 `/intro`） | 适用版本：v0.10.1+ | 对应流程阶段：S1-P4（提交审核）
 > 配套文档：[MSSTORE_GUIDE.md](./MSSTORE_GUIDE.md)（打包与流程）、[STORE_LISTING.md](./STORE_LISTING.md)（双语文案与素材）、[PUBLISH_CHECKLIST.md](./PUBLISH_CHECKLIST.md)（发布清单）
 > 用途：Partner Center「新提交」页面逐字段复制粘贴，避免临场编写。
 > 标记约定：**✅ 可直接照抄** / **⏳ 待 P2 回填**（P2 = 老板本人实名注册 Partner Center 并预留产品名称后，回填产品标识与正式包）——P2 已于 **2026-10-03 完成**，本表单已无 ⏳ 回填项，剩余 ⏳ 项均为 P4 提交动作（上传包 / IARC 问卷）。
@@ -22,7 +22,7 @@
 | 7 | Store listing | 版权与商标 | ✅ | 见 §3.4 |
 | 8 | Store listing | 系统要求 | ✅ | 见 §3.5（含 Docker 依赖声明） |
 | 9 | Store listing | 商店图标（300×300） | ✅ | `docs/deploy/store-assets/icon-512-300x300.png` |
-| 10 | Store listing | 截图（1–10 张） | ✅ 2 张（可补拍） | 见 §四 |
+| 10 | Store listing | 截图（1–10 张） | ✅ 8 张 | 6 张 1920×1080 功能主界面 + 2 张 1366×768 辅助页，见 §四 |
 | 11 | Store listing | 隐私政策 URL | ✅ | `https://opscompass.pages.dev/privacy` |
 | 12 | Store listing | 支持联系方式 | ✅ | 邮箱 `mxh6789@live.cn`；支持 URL 见 §六 |
 | 13 | Pricing and availability | 定价 / 市场 / 语言 | ✅ | 免费 / 全球 / zh-CN + en-US |
@@ -163,14 +163,27 @@ Note: this app is a PWA. The Store package launches the app directly; a full sel
 
 ### 4.2 商店截图（1–10 张，≥ 1366×768，PNG）
 
+**功能主界面截图（1920×1080，均为产品真实运行界面的直接截屏，非登录页/启动页）**
+
+| 序 | 截图内容 | 素材文件 | 免登录 URL | manifest 引用 |
+|---|---|---|---|---|
+| 1 | 运营总览 | `D:\OpsCompass\frontend\public\screenshots\dashboard-1920x1080.png` | `https://opscompass.pages.dev/screenshots/dashboard-1920x1080.png` | `/screenshots/dashboard-1920x1080.png` |
+| 2 | 全景罗盘 | `D:\OpsCompass\frontend\public\screenshots\compass-1920x1080.png` | `https://opscompass.pages.dev/screenshots/compass-1920x1080.png` | `/screenshots/compass-1920x1080.png` |
+| 3 | 指标中心 | `D:\OpsCompass\frontend\public\screenshots\metrics-1920x1080.png` | `https://opscompass.pages.dev/screenshots/metrics-1920x1080.png` | `/screenshots/metrics-1920x1080.png` |
+| 4 | 运营参谋 | `D:\OpsCompass\frontend\public\screenshots\ops-1920x1080.png` | `https://opscompass.pages.dev/screenshots/ops-1920x1080.png` | `/screenshots/ops-1920x1080.png` |
+| 5 | 模型中心 | `D:\OpsCompass\frontend\public\screenshots\model-1920x1080.png` | `https://opscompass.pages.dev/screenshots/model-1920x1080.png` | `/screenshots/model-1920x1080.png` |
+| 6 | AI 治理 | `D:\OpsCompass\frontend\public\screenshots\ai-governance-1920x1080.png` | `https://opscompass.pages.dev/screenshots/ai-governance-1920x1080.png` | `/screenshots/ai-governance-1920x1080.png` |
+
+**辅助页截图（1366×768，非功能主界面）**
+
 | 序 | 截图内容 | 素材文件 | 关联 URL | manifest 引用 |
 |---|---|---|---|---|
-| 1 | 登录页 | `D:\OpsCompass\frontend\public\screenshots\login-page-1366x768.png`（副本位于 `output\login-page-1366x768.png`） | `https://opscompass.pages.dev/login` | `/screenshots/login-page-1366x768.png` |
-| 2 | 隐私政策页 | `D:\OpsCompass\frontend\public\screenshots\privacy-policy-page-1366x768.png`（副本位于 `output\privacy-policy-page-1366x768.png`） | `https://opscompass.pages.dev/privacy` | `/screenshots/privacy-policy-page-1366x768.png` |
+| 7 | 登录页 | `D:\OpsCompass\frontend\public\screenshots\login-page-1366x768.png`（副本位于 `output\login-page-1366x768.png`） | `https://opscompass.pages.dev/login` | `/screenshots/login-page-1366x768.png` |
+| 8 | 隐私政策页 | `D:\OpsCompass\frontend\public\screenshots\privacy-policy-page-1366x768.png`（副本位于 `output\privacy-policy-page-1366x768.png`） | `https://opscompass.pages.dev/privacy` | `/screenshots/privacy-policy-page-1366x768.png` |
 | — | PWABuilder 报告卡 | `output\pwabuilder-reportcard-1366x768.png` | — | **不作为商店截图**，仅作打包校验证据留档 |
 
-> 本次变更已把上表 2 张截图落入 `frontend/public/screenshots/`，并在 `frontend/public/manifest.webmanifest` 的 `screenshots` 字段以 1366×768 / `form_factor: wide` 引用（满足 PWABuilder 报告卡"待补项"）。
-> ⏳ 可选补拍（不阻塞提交）：站点为需登录 SPA，`/terms`、`/about`、`/register`、`/dashboard` 均 302 到 `/login`，当前公开可达页仅登录页与隐私页；如后续开放公开页，建议补 1–2 张 1920×1080 截图。
+> 本次变更已把上表 8 张截图落入 `frontend/public/screenshots/`。其中 6 张 1920×1080 功能主界面截图于 2026-10-09 在本地部署环境（`http://localhost/`）以默认管理员账号登录后逐页实拍，全程只读、未新增/修改/删除任何数据；截图均为产品真实运行界面（非登录页或启动页），并在免登录产品介绍页 `https://opscompass.pages.dev/intro` 展示，用于满足认证项 10.1.1.3「截图须为产品直接截图」的要求。
+> `frontend/public/manifest.webmanifest` 的 `screenshots` 字段以 1366×768 / `form_factor: wide` 引用登录页与隐私页（满足 PWABuilder 报告卡"待补项"）。
 > ⏳ 可选：1920×1080 商店展示图（Store display image），当前未制作。
 
 ---
@@ -222,9 +235,9 @@ AI 能力默认调用本机本地大模型（数据不出设备）；如使用�
 | 字段 | 可直接照抄的值 | 状态 |
 |---|---|---|
 | 支持邮箱（Support contact email） | `mxh6789@live.cn` | ✅ |
-| 支持 URL（Support URL） | `https://opscompass.pages.dev/` | ✅ 暂用站点首页 |
+| 支持 URL（Support URL） | `https://opscompass.pages.dev/intro` | ✅ 产品介绍页，免登录可访问 |
 | 电话（Phone） | 留空 | ✅ 不提供 |
-| 官网 / 落地页 | `https://opscompass.pages.dev/` | ✅ |
+| 官网 / 落地页 | `https://opscompass.pages.dev/intro` | ✅ 产品介绍页，免登录可访问 |
 | 隐私 / 合规专页 | `https://opscompass.pages.dev/privacy` | ✅ |
 | 开发者名称 | `LAOMENG 网络工作室`（P2 真实值，见 §七.2） | ✅ |
 | 其他联系方式 | `mxh6789@gmail.com` **仅为 Cloudflare 账号标识，不得作为对外联系方式** | ✅ 禁止填入 |
@@ -272,7 +285,8 @@ AI 能力默认调用本机本地大模型（数据不出设备）；如使用�
 | 检查项 | 判据 |
 |---|---|
 | 隐私政策 URL 可公网 HTTPS 访问 | `https://opscompass.pages.dev/privacy` 返回 200 |
-| 截图 1–10 张、≥ 1366×768 | 当前 2 张，均实测 1366×768 |
+| 官网 / 产品介绍页免登录可访问 | `https://opscompass.pages.dev/intro` 返回 200，无需登录 |
+| 截图 1–10 张、≥ 1366×768 | ✅ 8 张：6 张 1920×1080 功能主界面（非登录页/启动页）+ 2 张 1366×768 辅助页，尺寸均已实测 |
 | 图标 300×300 已备 | `docs/deploy/store-assets/icon-512-300x300.png` |
 | 包内 Identity 与预留产品一致 | ✅ 已核验：Name / Publisher / Version `1.0.1.0` / PublisherDisplayName 四项与 Partner Center 完全一致 |
 | Docker 依赖已在描述中明示 | 见 §3.1 运行说明与 §3.5 |
@@ -290,8 +304,9 @@ AI 能力默认调用本机本地大模型（数据不出设备）；如使用�
 | 2 | 回填三项包标识并重新打包 `.msixbundle` | Marvis 重打包 | ✅ 已完成（2026-10-03） |
 | 3 | 上传正式包并提交审核（须于 2027-01-03 前） | 老板确认，Marvis 备料 | 提交前 |
 | 4 | IARC 分级问卷填写、回填 `iarc_rating_id` | 老板确认，Marvis 记录 | 提交前 |
-| 5 | 支持 URL 最终确认（是否建独立支持页） | 老板决策 | 非阻塞 |
-| 6 | 可选补拍 1920×1080 截图 / 商店展示图 | Marvis | 非阻塞 |
+| 5 | 支持 URL 最终确认（是否建独立支持页） | 老板决策 | ✅ 已定：`https://opscompass.pages.dev/intro`（免登录产品介绍页） |
+| 6 | 补拍 1920×1080 功能界面截图（修复认证项 10.1.1.3） | Marvis | ✅ 已完成（2026-10-09，6 张真实运行界面，已随 `/intro` 上线） |
+| 7 | 商店展示图 1920×1080（可选） | Marvis | 非阻塞 |
 
 ---
 **关联文档**：`docs/deploy/MSSTORE_GUIDE.md`、`docs/deploy/STORE_LISTING.md`、`docs/deploy/PUBLISH_CHECKLIST.md`、`docs/deploy/PWA_GUIDE.md`

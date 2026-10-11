@@ -71,6 +71,9 @@ PERMISSION_DEFINITIONS: list[tuple[str, str, str, str]] = [
     ("model:config", "配置模型", "model", "配置 AI 模型端点、连通性自检与一键接入"),
     ("learning:view", "查看学习进化", "learning", "查看学习进化总览、反馈、策略权重、案例与实验"),
     ("learning:manage", "管理学习进化", "learning", "登记反馈、重算权重、维护案例与 A/B 对照实验"),
+    ("plugin:view", "查看插件市场", "plugin", "查看插件市场列表与详情"),
+    ("plugin:install", "安装/启用插件", "plugin", "安装、启用插件"),
+    ("plugin:manage", "管理插件", "plugin", "禁用、卸载插件"),
 ]
 
 ALL_PERMISSION_CODES: list[str] = [c for c, _, _, _ in PERMISSION_DEFINITIONS]

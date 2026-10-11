@@ -251,6 +251,12 @@ MODULE_PERMISSION_MAP: dict = {
         "write": ["learning:manage"],
         "delete": ["learning:manage"],
     },
+    # 插件市场（v0.12.0 MVP）：读需查看权限，安装启用复用 install，禁用卸载用 manage
+    "plugin": {
+        "read": ["plugin:view"],
+        "write": ["plugin:install", "plugin:manage"],
+        "delete": ["plugin:manage"],
+    },
 }
 
 

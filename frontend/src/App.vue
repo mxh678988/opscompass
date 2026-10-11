@@ -21,6 +21,7 @@ const links = [
   { to: '/collect', label: '采集调度' },
   { to: '/storage', label: '存储适配' },
   { to: '/model', label: '模型中心' },
+  { to: '/plugins', label: '插件市场' },
   { to: '/security-log', label: '安全日志' },
   { to: '/ai-governance', label: 'AI 治理' },
   { to: '/learning', label: '学习进化' },

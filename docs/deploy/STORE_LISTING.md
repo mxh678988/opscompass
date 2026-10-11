@@ -17,7 +17,7 @@
 | 分类 | 商务 / 工作效率（Business / Productivity） |
 | 币种与定价 | 免费（Free） |
 | 支持语言 | 简体中文（主）、英语（英区必备） |
-| 官网 / 落地页 | `https://opscompass.pages.dev/` |
+| 官网 / 落地页 | `https://opscompass.pages.dev/intro`（产品介绍页，免登录公网可访问） |
 | 隐私政策 URL | `https://opscompass.pages.dev/privacy` |
 | 支持邮箱 | mxh6789@live.cn |
 | 开发者 | BY LAOMENG 网络工作室 |
@@ -86,12 +86,26 @@ Data sovereignty: designed for local or self-hosted deployment; business data st
 | 素材 | 规格要求 | 状态 |
 | --- | --- | --- |
 | 应用图标 | 300×300 PNG（商店主图），另需 44×44 / 50×50 / 150×150 | ✅ 已导出至 `docs/deploy/store-assets/`：`icon-512-300x300.png`（主图）、`icon-512-150x150.png`、`icon-512-50x50.png`、`icon-512-44x44.png`（源图 `frontend/public/icons/icon-512.png`） |
-| 桌面截图 | 1366×768 或 1920×1080，1–10 张，PNG | 待补（登录页、总览、罗盘、指标中心、AI 参谋） |
+| 桌面截图 | 1366×768 或 1920×1080，1–10 张，PNG | ✅ 已备 6 张 1920×1080 功能主界面（运营总览 / 全景罗盘 / 指标中心 / 运营参谋 / 模型中心 / AI 治理），另有 2 张 1366×768 辅助页（登录、隐私政策）；均位于 `frontend/public/screenshots/` |
 | 商店展示图 | 1920×1080 宣传图（可选） | 待补 |
 | 隐私政策页 | 可公网访问的 HTTPS 链接 | ✅ `https://opscompass.pages.dev/privacy`（2026-10-03 上线；填 `/privacy`，勿填 `/privacy.html`） |
 | 应用包 | MSIX（见 MSSTORE_GUIDE 路线 A/B） | 待 P1 后由 PWABuilder 生成 |
 
-截图拍摄建议顺序：登录页 → 运营总览 → 全景罗盘 → 指标中心 → 运营参谋问答 → 学习进化。
+截图清单（已备，位于 `frontend/public/screenshots/`，构建后位于 `frontend/dist/screenshots/`）：
+
+| 序 | 截图内容 | 文件名 | 尺寸 | 免登录公网 URL |
+| --- | --- | --- | --- | --- |
+| 1 | 运营总览 | `dashboard-1920x1080.png` | 1920×1080 | `https://opscompass.pages.dev/screenshots/dashboard-1920x1080.png` |
+| 2 | 全景罗盘 | `compass-1920x1080.png` | 1920×1080 | `https://opscompass.pages.dev/screenshots/compass-1920x1080.png` |
+| 3 | 指标中心 | `metrics-1920x1080.png` | 1920×1080 | `https://opscompass.pages.dev/screenshots/metrics-1920x1080.png` |
+| 4 | 运营参谋 | `ops-1920x1080.png` | 1920×1080 | `https://opscompass.pages.dev/screenshots/ops-1920x1080.png` |
+| 5 | 模型中心 | `model-1920x1080.png` | 1920×1080 | `https://opscompass.pages.dev/screenshots/model-1920x1080.png` |
+| 6 | AI 治理 | `ai-governance-1920x1080.png` | 1920×1080 | `https://opscompass.pages.dev/screenshots/ai-governance-1920x1080.png` |
+| 7 | 登录页（辅助） | `login-page-1366x768.png` | 1366×768 | `https://opscompass.pages.dev/screenshots/login-page-1366x768.png` |
+| 8 | 隐私政策页（辅助） | `privacy-policy-page-1366x768.png` | 1366×768 | `https://opscompass.pages.dev/screenshots/privacy-policy-page-1366x768.png` |
+
+> 6 张功能主界面截图于 2026-10-09 在本地部署环境（`http://localhost/`）以默认管理员账号登录后逐页实拍，均为产品真实运行界面（非登录页 / 启动页），全程只读、未改动任何数据。
+> 免登录产品介绍页 `https://opscompass.pages.dev/intro` 已内嵌上述截图，Partner Center 提交时可一并提供该链接，用于佐证截图取自真实运行界面。
 
 ---
 

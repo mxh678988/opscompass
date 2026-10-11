@@ -22,6 +22,7 @@ from app.api.v1.endpoints import (
     metrics,
     model_hub,
     ops,
+    plugin_market,
     rbac,
     storage,
     tenants,
@@ -110,5 +111,13 @@ api_router.include_router(
     prefix="/learning",
     tags=["learning"],
     dependencies=[Depends(require_module_access("learning"))],
+)
+
+# 插件市场（v0.12.0 MVP）：上架 / 安装 / 启停 / 卸载 / 签名校验
+api_router.include_router(
+    plugin_market.router,
+    prefix="/plugins",
+    tags=["plugins"],
+    dependencies=[Depends(require_module_access("plugin"))],
 )
 
