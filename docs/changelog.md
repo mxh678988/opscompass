@@ -18,6 +18,8 @@ AIGC:
 
 ### 新增
 
+- **插件市场 MVP 前后端闭环**：后端 `plugin_market.py` 六接口（列表/详情/安装/启用/禁用/卸载），前端 `PluginMarket.vue` + `api/plugin.ts`（类型化权限渲染修复），路由与导航接入；新增 `backend/tests/test_plugin_market.py`，后端全量 **259 passed**。
+- **官方商业插件占位说明页**：新增 `docs/COMMERCIAL_PLUGINS.md`，声明官方商业插件（舆情监控/危机公关）存在与获取方式，不含任何实现细节。
 - **OS 内核演进路线**：`docs/OPEN_SOURCE_PLAN.md` 新增第九章「OS 演进规划与商业插件边界」，确立三层结构（内核层 / 域层 / 插件层 / 界面层）、「内核 + 社区插件开源、官方商业插件闭源」的切分原则，以及商业设计文档 `docs_business/` 目录隔离约束。
 - **发布计划重排**：v0.11.0（内核地基）→ v0.12.0（风险域插件 MVP + 插件市场 MVP）→ v0.13.0（风险域完整版）→ v0.14.0（生态运营）→ v1.0.0（内核 API 冻结）→ v2.0.0（企业版）。
 - **产品说明书演进章节**：`docs/product-manual.md` 增补 6.1「OS 演进说明」，含版本演进表与三点设计取向。
@@ -26,6 +28,8 @@ AIGC:
 
 ### 变更
 
+- **M8 正式冻结（2026-10-11）**：插件市场 MVP 闭环（259 passed）+ 分发协议拍板后冻结，条件已满足；`docs/os-kernel-design.md` 更新冻结状态。
+- **分发协议拍板（D5/D6 闭环，2026-10-11）**：D5 商业插件 = 加密插件包 + 授权码校验，随商业版订阅分发，开源仓库放置 `docs/COMMERCIAL_PLUGINS.md` 占位说明页；D6 插件市场 = 市场协议与 SDK 开源、市场服务端商业服务。`docs/OPEN_SOURCE_PLAN.md` 待决表同步更新。
 - **稳定版时间调整**：v1.0.0 由原定 2027-06-01 调整为 2027-11-01，为内核与插件体系留出两个稳定观察期。
 - **仓库忽略规则**：`.gitignore` 新增 `docs_business/`，商业插件文档不出现在公开仓库。
 - **前端 UI 美化续（P4 令牌化补全）**：`CollectCenter.vue`（47 处）与 `ModelCenter.vue`（63 处）样式段硬编码色值清零，统一归一为设计令牌变量（品牌/语义色、文字三级、边框、阴影、圆角、间距），全前端非样式段亦无残留色值；`SentimentCenter.vue` 重写为令牌化卡片 UI（页面头 + 创建表单 + 主题卡片网格 + 分析报告统计与情绪条），并修复前端调用链路（新增后端 `list_topics` / `delete_topic` action 并注册进 `action_map`，前端由调不通的 `get_topics` 改为 `list_topics` / `delete_topic` / `get_analytics`）。
