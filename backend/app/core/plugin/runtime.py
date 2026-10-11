@@ -165,17 +165,14 @@ class PluginRuntime:
     def _make_sentiment(self, plugin_id: str) -> Optional[Callable[..., Any]]:
         """构造舆情门面回调（M8）：基于注入的舆情引擎返回 callable。
 
-        未显式注入且无会话工厂时返回 None，插件侧 sentiment.* 抛
+        舆情引擎属插件业务层（``plugins/sentiment/backend``），内核不
+        感知插件代码路径：仅当外部显式注入 ``sentiment_engine`` 时才装配，
+        否则返回 None，插件侧 sentiment.* 抛
         NotAvailableError("sentiment.*", "M8 装配完成")，不假装可用。
         """
-        if self._sentiment_engine is not None:
-            engine = self._sentiment_engine
-        elif self._session_factory is not None:
-            from app.core.sentiment import create_for_plugin
-
-            engine = create_for_plugin
-        else:
+        if self._sentiment_engine is None:
             return None
+        engine = self._sentiment_engine
 
         def sentiment_fn(*, action: str, params: Optional[dict] = None, **kwargs: Any) -> Any:
             db = self._session_factory()

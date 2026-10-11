@@ -12,11 +12,21 @@ from datetime import datetime, timedelta
 from typing import Any, Optional
 from uuid import uuid4
 
-from app.database import session_factory
-from app.models import Base, SentimentTopic, SentimentSource, SentimentTask, SentimentItem, SentimentEmotion, SentimentEntity
-from app.models import SentimentEvent, SentimentEventItem, SentimentAlertRule, SentimentAlert, SentimentReport, SentimentKeywordStat
-from app.core.model_router import ModelRouteResult
-from sqlalchemy import select, func, or_
+from .database import (
+    Base,
+    SentimentTopic,
+    SentimentSource,
+    SentimentTask,
+    SentimentItem,
+    SentimentEmotion,
+    SentimentEntity,
+    SentimentEvent,
+    SentimentEventItem,
+    SentimentAlertRule,
+    SentimentAlert,
+    SentimentReport,
+    SentimentKeywordStat,
+)
 from sqlalchemy.orm import Session
 import random
 
