@@ -1,11 +1,44 @@
-plugin_id: sentiment
+id: sentiment
 name: 舆情监控
 version: "0.12.0"
+min_kernel_version: "0.11.0"
+kind: community
+entry: backend.src.main:register
 description: 舆情监控与预警，覆盖主题管理、数据采集、情感分析、事件归并、预警分级与报告。
 author: 老孟AI智能写作
 email: laomeng@example.com
 category: risk
 license: commercial
+
+namespace:
+  tables: os_sentiment_
+  events: "sentiment."
+  permissions: "sentiment:"
+
+permissions:
+  - code: sentiment:topic:manage
+    name: 主题管理
+  - code: sentiment:task:create
+    name: 创建舆情任务
+  - code: sentiment:alert:view
+    name: 查看预警
+
+roles:
+  - code: sentiment:analyst
+    name: 舆情分析师
+    permissions:
+      - sentiment:topic:manage
+      - sentiment:task:create
+      - sentiment:alert:view
+
+events:
+  publish:
+    - sentiment.task.created
+    - sentiment.item.collected
+    - sentiment.event.created
+    - sentiment.alert.created
+  subscribe:
+    - core.metric.written
 
 sdk:
   min_version: "0.11.0"

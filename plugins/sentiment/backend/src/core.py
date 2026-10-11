@@ -162,18 +162,20 @@ class SentimentEngine:
         inserted = 0
         failed = 0
         errors = []
+        item_ids: list[str] = []
 
         try:
             # 模拟从数据源采集（实际应调用采集器）
             # 这里生成示例数据用于测试
             sample_titles = [
-                f"关于{topic['name']}的用户反馈第{i+1}期",
-                f"{topic['name']}最新动态 - 第{i+1}条",
+                f"关于{topic['name']}的用户反馈",
+                f"{topic['name']}最新动态",
             ]
 
             for i in range(5):  # 模拟采集5条
-                title = random.choice(sample_titles).format()
-                content = f"用户对{topic['name']}的评价：{random.choice(['很好', '不错', '一般', '差劲', '完美', '失望'])}"
+                uid = uuid4().hex[:8]
+                title = f"{random.choice(sample_titles)} #{uid}"
+                content = f"用户对{topic['name']}的评价：{random.choice(['很好', '不错', '一般', '差劲', '完美', '失望'])} #{uid}"
 
                 item = SentimentItem(
                     plugin_id=self.plugin_id,
@@ -220,6 +222,7 @@ class SentimentEngine:
 
                 fetched += 1
                 inserted += 1
+                item_ids.append(item.id)
 
             self.db.commit()
 
@@ -258,6 +261,7 @@ class SentimentEngine:
             "inserted": inserted,
             "failed": failed,
             "errors": errors,
+            "item_ids": item_ids,
         }
 
     # -------------------------------------------------------------------
@@ -277,6 +281,7 @@ class SentimentEngine:
         entities = extract_entities(item.content, [topic])
 
         return {
+            "item_id": item.id,
             "polarity": sentiment["polarity"],
             "intensity": sentiment["intensity"],
             "confidence": sentiment["confidence"],
@@ -464,10 +469,19 @@ class SentimentEngine:
             SentimentItem.publish_at >= start_date
         ).all()
 
-        # 情绪结构
-        positive = sum(1 for i in items if i.status == "positive")
-        neutral = sum(1 for i in items if i.status == "neutral")
-        negative = sum(1 for i in items if i.status == "negative")
+        # 情绪结构：按条目关联的情感标注聚合
+        item_ids = [i.id for i in items]
+        if item_ids:
+            emotions = (
+                self.db.query(SentimentEmotion)
+                .filter(SentimentEmotion.item_id.in_(item_ids))
+                .all()
+            )
+        else:
+            emotions = []
+        positive = sum(1 for e in emotions if e.polarity == "positive")
+        neutral = sum(1 for e in emotions if e.polarity == "neutral")
+        negative = sum(1 for e in emotions if e.polarity == "negative")
         total = len(items)
 
         # 竞品对标
@@ -482,6 +496,7 @@ class SentimentEngine:
         }
 
         return {
+            "topic_id": topic_id,
             "hot_heat": {
                 "total_items": total,
                 "start_date": start_date.isoformat(),
@@ -585,10 +600,13 @@ class SentimentEngine:
     # 辅助方法
     # -------------------------------------------------------------------
     def _publish_event(self, name: str, payload: dict) -> str:
-        """发布事件（通过 SDK 的 bus.publish）。"""
-        from app.core.event_bus import EventBus
-        bus = EventBus()
-        return bus.publish(name, payload, plugin_id=self.plugin_id)
+        """发布事件（预留：事件统一经内核注入的 SDK 门面 bus.publish）。
+
+        插件引擎不直连内核模块（M2 约束）；当前内核尚未把发布回调注入
+        引擎，先安全降级记录日志，待 M9 事件门面打通后接入。
+        """
+        logger.warning("事件发布通道未接入内核，跳过: %s", name)
+        return ""
 
     def get_alerts(self, topic_id: str, status: str = "pending", **kwargs: Any) -> list[dict[str, Any]]:
         """获取预警列表。"""

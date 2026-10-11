@@ -1,10 +1,13 @@
 import uuid
 from datetime import datetime
 
-from app.database import session_factory
-from app.models import Base
 from sqlalchemy import Column, String, Integer, BigInteger, Boolean, DateTime, JSON, Text, Index
 from sqlalchemy.dialects.mssql import NVARCHAR, TIMESTAMP
+from sqlalchemy.orm import declarative_base
+
+# 插件自有 ORM 基类：不挂靠内核 app.models.Base，表归插件自身 metadata，
+# 由内核 PluginRuntime.provision_tables 在监督下建表（M2 设计约束）。
+Base = declarative_base()
 
 # ---------------------------------------------------------------------------
 # 表名约定：os_sentiment_*
@@ -21,8 +24,8 @@ class SentimentTopic(Base):
     brand_entities = Column(JSON, default=list)
     product_line = Column(String(128), default='')
     status = Column(String(16), default='active')
-    created_at = Column(TIMESTAMP, default=datetime.utcnow)
-    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     __table_args__ = (
         Index('ix_sentiment_topic_plugin', 'plugin_id'),
@@ -42,8 +45,8 @@ class SentimentSource(Base):
     interval_min = Column(Integer, default=60)
     rate_limit = Column(Integer, default=1000)
     status = Column(String(16), default='active')
-    created_at = Column(TIMESTAMP, default=datetime.utcnow)
-    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     __table_args__ = (
         Index('ix_sentiment_source_plugin', 'plugin_id'),
@@ -58,8 +61,8 @@ class SentimentTask(Base):
     plugin_id = Column(String(64), nullable=False, default='sentiment')
     source_id = Column(NVARCHAR(36), nullable=False)
     trigger_type = Column(String(16), default='manual')
-    started_at = Column(TIMESTAMP)
-    finished_at = Column(TIMESTAMP)
+    started_at = Column(DateTime)
+    finished_at = Column(DateTime)
     fetched = Column(Integer, default=0)
     inserted = Column(Integer, default=0)
     failed = Column(Integer, default=0)
@@ -83,7 +86,7 @@ class SentimentItem(Base):
     content = Column(Text, default='')
     author = Column(String(256), default='')
     author_fans = Column(Integer, default=0)
-    publish_at = Column(TIMESTAMP)
+    publish_at = Column(DateTime)
     url = Column(String(1024), default='')
     fingerprint = Column(String(128), default='')
     lang = Column(String(16), default='zh')
@@ -108,7 +111,7 @@ class SentimentEmotion(Base):
     model = Column(String(32), default='')
     rule_hit = Column(Boolean, default=False)
     confidence = Column(Integer, default=0)
-    labeled_at = Column(TIMESTAMP, default=datetime.utcnow)
+    labeled_at = Column(DateTime, default=datetime.utcnow)
 
     __table_args__ = (
         Index('ix_sentiment_emotion_plugin', 'plugin_id'),
@@ -140,8 +143,8 @@ class SentimentEvent(Base):
     plugin_id = Column(String(64), nullable=False, default='sentiment')
     topic_id = Column(NVARCHAR(36), nullable=False)
     title = Column(String(512), default='')
-    first_seen_at = Column(TIMESTAMP)
-    peak_at = Column(TIMESTAMP)
+    first_seen_at = Column(DateTime)
+    peak_at = Column(DateTime)
     item_count = Column(Integer, default=0)
     spread_level = Column(String(16), default='low')
     status = Column(String(16), default='active')
@@ -213,8 +216,8 @@ class SentimentReport(Base):
     plugin_id = Column(String(64), nullable=False, default='sentiment')
     topic_id = Column(NVARCHAR(36), nullable=False)
     report_type = Column(String(16), default='daily')
-    period_start = Column(TIMESTAMP)
-    period_end = Column(TIMESTAMP)
+    period_start = Column(DateTime)
+    period_end = Column(DateTime)
     content = Column(Text, default='')
     ai_generated = Column(Boolean, default=False)
     confirmed_by = Column(String(36), default='')
@@ -232,7 +235,7 @@ class SentimentKeywordStat(Base):
     id = Column(NVARCHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     plugin_id = Column(String(64), nullable=False, default='sentiment')
     topic_id = Column(NVARCHAR(36), nullable=False)
-    stat_date = Column(TIMESTAMP, nullable=False)
+    stat_date = Column(DateTime, nullable=False)
     keyword = Column(String(256), nullable=False)
     count = Column(Integer, default=0)
     delta_ratio = Column(Integer, default=0)

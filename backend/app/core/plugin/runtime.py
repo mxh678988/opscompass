@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+import importlib
 import logging
+import sys
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -182,6 +184,108 @@ class PluginRuntime:
                 db.close()
 
         return sentiment_fn
+
+    # ---- M8 插件 backend 加载与引擎注入 ----
+
+    def inject_sentiment_engine(self, engine: Any) -> None:
+        """插件 backend 通过本方法把舆情引擎注入内核（register 内调用）。
+
+        注入对象与 ``_make_sentiment`` 约定一致：
+        engine(db, plugin_id, action, params, **kwargs) -> result。
+        """
+        self._sentiment_engine = engine
+
+    def load_backend(self, plugin_id: str) -> Any:
+        """按清单 entry 加载插件 backend 并调用入口函数（幂等）。
+
+        内核不感知插件内部结构：仅把自身传给入口函数（如
+        ``register(runtime)``），插件通过 ``inject_*`` 回调把引擎注入
+        内核；backend 模块须相对导入自身子模块（backend.src.*），加载
+        期间仅临时把插件目录加入 sys.path，结束后移除。
+
+        说明：当前按 backend.src.<mod> 包路径加载，适用于单官方插件；
+        多插件同名 backend 包时需升级为插件专属模块命名空间。
+        """
+        meta = self.registry.get(plugin_id)
+        if meta is None:
+            raise KeyError(f"插件未注册: {plugin_id}")
+        if not meta.entry:
+            raise RuntimeError(f"插件 {plugin_id} 未声明 entry")
+        mod_name, _, func_name = meta.entry.partition(":")
+        if not mod_name or not func_name:
+            raise RuntimeError(f"插件 {plugin_id} entry 非法: {meta.entry!r}")
+
+        cache_key = f"__plugin_backend_{plugin_id}"
+        if cache_key in sys.modules:
+            # 模块复用缓存，但入口函数必须每次执行：register 把引擎注入
+            # 的是“当前 runtime 实例”，跳过会导致新实例未装配（幂等约定：
+            # 入口函数只做注入类副作用，重复调用安全）。
+            mod = sys.modules[cache_key]
+            func = getattr(mod, func_name, None)
+            if func is not None:
+                func(self)
+                return mod
+
+        plugin_dir = self.registry.plugins_dir / plugin_id
+        backend_dir = plugin_dir / "backend"
+        # 校验模块物理存在（entry 为相对插件根的包路径，如 backend.src.main）
+        mod_rel = mod_name.replace(".", "/") + ".py"
+        if not (plugin_dir / mod_rel).exists():
+            raise RuntimeError(
+                f"插件 {plugin_id} backend 模块不存在: {plugin_dir / mod_rel}"
+            )
+
+        added: list[str] = []
+        for d in (str(plugin_dir), str(backend_dir)):
+            if d not in sys.path:
+                sys.path.insert(0, d)
+                added.append(d)
+        try:
+            mod = importlib.import_module(mod_name)
+            sys.modules[cache_key] = mod
+            func = getattr(mod, func_name, None)
+            if func is None:
+                raise RuntimeError(
+                    f"插件 {plugin_id} 入口函数不存在: {meta.entry!r}"
+                )
+            func(self)
+            return mod
+        except Exception as e:
+            raise RuntimeError(f"插件 {plugin_id} backend 加载失败: {e}") from e
+        finally:
+            for d in added:
+                try:
+                    sys.path.remove(d)
+                except ValueError:
+                    pass
+
+    def provision_tables(self, plugin_id: str) -> list[str]:
+        """内核监督下为插件建表（插件不得自行建表，M2 设计约束）。
+
+        复用已加载 backend 的自有 database 模块 metadata，以内核会话
+        bind 执行 create_all，返回已建表名列表。
+        """
+        if self._session_factory is None:
+            raise RuntimeError("session_factory 未注入，无法建表")
+        self.load_backend(plugin_id)  # 确保 backend 已加载（幂等）
+
+        cache_key = f"__plugin_backend_{plugin_id}"
+        mod = sys.modules.get(cache_key)
+        if mod is None:
+            raise RuntimeError(f"插件 {plugin_id} backend 未加载")
+        # backend.src.<mod> → backend.src.database
+        db_mod_name = mod.__name__.rsplit(".", 1)[0] + ".database"
+        db_mod = sys.modules.get(db_mod_name)
+        if db_mod is None or not hasattr(db_mod, "Base"):
+            raise RuntimeError(f"插件 {plugin_id} 无可建表 database 模块")
+
+        db = self._session_factory()
+        try:
+            engine = db.get_bind()
+            db_mod.Base.metadata.create_all(engine)
+        finally:
+            db.close()
+        return sorted(db_mod.Base.metadata.tables.keys())
 
     def build_context(self, plugin_id: str) -> PluginContext:
         """为指定插件装配上下文（不改变插件状态）。"""

@@ -374,6 +374,26 @@ class SentimentFacade:
         """生成报告（日报/周报/专题），返回报告 ID 和预览内容。"""
         return self._require("generate_report")(action="generate_report", params={"topic_id": topic_id, "report_type": report_type}, **kwargs)
 
+    def create_topic(self, name: str, keywords: list[str], brand_entities: list[str] | None = None, product_line: str = "", **kwargs: Any) -> dict[str, Any]:
+        """创建监测主题，返回主题 ID。"""
+        return self._require("create_topic")(action="create_topic", params={"name": name, "keywords": keywords, "brand_entities": brand_entities or [], "product_line": product_line}, **kwargs)
+
+    def create_source(self, topic_id: str, source_type: str, access_type: str = "api", endpoint: str = "", credential_ref: str = "", interval_min: int = 60, rate_limit: int = 1000, **kwargs: Any) -> dict[str, Any]:
+        """创建数据源配置，返回数据源 ID。"""
+        return self._require("create_source")(action="create_source", params={"topic_id": topic_id, "source_type": source_type, "access_type": access_type, "endpoint": endpoint, "credential_ref": credential_ref, "interval_min": interval_min, "rate_limit": rate_limit}, **kwargs)
+
+    def create_alert_rule(self, topic_id: str, rule_type: str, params: dict[str, Any], level: str = "S3", silence_window: int = 0, enabled: bool = True, **kwargs: Any) -> dict[str, Any]:
+        """创建预警规则，返回规则 ID。"""
+        return self._require("create_alert_rule")(action="create_alert_rule", params={"topic_id": topic_id, "rule_type": rule_type, "params": params, "level": level, "silence_window": silence_window, "enabled": enabled}, **kwargs)
+
+    def get_alerts(self, topic_id: str, status: str = "pending", **kwargs: Any) -> list[dict[str, Any]]:
+        """获取预警列表。"""
+        return self._require("get_alerts")(action="get_alerts", params={"topic_id": topic_id, "status": status}, **kwargs)
+
+    def get_events(self, topic_id: str, status: str = "active", **kwargs: Any) -> list[dict[str, Any]]:
+        """获取事件列表。"""
+        return self._require("get_events")(action="get_events", params={"topic_id": topic_id, "status": status}, **kwargs)
+
 
 class SigningFacade:
     """签名门面：插件侧查询自身签名状态并校验发布包完整性（M7 插件签名密钥体系落地）。
