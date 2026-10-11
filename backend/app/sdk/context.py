@@ -305,6 +305,37 @@ class StorageFacade:
         raise NotAvailableError("storage.read", "M5")
 
 
+class SigningFacade:
+    """签名门面：插件侧查询自身签名状态并校验发布包完整性（M7 插件签名密钥体系落地）。
+
+    内核在装载插件时注入 ``verify_fn``（按已登记公钥验签自身发布包）与
+    ``key_query_fn``（查询已登记公钥指纹）；未注入时抛 ``NotAvailableError``
+    指明 M7，防止插件误以为已签名受控。
+    """
+
+    def __init__(
+        self,
+        plugin_id: str,
+        verify_fn: Optional[Callable[[], Any]] = None,
+        key_query_fn: Optional[Callable[[], Any]] = None,
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._verify = verify_fn
+        self._key_query = key_query_fn
+
+    def verify_self(self) -> dict[str, Any]:
+        """校验插件自身发布包签名，返回 {"verified", "status", "message"}。"""
+        if self._verify is None:
+            raise NotAvailableError("signing.verify_self", "M7 装配完成")
+        return self._verify()
+
+    def key_fingerprint(self) -> Optional[str]:
+        """查询插件当前启用公钥指纹；未登记返回 None。"""
+        if self._key_query is None:
+            raise NotAvailableError("signing.key_fingerprint", "M7 装配完成")
+        return self._key_query()
+
+
 class TaskFacade:
     """待办门面：自动挂 SLA 与升级链（M4 任务 SLA 落地）。
 
@@ -481,6 +512,8 @@ class PluginContext:
         task_fn: Optional[Callable[..., Any]] = None,
         workflow_engine: Any = None,
         model_router: Any = None,
+        signing_verify_fn: Optional[Callable[[], Any]] = None,
+        signing_key_query_fn: Optional[Callable[[], Any]] = None,
     ) -> None:
         self.plugin_id = plugin_id
         self.plugin_version = plugin_version
@@ -501,6 +534,9 @@ class PluginContext:
         self.task = TaskFacade(plugin_id, task_fn)
         self.workflow = WorkflowFacade(plugin_id, workflow_engine, session_factory)
         self.model = ModelFacade(plugin_id, model_router, session_factory)
+        self.signing = SigningFacade(
+            plugin_id, signing_verify_fn, signing_key_query_fn
+        )
         self.ui = UIFacade(plugin_id)
 
     def declarations(self) -> dict[str, list[dict[str, Any]]]:
@@ -530,6 +566,8 @@ def create_context(
     task_fn: Optional[Callable[..., Any]] = None,
     workflow_engine: Any = None,
     model_router: Any = None,
+    signing_verify_fn: Optional[Callable[[], Any]] = None,
+    signing_key_query_fn: Optional[Callable[[], Any]] = None,
 ) -> PluginContext:
     """内核侧创建插件上下文（插件作者通常不直接调用）。"""
     return PluginContext(
@@ -545,4 +583,6 @@ def create_context(
         task_fn=task_fn,
         workflow_engine=workflow_engine,
         model_router=model_router,
+        signing_verify_fn=signing_verify_fn,
+        signing_key_query_fn=signing_key_query_fn,
     )

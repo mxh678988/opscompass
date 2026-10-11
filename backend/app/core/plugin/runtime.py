@@ -41,6 +41,7 @@ class PluginRuntime:
         sla_engine: Any = None,
         workflow_engine: Any = None,
         model_router: Any = None,
+        signing_service: Any = None,
     ) -> None:
         self.registry = registry
         self._session_factory = session_factory
@@ -52,6 +53,7 @@ class PluginRuntime:
         self._sla_engine = sla_engine
         self._workflow_engine = workflow_engine
         self._model_router = model_router
+        self._signing_service = signing_service
         self._contexts: dict[str, PluginContext] = {}
 
     # ---- 装配：把内核能力包成 SDK 回调 ----
@@ -107,6 +109,27 @@ class PluginRuntime:
 
         return task_fn
 
+    def _make_signing(self, plugin_id: str) -> tuple[Optional[Callable[[], Any]], Optional[Callable[[], Any]]]:
+        """构造签名门面回调（M7）：基于注入的签名服务返回 (verify_fn, key_query_fn)。
+
+        verify_fn 校验插件目录发布包签名（按已登记公钥）；key_query_fn 返回
+        插件当前启用公钥指纹。未注入签名服务时返回 (None, None)，插件侧
+        signing.* 抛 NotAvailableError，不假装已签名受控。
+        """
+        if self._signing_service is None:
+            return None, None
+        service = self._signing_service
+        plugin_dir = self.registry.plugins_dir / plugin_id
+
+        def verify_fn() -> dict[str, Any]:
+            status, message = service.verify_plugin(plugin_dir, plugin_id)
+            return {"verified": status == "ok", "status": status, "message": message}
+
+        def key_query_fn() -> Optional[str]:
+            return service.get_fingerprint(plugin_id)
+
+        return verify_fn, key_query_fn
+
     def build_context(self, plugin_id: str) -> PluginContext:
         """为指定插件装配上下文（不改变插件状态）。"""
         meta = self.registry.get(plugin_id)
@@ -119,6 +142,8 @@ class PluginRuntime:
             events=str(ns_data.get("events", "")),
             permissions=str(ns_data.get("permissions", "")),
         )
+
+        signing_verify, signing_query = self._make_signing(meta.plugin_id)
 
         ctx = create_context(
             plugin_id=meta.plugin_id,
@@ -136,6 +161,8 @@ class PluginRuntime:
             task_fn=self._make_task(meta.plugin_id),
             workflow_engine=self._workflow_engine,
             model_router=self._model_router,
+            signing_verify_fn=signing_verify,
+            signing_key_query_fn=signing_query,
         )
         self._contexts[plugin_id] = ctx
         return ctx

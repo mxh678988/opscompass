@@ -87,6 +87,49 @@ class CorePlugin(Base):
     )
 
 
+class CorePluginKey(Base):
+    """插件签名公钥注册表（M7 插件签名密钥体系）。
+
+    同一插件同一时刻至多一个 ``enabled`` 公钥，轮换时旧钥置 ``revoked`` 留痕；
+    ``fingerprint`` 全局唯一，用于核对 ``.sig`` 内嵌指纹，防止公钥错配。
+    """
+
+    __tablename__ = "oc_core_plugin_key"
+    __table_args__ = (
+        Index("ix_core_plugin_key_state", "plugin_id", "key_state"),
+        Index("ix_core_plugin_key_fingerprint", "fingerprint"),
+    )
+
+    id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)
+    plugin_id: Mapped[str] = mapped_column(
+        String(64), index=True, comment="所属插件 ID"
+    )
+    public_key: Mapped[str] = mapped_column(
+        Text, comment="Ed25519 公钥 PEM（SubjectPublicKeyInfo）"
+    )
+    fingerprint: Mapped[str] = mapped_column(
+        String(64), unique=True, comment="公钥指纹 SHA-256 十六进制"
+    )
+    key_state: Mapped[str] = mapped_column(
+        String(16), default="enabled", comment="enabled / revoked"
+    )
+    revoked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), default=None, comment="吊销时间（轮换/撤销）"
+    )
+    revoked_reason: Mapped[Optional[str]] = mapped_column(
+        Text, default=None, comment="吊销/轮换原因"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), comment="登记时间"
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        comment="最近更新时间",
+    )
+
+
 class CorePluginConfig(Base):
     """插件配置项（按插件分区，键值隔离）。"""
 
