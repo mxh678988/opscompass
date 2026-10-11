@@ -660,6 +660,41 @@ class SentimentEngine:
         self.db.commit()
         return {"id": topic.id, "name": name}
 
+    def list_topics(self, **kwargs: Any) -> list[dict[str, Any]]:
+        """列出全部监测主题（按创建时间倒序）。"""
+        rows = (
+            self.db.query(SentimentTopic)
+            .filter(SentimentTopic.plugin_id == self.plugin_id)
+            .order_by(SentimentTopic.created_at.desc())
+            .all()
+        )
+        return [
+            {
+                "id": r.id,
+                "name": r.name,
+                "keywords": r.keywords or [],
+                "status": r.status,
+                "created_at": r.created_at.isoformat() if r.created_at else "",
+            }
+            for r in rows
+        ]
+
+    def delete_topic(self, topic_id: str, **kwargs: Any) -> dict[str, Any]:
+        """删除监测主题。"""
+        row = (
+            self.db.query(SentimentTopic)
+            .filter(
+                SentimentTopic.id == topic_id,
+                SentimentTopic.plugin_id == self.plugin_id,
+            )
+            .first()
+        )
+        if not row:
+            return {"error": f"主题不存在: {topic_id}"}
+        self.db.delete(row)
+        self.db.commit()
+        return {"ok": True, "id": topic_id}
+
     def create_source(self, topic_id: str, source_type: str, access_type: str = "api", endpoint: str = "", credential_ref: str = "", interval_min: int = 60, rate_limit: int = 1000) -> dict[str, Any]:
         """创建数据源配置。"""
         source = SentimentSource(
@@ -727,6 +762,8 @@ def create_for_plugin(
         "get_alerts": engine.get_alerts,
         "get_events": engine.get_events,
         "create_topic": engine.create_topic,
+        "list_topics": engine.list_topics,
+        "delete_topic": engine.delete_topic,
         "create_source": engine.create_source,
         "create_alert_rule": engine.create_alert_rule,
     }

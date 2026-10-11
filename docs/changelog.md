@@ -28,6 +28,8 @@ AIGC:
 
 - **稳定版时间调整**：v1.0.0 由原定 2027-06-01 调整为 2027-11-01，为内核与插件体系留出两个稳定观察期。
 - **仓库忽略规则**：`.gitignore` 新增 `docs_business/`，商业插件文档不出现在公开仓库。
+- **前端 UI 美化续（P4 令牌化补全）**：`CollectCenter.vue`（47 处）与 `ModelCenter.vue`（63 处）样式段硬编码色值清零，统一归一为设计令牌变量（品牌/语义色、文字三级、边框、阴影、圆角、间距），全前端非样式段亦无残留色值；`SentimentCenter.vue` 重写为令牌化卡片 UI（页面头 + 创建表单 + 主题卡片网格 + 分析报告统计与情绪条），并修复前端调用链路（新增后端 `list_topics` / `delete_topic` action 并注册进 `action_map`，前端由调不通的 `get_topics` 改为 `list_topics` / `delete_topic` / `get_analytics`）。
+  - 验收：宿主机 `npm run build` 通过（vue-tsc 类型检查 + vite build，152 modules，7.26s）；后端全量测试 253 passed；浏览器实测 `/login` 渲染正常、`/sentiment` `/collect` `/model` 登录守卫跳转正常，console 无 JS 报错。
 
 ### 实现（v0.11.0 内核）
 

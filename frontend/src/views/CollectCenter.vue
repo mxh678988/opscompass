@@ -815,7 +815,7 @@ onMounted(load)
   max-width: 1400px;
   margin: 0 auto;
   padding: 24px 20px 60px;
-  color: var(--color-text, #1f2329);
+  color: var(--color-text);
 }
 
 .page-head {
@@ -834,7 +834,7 @@ onMounted(load)
 .sub {
   margin: 0;
   font-size: 13px;
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
 }
 
 .head-actions {
@@ -848,8 +848,8 @@ onMounted(load)
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid var(--color-border, #e5e6eb);
-  color: var(--color-muted, #8a919f);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
 }
 
 .msg {
@@ -860,13 +860,13 @@ onMounted(load)
 }
 
 .msg.ok {
-  background: rgba(0, 180, 42, 0.1);
-  color: #0a8a2a;
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
 .msg.bad {
-  background: rgba(245, 63, 63, 0.1);
-  color: #c22b2b;
+  background: var(--color-error-light);
+  color: var(--color-error);
 }
 
 .stats {
@@ -877,8 +877,8 @@ onMounted(load)
 }
 
 .stat {
-  background: var(--color-card, #fff);
-  border: 1px solid var(--color-border, #e5e6eb);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 16px;
   display: flex;
@@ -888,7 +888,7 @@ onMounted(load)
 
 .stat .label {
   font-size: 13px;
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
 }
 
 .stat strong {
@@ -899,7 +899,7 @@ onMounted(load)
 .stat em {
   font-size: 12px;
   font-style: normal;
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
 }
 
 .cols {
@@ -916,8 +916,8 @@ onMounted(load)
 }
 
 .card {
-  background: var(--color-card, #fff);
-  border: 1px solid var(--color-border, #e5e6eb);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 18px;
   margin-bottom: 16px;
@@ -935,7 +935,7 @@ onMounted(load)
 .card h4 {
   margin: 18px 0 10px;
   font-size: 14px;
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
 }
 
 .card-head {
@@ -960,7 +960,7 @@ onMounted(load)
 }
 
 .modes li {
-  border: 1px solid var(--color-border, #e5e6eb);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 12px 14px;
   cursor: pointer;
@@ -968,12 +968,12 @@ onMounted(load)
 }
 
 .modes li:hover {
-  border-color: var(--color-primary, #3370ff);
+  border-color: var(--color-primary);
 }
 
 .modes li.active {
-  border-color: var(--color-primary, #3370ff);
-  background: rgba(51, 112, 255, 0.06);
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 .mode-head {
@@ -986,13 +986,13 @@ onMounted(load)
 .mode-desc {
   margin: 8px 0 4px;
   font-size: 13px;
-  color: var(--color-text, #1f2329);
+  color: var(--color-text);
 }
 
 .mode-hint {
   margin: 0;
   font-size: 12px;
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
 }
 
 .trend {
@@ -1024,7 +1024,7 @@ onMounted(load)
   width: 60%;
   min-height: 3px;
   border-radius: 4px 4px 0 0;
-  background: var(--color-primary, #3370ff);
+  background: var(--color-primary);
 }
 
 .trend-num {
@@ -1033,7 +1033,7 @@ onMounted(load)
 
 .trend-date {
   font-size: 11px;
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
 }
 
 .dist {
@@ -1049,7 +1049,7 @@ onMounted(load)
   align-items: center;
   justify-content: space-between;
   font-size: 13px;
-  border-bottom: 1px dashed var(--color-border, #e5e6eb);
+  border-bottom: 1px dashed var(--color-border);
   padding-bottom: 6px;
 }
 
@@ -1071,7 +1071,7 @@ onMounted(load)
 }
 
 .form label span {
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
 }
 
 .form label.check {
@@ -1081,7 +1081,7 @@ onMounted(load)
 }
 
 .form label.check span {
-  color: var(--color-text, #1f2329);
+  color: var(--color-text);
 }
 
 input,
@@ -1089,9 +1089,9 @@ select,
 textarea {
   font: inherit;
   font-size: 13px;
-  color: var(--color-text, #1f2329);
-  background: var(--color-bg, #f7f8fa);
-  border: 1px solid var(--color-border, #e5e6eb);
+  color: var(--color-text);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 7px 10px;
   outline: none;
@@ -1100,12 +1100,12 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--color-primary, #3370ff);
+  border-color: var(--color-primary);
   background: #fff;
 }
 
 input:disabled {
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
   cursor: not-allowed;
 }
 
@@ -1130,16 +1130,16 @@ textarea {
   font: inherit;
   font-size: 13px;
   border-radius: 6px;
-  border: 1px solid var(--color-border, #e5e6eb);
+  border: 1px solid var(--color-border);
   background: #fff;
-  color: var(--color-text, #1f2329);
+  color: var(--color-text);
   padding: 7px 14px;
   cursor: pointer;
   transition: opacity 0.15s, border-color 0.15s;
 }
 
 .btn:hover {
-  border-color: var(--color-primary, #3370ff);
+  border-color: var(--color-primary);
 }
 
 .btn:disabled {
@@ -1148,8 +1148,8 @@ textarea {
 }
 
 .btn.primary {
-  background: var(--color-primary, #3370ff);
-  border-color: var(--color-primary, #3370ff);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
 }
 
@@ -1163,8 +1163,8 @@ textarea {
 }
 
 .btn.danger {
-  color: #c22b2b;
-  border-color: rgba(245, 63, 63, 0.4);
+  color: var(--color-error);
+  border-color: var(--color-error-border);
 }
 
 .tbl {
@@ -1177,13 +1177,13 @@ textarea {
 .tbl td {
   text-align: left;
   padding: 9px 10px;
-  border-bottom: 1px solid var(--color-border, #e5e6eb);
+  border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
 }
 
 .tbl th {
   font-weight: 600;
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
@@ -1210,33 +1210,33 @@ textarea {
   line-height: 1.6;
   padding: 0 8px;
   border-radius: 999px;
-  border: 1px solid var(--color-border, #e5e6eb);
-  background: var(--color-bg, #f7f8fa);
-  color: var(--color-muted, #8a919f);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
   margin-right: 4px;
 }
 
 .tag.ok {
-  color: #0a8a2a;
-  border-color: rgba(0, 180, 42, 0.35);
-  background: rgba(0, 180, 42, 0.1);
+  color: var(--color-success);
+  border-color: var(--color-success-border);
+  background: var(--color-success-light);
 }
 
 .tag.warn {
-  color: #a8710a;
-  border-color: rgba(255, 158, 0, 0.35);
-  background: rgba(255, 158, 0, 0.12);
+  color: var(--color-warning);
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-light);
 }
 
 .tag.bad {
-  color: #c22b2b;
-  border-color: rgba(245, 63, 63, 0.35);
-  background: rgba(245, 63, 63, 0.1);
+  color: var(--color-error);
+  border-color: var(--color-error-border);
+  background: var(--color-error-light);
 }
 
 .empty {
   text-align: center;
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
   font-size: 13px;
   padding: 14px 0;
 }
@@ -1248,7 +1248,7 @@ textarea {
   gap: 12px;
   margin-top: 14px;
   font-size: 13px;
-  color: var(--color-muted, #8a919f);
+  color: var(--color-text-muted);
 }
 
     /* ===== 响应式自适应（窗口缩放） ===== */
