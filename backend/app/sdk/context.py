@@ -330,6 +330,51 @@ class StorageFacade:
         return self._require("list")(op="list", path="", prefix=prefix)
 
 
+class SentimentFacade:
+    """舆情门面：插件通过 SDK 调用舆情能力（M8 舆情监控落地）。
+
+    内核在装载插件时注入 ``sentiment_fn``；未注入时抛 ``NotAvailableError``
+    指明 M8，防止插件误以为舆情能力已就绪。
+    """
+
+    def __init__(
+        self,
+        plugin_id: str,
+        sentiment_fn: Optional[Callable[..., Any]] = None,
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._sentiment_fn = sentiment_fn
+
+    def _require(self, op: str) -> Callable[..., Any]:
+        if self._sentiment_fn is None:
+            raise NotAvailableError(f"sentiment.{op}", "M8 装配完成")
+        return self._sentiment_fn
+
+    def monitor(self, topic_id: str, source_id: Optional[str] = None, **kwargs: Any) -> dict[str, Any]:
+        """采集一条或多条舆情条目，返回采集结果。"""
+        return self._require("monitor")(action="monitor", params={"topic_id": topic_id, "source_id": source_id}, **kwargs)
+
+    def analyze(self, item_id: str, **kwargs: Any) -> dict[str, Any]:
+        """对单条条目执行情感分析 + 实体识别，返回分析结果。"""
+        return self._require("analyze")(action="analyze", params={"item_id": item_id}, **kwargs)
+
+    def merge_event(self, item_ids: list[str], **kwargs: Any) -> dict[str, Any]:
+        """将多条条目归并为一个事件，返回事件 ID 和详情。"""
+        return self._require("merge_event")(action="merge_event", params={"item_ids": item_ids}, **kwargs)
+
+    def check_alert(self, event_id: str, **kwargs: Any) -> dict[str, Any]:
+        """对事件执行预警规则检查，返回命中的规则与定级。"""
+        return self._require("check_alert")(action="check_alert", params={"event_id": event_id}, **kwargs)
+
+    def get_analytics(self, topic_id: str, period: str = "7d", **kwargs: Any) -> dict[str, Any]:
+        """获取舆情分析数据（热度/情绪/趋势/竞品对标）。"""
+        return self._require("get_analytics")(action="get_analytics", params={"topic_id": topic_id, "period": period}, **kwargs)
+
+    def generate_report(self, topic_id: str, report_type: str = "daily", **kwargs: Any) -> dict[str, Any]:
+        """生成报告（日报/周报/专题），返回报告 ID 和预览内容。"""
+        return self._require("generate_report")(action="generate_report", params={"topic_id": topic_id, "report_type": report_type}, **kwargs)
+
+
 class SigningFacade:
     """签名门面：插件侧查询自身签名状态并校验发布包完整性（M7 插件签名密钥体系落地）。
 
@@ -540,6 +585,7 @@ class PluginContext:
         storage_fn: Optional[Callable[..., Any]] = None,
         signing_verify_fn: Optional[Callable[[], Any]] = None,
         signing_key_query_fn: Optional[Callable[[], Any]] = None,
+        sentiment_fn: Optional[Callable[..., Any]] = None,
     ) -> None:
         self.plugin_id = plugin_id
         self.plugin_version = plugin_version
@@ -563,6 +609,7 @@ class PluginContext:
         self.signing = SigningFacade(
             plugin_id, signing_verify_fn, signing_key_query_fn
         )
+        self.sentiment = SentimentFacade(plugin_id, sentiment_fn)
         self.ui = UIFacade(plugin_id)
 
     def declarations(self) -> dict[str, list[dict[str, Any]]]:
@@ -595,6 +642,7 @@ def create_context(
     storage_fn: Optional[Callable[..., Any]] = None,
     signing_verify_fn: Optional[Callable[[], Any]] = None,
     signing_key_query_fn: Optional[Callable[[], Any]] = None,
+    sentiment_fn: Optional[Callable[..., Any]] = None,
 ) -> PluginContext:
     """内核侧创建插件上下文（插件作者通常不直接调用）。"""
     return PluginContext(
@@ -613,4 +661,5 @@ def create_context(
         storage_fn=storage_fn,
         signing_verify_fn=signing_verify_fn,
         signing_key_query_fn=signing_key_query_fn,
+        sentiment_fn=sentiment_fn,
     )

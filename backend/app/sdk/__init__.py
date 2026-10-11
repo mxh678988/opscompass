@@ -32,6 +32,7 @@ from app.sdk.context import (
     StorageFacade,
     TaskFacade,
     UIFacade,
+    SentimentFacade,
     create_context,
 )
 from app.sdk.exceptions import (

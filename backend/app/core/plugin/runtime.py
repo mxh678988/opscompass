@@ -44,6 +44,7 @@ class PluginRuntime:
         model_router: Any = None,
         signing_service: Any = None,
         storage_engine: Any = None,
+        sentiment_engine: Any = None,
     ) -> None:
         self.registry = registry
         self._session_factory = session_factory
@@ -57,6 +58,7 @@ class PluginRuntime:
         self._model_router = model_router
         self._signing_service = signing_service
         self._storage_engine = storage_engine
+        self._sentiment_engine = sentiment_engine
         self._contexts: dict[str, PluginContext] = {}
 
     # ---- 装配：把内核能力包成 SDK 回调 ----
@@ -160,6 +162,30 @@ class PluginRuntime:
 
         return storage_fn
 
+    def _make_sentiment(self, plugin_id: str) -> Optional[Callable[..., Any]]:
+        """构造舆情门面回调（M8）：基于注入的舆情引擎返回 callable。
+
+        未显式注入且无会话工厂时返回 None，插件侧 sentiment.* 抛
+        NotAvailableError("sentiment.*", "M8 装配完成")，不假装可用。
+        """
+        if self._sentiment_engine is not None:
+            engine = self._sentiment_engine
+        elif self._session_factory is not None:
+            from app.core.sentiment import create_for_plugin
+
+            engine = create_for_plugin
+        else:
+            return None
+
+        def sentiment_fn(*, action: str, params: Optional[dict] = None, **kwargs: Any) -> Any:
+            db = self._session_factory()
+            try:
+                return engine(db, plugin_id, action, params or {}, **kwargs)
+            finally:
+                db.close()
+
+        return sentiment_fn
+
     def build_context(self, plugin_id: str) -> PluginContext:
         """为指定插件装配上下文（不改变插件状态）。"""
         meta = self.registry.get(plugin_id)
@@ -194,6 +220,7 @@ class PluginRuntime:
             storage_fn=self._make_storage(meta.plugin_id),
             signing_verify_fn=signing_verify,
             signing_key_query_fn=signing_query,
+            sentiment_fn=self._make_sentiment(meta.plugin_id),
         )
         self._contexts[plugin_id] = ctx
         return ctx

@@ -89,6 +89,12 @@ const router = createRouter({
       component: () => import('@/views/Learning.vue'),
       meta: { title: '学习进化' },
     },
+    {
+      path: '/sentiment',
+      name: 'sentiment-center',
+      component: () => import('@/views/SentimentCenter.vue'),
+      meta: { title: '舆情监控' },
+    },
   ],
 })
 

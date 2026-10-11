@@ -1,0 +1,29 @@
+plugin_id: sentiment
+name: 舆情监控
+version: "0.12.0"
+description: 舆情监控与预警，覆盖主题管理、数据采集、情感分析、事件归并、预警分级与报告。
+author: 老孟AI智能写作
+email: laomeng@example.com
+category: risk
+license: commercial
+
+sdk:
+  min_version: "0.11.0"
+  required_capabilities:
+    - event_bus
+    - workflow_engine
+    - task_sla
+    - plugin_signing
+    - plugin_storage
+
+config:
+  sentiment:
+    collection_batch_size: 5000
+    emotion_model_path: null
+    emotion_rules_threshold: 0.75
+    alert_cooldown_seconds: 300
+    report_auto_generate: true
+    data_retention_months: 24
+  storage:
+    root_type: user
+    max_file_size_mb: 100
