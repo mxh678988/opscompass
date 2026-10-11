@@ -95,6 +95,12 @@ const router = createRouter({
       component: () => import('@/views/SentimentCenter.vue'),
       meta: { title: '舆情监控' },
     },
+    {
+      path: '/audit',
+      name: 'audit-center',
+      component: () => import('@/views/AuditCenter.vue'),
+      meta: { title: '审计日志' },
+    },
   ],
 })
 

@@ -30,6 +30,8 @@ AIGC:
 - **仓库忽略规则**：`.gitignore` 新增 `docs_business/`，商业插件文档不出现在公开仓库。
 - **前端 UI 美化续（P4 令牌化补全）**：`CollectCenter.vue`（47 处）与 `ModelCenter.vue`（63 处）样式段硬编码色值清零，统一归一为设计令牌变量（品牌/语义色、文字三级、边框、阴影、圆角、间距），全前端非样式段亦无残留色值；`SentimentCenter.vue` 重写为令牌化卡片 UI（页面头 + 创建表单 + 主题卡片网格 + 分析报告统计与情绪条），并修复前端调用链路（新增后端 `list_topics` / `delete_topic` action 并注册进 `action_map`，前端由调不通的 `get_topics` 改为 `list_topics` / `delete_topic` / `get_analytics`）。
   - 验收：宿主机 `npm run build` 通过（vue-tsc 类型检查 + vite build，152 modules，7.26s）；后端全量测试 253 passed；浏览器实测 `/login` 渲染正常、`/sentiment` `/collect` `/model` 登录守卫跳转正常，console 无 JS 报错。
+- **审计日志页（M11 前端）**：新增 `AuditCenter.vue`（近 7 日统计卡 + 事件类型/状态/用户名/关键词/日期筛选 + 分页操作记录表格，样式全部令牌化），`api/audit.ts` 追加审计日志封装（`fetchAuditLogs` / `fetchAuditStats` / `fetchAuditEventTypes` / `purgeAuditLogs`，路径 `/audit/logs`、`/audit/stats`、`/audit/event-types`、`/audit/purge`），`router/index.ts` 新增 `/audit` 路由，`App.vue` 顶栏导航追加「审计日志」。
+  - 验收：宿主机 `npm run build` 通过（vue-tsc 类型检查 + vite build 全绿，dist 生成 AuditCenter chunk）；浏览器实测 `/audit` 未登录访问被守卫重定向 `/login?redirect=/audit`，登录页渲染正常，console 无 JS 报错。
 
 ### 实现（v0.11.0 内核）
 
