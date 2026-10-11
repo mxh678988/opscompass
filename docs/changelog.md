@@ -14,7 +14,7 @@ AIGC:
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [v0.12.0] - 2026-10-11
 
 ### 新增
 
