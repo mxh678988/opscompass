@@ -263,6 +263,12 @@ MODULE_PERMISSION_MAP: dict = {
         "write": ["predictive:run"],
         "delete": ["predictive:run"],
     },
+    # M10 人群包引擎：读需查看权限，写（创建/复用/更新）需创建/更新权限
+    "audience": {
+        "read": ["audience:view"],
+        "write": ["audience:create", "audience:update"],
+        "delete": ["audience:delete"],
+    },
 }
 
 

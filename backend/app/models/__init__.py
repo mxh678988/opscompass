@@ -26,6 +26,12 @@ from app.models.predictive import (  # noqa: F401
     PredictionJob,
     PredictionResult,
 )
+from app.models.audience import (  # noqa: F401
+    SEGMENT_STATUSES,
+    SEGMENT_TARGETS,
+    AudienceMember,
+    AudienceSegment,
+)
 from app.models.collect import CollectRun, CollectTask  # noqa: F401
 from app.models.datasource import DataSource  # noqa: F401
 from app.models.import_task import ImportTask  # noqa: F401
@@ -117,6 +123,10 @@ __all__ = [
     "PREDICTION_MODES",
     "PREDICTION_BANDS",
     "PREDICTION_STATUSES",
+    "AudienceSegment",
+    "AudienceMember",
+    "SEGMENT_TARGETS",
+    "SEGMENT_STATUSES",
     "CorePlugin",
     "CorePluginConfig",
     "PLUGIN_STATES",

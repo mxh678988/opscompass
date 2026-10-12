@@ -96,7 +96,9 @@ _OPERATOR_CODES = set(_VIEW_ONLY) | {
     "marketing:authorize",
     "collect:run",
     "predictive:run",
-}
+    "audience:create",
+    "audience:update",
+}  # noqa: E501
 _ADMIN_CODES = set(ALL_PERMISSION_CODES) - {"role:delete", "user:delete", "audit:export"}
 
 # ------------------------------------------------------ 角色定义

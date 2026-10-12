@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends
 from app.api.deps import get_current_user, require_module_access
 from app.api.v1.endpoints import (
     ai,
+    audience,
     audit,
     auth,
     collect,
@@ -128,5 +129,13 @@ api_router.include_router(
     prefix="/predictive",
     tags=["predictive"],
     dependencies=[Depends(require_module_access("predictive"))],
+)
+
+# M10 人群包引擎：按预测概率区间圈选 / 复用 / 列表与详情
+api_router.include_router(
+    audience.router,
+    prefix="/audience",
+    tags=["audience"],
+    dependencies=[Depends(require_module_access("audience"))],
 )
 
