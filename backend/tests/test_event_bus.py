@@ -7,7 +7,7 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -399,3 +399,74 @@ def test_audit_trail_requeue_on_lease_expired(db) -> None:
     rows = audit_bus.audit_trail(db, event_id="hang-001", action="requeue")
     assert len(rows) == 1
     assert rows[0]["detail"]["reason"] == "lease_expired"
+
+
+def test_publish_many_batch_and_dispatch(db) -> None:
+    """S6: 批量发布多条事件，同事务落库且可正常派发。"""
+    batch_bus = EventBus()
+
+    ids = batch_bus.publish_many(
+        db,
+        [
+            {"event_name": "core.b1", "payload": {"i": 1}, "trace_id": "bt-1"},
+            {"event_name": "core.b2", "payload": {"i": 2}, "trace_id": "bt-1", "delay_seconds": 5},
+            {"event_name": "core.b3", "payload": {"i": 3}},
+        ],
+    )
+    assert len(ids) == 3
+    assert len(set(ids)) == 3
+    assert len(_events(db)) == 3
+    # 每条批量事件都有 publish 审计（S5 兼容）
+    assert len(batch_bus.audit_trail(db, trace_id="bt-1")) == 2
+
+    # 批量事件可正常派发；b2 带 5 秒延迟不在本批，故只跳过 2 条
+    result = batch_bus.dispatch_once(db)
+    assert result.skipped == 2
+
+
+def test_publish_many_idempotent_skip_done(db) -> None:
+    """S6: 批量发布时终态 event_id 幂等跳过，不重复创建。"""
+    batch_bus = EventBus()
+    batch_bus.publish(db, "core.dup", {}, event_id="dup-001", commit=True)
+    db.execute(
+        update(CoreEvent)
+        .where(CoreEvent.event_id == "dup-001")
+        .values(status="done", finished_at=_now())
+    )
+    db.commit()
+
+    ids = batch_bus.publish_many(
+        db,
+        [
+            {"event_name": "core.dup", "event_id": "dup-001"},
+            {"event_name": "core.fresh", "payload": {}, "event_id": "fresh-001"},
+        ],
+    )
+    assert ids == ["dup-001", "fresh-001"]
+    assert len(_events(db)) == 2  # 只有 fresh 一条新增
+
+
+def test_publish_many_commit_false_rollback(db) -> None:
+    """S6: commit=False 时未提交，调用方回滚则全部不落库。"""
+    batch_bus = EventBus()
+
+    ids = batch_bus.publish_many(
+        db,
+        [
+            {"event_name": "core.r1"},
+            {"event_name": "core.r2"},
+        ],
+        commit=False,
+    )
+    assert len(ids) == 2
+    assert len(_events(db)) == 2  # flush 后当前事务可见
+
+    db.rollback()
+    assert len(_events(db)) == 0  # 整体回滚，无部分残留
+
+
+def test_publish_many_empty(db) -> None:
+    """S6: 空列表直接返回，不产生任何写入。"""
+    batch_bus = EventBus()
+    assert batch_bus.publish_many(db, []) == []
+    assert len(_events(db)) == 0

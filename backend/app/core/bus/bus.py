@@ -261,6 +261,84 @@ class EventBus:
         logger.debug("事件已发布：%s (%s)", event_name, ev.event_id)
         return ev.event_id
 
+    def publish_many(
+        self,
+        db: Session,
+        events: Sequence[dict],
+        *,
+        commit: bool = True,
+    ) -> list[str]:
+        """批量发布多个事件（S6 批量事务发布），同事务落库。
+
+        :param events: 事件定义列表，每项为 dict，字段与 :meth:`publish` 一致：
+            ``event_name`` 必填；可选 payload / tenant_id / partition_key /
+            trace_id / delay_seconds / max_attempts / event_id / occurred_at。
+        :param commit: True 立即提交；False 由调用方统一提交，
+            任一条失败时整体回滚，避免「部分事件已发、业务未提交」。
+        :return: 与输入一一对应的事件 ID 列表（幂等跳过的返回原 ID）。
+        """
+        if not events:
+            return []
+
+        now = _now()
+        # S1 幂等：一次性查出已存在的终态事件，避免逐条查询
+        id_specs = [e for e in events if e.get("event_id")]
+        existing_ids: set[str] = set()
+        if id_specs:
+            existing_rows = db.execute(
+                select(CoreEvent).where(
+                    CoreEvent.event_id.in_([e["event_id"] for e in id_specs])
+                )
+            ).scalars().all()
+            existing_ids = {
+                r.event_id for r in existing_rows if r.status in ("done", "dead")
+            }
+
+        ids: list[str] = []
+        for spec in events:
+            event_name = spec.get("event_name")
+            if not event_name:
+                raise ValueError("event_name 不能为空")
+            event_id = spec.get("event_id")
+            if event_id and event_id in existing_ids:
+                logger.debug("批量发布幂等跳过：%s", event_id)
+                ids.append(event_id)
+                continue
+
+            delay = max(int(spec.get("delay_seconds", 0) or 0), 0)
+            max_attempts = int(spec.get("max_attempts", 5) or 5)
+            ev = CoreEvent(
+                event_id=event_id or uuid.uuid4().hex,
+                event_name=event_name,
+                payload=spec.get("payload") or {},
+                trace_id=spec.get("trace_id"),
+                tenant_id=spec.get("tenant_id"),
+                partition_key=spec.get("partition_key"),
+                status="pending",
+                attempts=0,
+                max_attempts=max_attempts,
+                available_at=now + timedelta(seconds=delay),
+                occurred_at=spec.get("occurred_at") or now,
+            )
+            db.add(ev)
+            self._audit(
+                db,
+                event_id=ev.event_id,
+                event_name=ev.event_name,
+                action="publish",
+                trace_id=ev.trace_id,
+                tenant_id=ev.tenant_id,
+                detail={"delay_seconds": delay, "max_attempts": max_attempts},
+            )
+            ids.append(ev.event_id)
+
+        if commit:
+            db.commit()
+        else:
+            db.flush()
+        logger.debug("批量发布 %d 条事件", len(ids))
+        return ids
+
     # ---- 派发 ----------------------------------------------------------
 
     def dispatch_once(
