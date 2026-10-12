@@ -151,3 +151,50 @@ class CoreEventCursor(Base):
         onupdate=func.now(),
         comment="更新时间",
     )
+
+
+class CoreEventAudit(Base):
+    """事件审计日志：记录事件生命周期关键动作，供追溯排查（S5）。
+
+    动作集合（action）：
+    - publish   发布成功
+    - delivered 全部订阅方投递成功
+    - retry     部分订阅失败，进入退避重试
+    - dead      重试耗尽转入死信
+    - replay    死信重放回队列
+    - skip      无订阅方，直接完结
+    - requeue   租约超时被回收重排
+
+    每条动作独立一行，支持按 ``event_id`` / ``trace_id`` / ``action`` 组合追溯，
+    审计表不随事件清理而删除，保留完整生命周期链。
+    """
+
+    __tablename__ = "oc_core_event_audit"
+    __table_args__ = (
+        Index("ix_core_event_audit_event", "event_id", "id"),
+        Index("ix_core_event_audit_trace", "trace_id", "id"),
+        Index("ix_core_event_audit_action", "action", "id"),
+    )
+
+    id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)
+    event_id: Mapped[str] = mapped_column(String(64), comment="事件 ID")
+    event_name: Mapped[str] = mapped_column(String(128), comment="事件名")
+    action: Mapped[str] = mapped_column(
+        String(32), comment="动作：publish/delivered/retry/dead/replay/skip/requeue"
+    )
+    trace_id: Mapped[Optional[str]] = mapped_column(
+        String(64), default=None, comment="链路追踪 ID"
+    )
+    tenant_id: Mapped[Optional[int]] = mapped_column(
+        Integer, default=None, comment="租户 ID"
+    )
+    subscriber: Mapped[Optional[str]] = mapped_column(
+        String(128), default=None, comment="订阅方标识（单订阅动作）"
+    )
+    worker_id: Mapped[Optional[str]] = mapped_column(
+        String(64), default=None, comment="派发工作者标识"
+    )
+    detail: Mapped[dict] = mapped_column(JSON, default=dict, comment="动作详情（错误、订阅方列表等）")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), comment="审计时间"
+    )

@@ -13,9 +13,14 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.bus import EventBus, bus, registry
 from app.models.base import Base
-from app.models.kernel import CoreEvent, CoreEventCursor, CoreEventDead
+from app.models.kernel import CoreEvent, CoreEventAudit, CoreEventCursor, CoreEventDead
 
-KERNEL_TABLES = [CoreEvent.__table__, CoreEventDead.__table__, CoreEventCursor.__table__]
+KERNEL_TABLES = [
+    CoreEvent.__table__,
+    CoreEventDead.__table__,
+    CoreEventCursor.__table__,
+    CoreEventAudit.__table__,
+]
 
 
 @pytest.fixture()
@@ -297,3 +302,100 @@ def test_dead_letter_alert_absent_callback_no_crash(db) -> None:
 
     result = plain_bus.dispatch_once(db)
     assert result.dead == 1  # 正常进入死信，无回调不报错
+
+
+def test_audit_trail_success_lifecycle(db) -> None:
+    """S5: 成功事件可追溯完整生命周期（publish -> delivered）。"""
+    audit_bus = EventBus()
+
+    def ok(ctx) -> None:
+        ctx.received = 1
+
+    registry.subscribe("core.trail", ok, subscriber="trailer")
+    event_id = audit_bus.publish(
+        db, "core.trail", {"v": 1}, trace_id="trace-1", tenant_id=7
+    )
+    audit_bus.dispatch_once(db, worker_id="w1")
+
+    trail = audit_bus.audit_trail(db, event_id=event_id)
+    actions = [row["action"] for row in trail]
+    assert actions == ["delivered", "publish"]
+    assert trail[0]["worker_id"] == "w1"
+    assert trail[0]["detail"]["subscribers"] == ["trailer"]
+    assert trail[1]["detail"]["max_attempts"] == 5
+
+
+def test_audit_trail_dead_and_replay(db) -> None:
+    """S5: 死信与重放可追溯（publish -> retry -> dead -> replay）。"""
+    audit_bus = EventBus()
+
+    def boom(ctx) -> None:
+        raise RuntimeError("熔断")
+
+    registry.subscribe("core.dead.trail", boom, subscriber="dt")
+    event_id = audit_bus.publish(
+        db, "core.dead.trail", {}, trace_id="trace-2", max_attempts=2
+    )
+
+    audit_bus.dispatch_once(db)
+    audit_bus.dispatch_once(db, now=_now() + timedelta(hours=1))  # 第二次失败进死信
+
+    trail = audit_bus.audit_trail(db, event_id=event_id)
+    actions = [row["action"] for row in trail]
+    assert actions == ["dead", "retry", "publish"]
+    assert trail[0]["detail"]["attempts"] == 2
+
+    # 重放后应出现 replay 记录，事件重新可派发
+    assert audit_bus.replay_dead(db, event_ids=[event_id]) == 1
+    trail = audit_bus.audit_trail(db, event_id=event_id)
+    assert [row["action"] for row in trail][0] == "replay"
+
+
+def test_audit_trail_by_trace_cross_events(db) -> None:
+    """S5: 按 trace_id 可跨事件追溯一次请求的全链路。"""
+    audit_bus = EventBus()
+    ids = [
+        audit_bus.publish(db, "core.t1", {}, trace_id="trace-9"),
+        audit_bus.publish(db, "core.t2", {}, trace_id="trace-9"),
+    ]
+    audit_bus.dispatch_once(db)
+
+    rows = audit_bus.audit_trail(db, trace_id="trace-9")
+    assert {r["event_id"] for r in rows} == set(ids)
+    assert all(r["trace_id"] == "trace-9" for r in rows)
+    # 两条事件各自 publish + delivered
+    assert len(rows) == 4
+
+
+def test_audit_trail_skip_and_action_filter(db) -> None:
+    """S5: 无订阅跳过留痕，支持按动作过滤。"""
+    audit_bus = EventBus()
+    audit_bus.publish(db, "core.nobody", {})
+
+    audit_bus.dispatch_once(db)
+    rows = audit_bus.audit_trail(db, action="skip")
+    assert len(rows) == 1
+    assert rows[0]["detail"]["reason"] == "no_subscriber"
+
+
+def test_audit_trail_requeue_on_lease_expired(db) -> None:
+    """S5: 租约超时回收留 requeue 审计。"""
+    audit_bus = EventBus()
+
+    # 模拟工作者崩溃：事件停留在 processing 且租约已超时
+    hung = CoreEvent(
+        event_id="hang-001",
+        event_name="core.hang",
+        payload={},
+        status="processing",
+        locked_by="crashed-worker",
+        locked_at=_now() - timedelta(minutes=30),
+        available_at=_now() - timedelta(minutes=30),
+    )
+    db.add(hung)
+    db.commit()
+
+    assert audit_bus.requeue_expired(db, now=_now()) == 1
+    rows = audit_bus.audit_trail(db, event_id="hang-001", action="requeue")
+    assert len(rows) == 1
+    assert rows[0]["detail"]["reason"] == "lease_expired"

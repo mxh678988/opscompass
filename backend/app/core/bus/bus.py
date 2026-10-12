@@ -30,7 +30,7 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
 from app.core.bus import registry
-from app.models.kernel import CoreEvent, CoreEventCursor, CoreEventDead
+from app.models.kernel import CoreEvent, CoreEventAudit, CoreEventCursor, CoreEventDead
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +125,75 @@ class EventBus:
         """
         self._on_dead_letter = callback
 
+    # ---- 审计（S5 追溯审计日志） ---------------------------------------
+
+    def _audit(
+        self,
+        db: Session,
+        *,
+        event_id: str,
+        event_name: str,
+        action: str,
+        trace_id: Optional[str] = None,
+        tenant_id: Optional[int] = None,
+        subscriber: Optional[str] = None,
+        worker_id: Optional[str] = None,
+        detail: Optional[dict] = None,
+    ) -> None:
+        """写一条事件审计记录（随调用方事务一并提交）。"""
+        db.add(
+            CoreEventAudit(
+                event_id=event_id,
+                event_name=event_name,
+                action=action,
+                trace_id=trace_id,
+                tenant_id=tenant_id,
+                subscriber=subscriber,
+                worker_id=worker_id,
+                detail=detail or {},
+            )
+        )
+
+    def audit_trail(
+        self,
+        db: Session,
+        *,
+        event_id: Optional[str] = None,
+        trace_id: Optional[str] = None,
+        action: Optional[str] = None,
+        limit: int = 200,
+    ) -> list[dict]:
+        """按事件 / 链路 / 动作追溯审计日志（倒序，最近在前）。
+
+        S5：给定 ``event_id`` 可还原完整生命周期链
+        （publish -> retry* -> delivered | dead -> replay*）；
+        给定 ``trace_id`` 可跨事件还原一次业务请求的全链路投递。
+        """
+        stmt = select(CoreEventAudit).order_by(CoreEventAudit.id.desc()).limit(limit)
+        if event_id:
+            stmt = stmt.where(CoreEventAudit.event_id == event_id)
+        if trace_id:
+            stmt = stmt.where(CoreEventAudit.trace_id == trace_id)
+        if action:
+            stmt = stmt.where(CoreEventAudit.action == action)
+
+        rows = list(db.execute(stmt).scalars().all())
+        return [
+            {
+                "id": row.id,
+                "event_id": row.event_id,
+                "event_name": row.event_name,
+                "action": row.action,
+                "trace_id": row.trace_id,
+                "tenant_id": row.tenant_id,
+                "subscriber": row.subscriber,
+                "worker_id": row.worker_id,
+                "detail": row.detail or {},
+                "created_at": _as_utc(row.created_at).isoformat() if row.created_at else None,
+            }
+            for row in rows
+        ]
+
     # ---- 发布 ----------------------------------------------------------
 
     def publish(
@@ -176,6 +245,15 @@ class EventBus:
             occurred_at=occurred_at or now,
         )
         db.add(ev)
+        self._audit(
+            db,
+            event_id=ev.event_id,
+            event_name=ev.event_name,
+            action="publish",
+            trace_id=ev.trace_id,
+            tenant_id=ev.tenant_id,
+            detail={"delay_seconds": max(delay_seconds, 0), "max_attempts": max_attempts},
+        )
         if commit:
             db.commit()
         else:
@@ -234,6 +312,16 @@ class EventBus:
             # 无人订阅：直接完结，避免无谓积压（订阅方上线后可回放补数）
             ev.status = "done"
             ev.finished_at = now
+            self._audit(
+                db,
+                event_id=ev.event_id,
+                event_name=ev.event_name,
+                action="skip",
+                trace_id=ev.trace_id,
+                tenant_id=ev.tenant_id,
+                worker_id=worker_id,
+                detail={"reason": "no_subscriber"},
+            )
             db.commit()
             result.skipped += 1
             return
@@ -275,12 +363,32 @@ class EventBus:
                 ev.available_at = now + timedelta(seconds=_backoff_seconds(ev.attempts))
                 ev.locked_by = None
                 ev.locked_at = None
+                self._audit(
+                    db,
+                    event_id=ev.event_id,
+                    event_name=ev.event_name,
+                    action="retry",
+                    trace_id=ev.trace_id,
+                    tenant_id=ev.tenant_id,
+                    worker_id=worker_id,
+                    detail={"attempts": ev.attempts, "errors": errors},
+                )
                 result.retried += 1
         else:
             ev.status = "done"
             ev.finished_at = now
             ev.locked_by = None
             ev.locked_at = None
+            self._audit(
+                db,
+                event_id=ev.event_id,
+                event_name=ev.event_name,
+                action="delivered",
+                trace_id=ev.trace_id,
+                tenant_id=ev.tenant_id,
+                worker_id=worker_id,
+                detail={"subscribers": [s.subscriber for s in subs]},
+            )
             result.delivered += 1
         db.commit()
 
@@ -309,6 +417,15 @@ class EventBus:
                 failed_at=now,
             )
         )
+        self._audit(
+            db,
+            event_id=ev.event_id,
+            event_name=ev.event_name,
+            action="dead",
+            trace_id=ev.trace_id,
+            tenant_id=ev.tenant_id,
+            detail={"attempts": ev.attempts, "errors": (ev.last_error or "").split("; ")},
+        )
         db.delete(ev)
         logger.error("事件转入死信：%s (%s)", ev.event_name, ev.event_id)
         if self._on_dead_letter is not None:
@@ -321,18 +438,31 @@ class EventBus:
         now = now or _now()
         deadline = now - timedelta(seconds=lease_seconds)
         stmt = (
-            update(CoreEvent)
+            select(CoreEvent)
             .where(
                 CoreEvent.status == "processing",
                 CoreEvent.locked_at.is_not(None),
                 CoreEvent.locked_at < deadline,
             )
-            .values(status="pending", locked_by=None, locked_at=None, available_at=now)
+            .order_by(CoreEvent.id)
         )
-        # 具备 RETURNING 的方言可拿到行数；否则以 rowcount 兜底
-        res = db.execute(stmt)
+        rows = list(db.execute(stmt).scalars().all())
+        for ev in rows:
+            ev.status = "pending"
+            ev.locked_by = None
+            ev.locked_at = None
+            ev.available_at = now
+            self._audit(
+                db,
+                event_id=ev.event_id,
+                event_name=ev.event_name,
+                action="requeue",
+                trace_id=ev.trace_id,
+                tenant_id=ev.tenant_id,
+                detail={"reason": "lease_expired", "lease_seconds": lease_seconds},
+            )
         db.commit()
-        count = res.rowcount or 0
+        count = len(rows)
         if count:
             logger.warning("回收超时租约事件 %d 条", count)
         return count
@@ -371,6 +501,15 @@ class EventBus:
                     available_at=now,
                     occurred_at=now,
                 )
+            )
+            self._audit(
+                db,
+                event_id=row.event_id,
+                event_name=row.event_name,
+                action="replay",
+                trace_id=row.trace_id,
+                tenant_id=row.tenant_id,
+                detail={"dead_id": row.id},
             )
             row.replayed = True
             row.replayed_at = now
