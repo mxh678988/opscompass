@@ -420,6 +420,95 @@ def _fail_step(
     return "failed"
 
 
+# ---- 超时恢复（S4） ----
+
+
+def _mark_step_timed_out(step: CoreWorkflowStep) -> None:
+    step.status = "failed"
+    step.error = f"步骤执行超时（timeout_minutes={step.config.get('timeout_minutes')}）"
+    step.completed_at = _utcnow()
+    step.payload = {**(step.payload or {}), "timed_out": True, "timeout_at": _utcnow().isoformat()}
+
+
+def scan_stalled_steps(
+    db: Session,
+    *,
+    timeout_minutes: int = 10,
+    now: Optional[datetime] = None,
+    handlers: Optional[dict[str, Handler]] = None,
+    sla_creator: Optional[SlaCreator] = None,
+) -> int:
+    """扫描 running 状态中超过 timeout_minutes 的 task 步骤并标记超时。
+
+    适用于网络调用挂起、外部服务无响应等不可逆场景。
+    超时步骤执行失败，若有 timeout_next 则继续推进；无 timeout_next 则整条实例标记 failed。
+    """
+    now = now or _utcnow()
+    steps = list(
+        db.execute(
+            select(CoreWorkflowStep).where(CoreWorkflowStep.status == "running")
+        ).scalars()
+    )
+    handled = 0
+    for step in steps:
+        timeout = step.config.get("timeout_minutes")
+        if timeout is None or not step.started_at:
+            continue
+        elapsed = (now - _as_utc(step.started_at)).total_seconds() / 60
+        if elapsed >= timeout:
+            _mark_step_timed_out(step)
+            handled += 1
+
+    if handled > 0:
+        db.commit()
+
+    return handled
+
+
+def continue_after_stalled(
+    db: Session,
+    instance_id: int,
+    *,
+    handlers: Optional[dict[str, Handler]] = None,
+    sla_creator: Optional[SlaCreator] = None,
+) -> CoreWorkflowInstance:
+    """超时步骤标记失败后，若有 timeout_next 则继续推进，否则标记 failed。
+
+    与 scan_stalled_steps 配合使用：先 scan 标记超时，再调用本方法继续。
+    """
+    inst = get_instance(db, instance_id)
+    if inst.status in ("completed", "failed", "cancelled"):
+        return inst
+
+    steps = _steps(db, instance_id)
+    stalled = [s for s in steps if s.status == "failed" and (s.payload or {}).get("timed_out")]
+
+    if not stalled:
+        return inst
+
+    for step in stalled:
+        timeout_next = step.config.get("timeout_next")
+        if timeout_next:
+            target = _step_by_node_id(steps, timeout_next)
+            if target is not None:
+                # 跳过 stalled 与 target 之间的 pending 步骤
+                for s in steps:
+                    if s.seq > step.seq and s.seq < target.seq:
+                        _mark_step_skipped(s)
+                # 确保 target 是 pending（可能被 run 内部逻辑影响）
+                if target.status in ("pending", "running"):
+                    target.status = "pending"
+            # 让 _advance_loop 能跳过 timed_out 步骤
+            step.status = "skipped"
+            step.completed_at = _utcnow()
+
+    # 保存状态修改
+    db.commit()
+
+    _set_instance_status(db, inst, "running")
+    return run(db, instance_id, handlers=handlers or {}, sla_creator=sla_creator)
+
+
 # 补偿 handler 注册表：由调用方通过 register_compensate 登记
 _compensate_handlers: dict[str, Handler] = {}
 

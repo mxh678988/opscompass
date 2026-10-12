@@ -29,6 +29,7 @@ from app.core.workflow.engine import (
     WorkflowError,
     cancel_instance,
     confirm_wait_step,
+    continue_after_stalled,
     create_instance,
     get_instance,
     list_waiting_steps,
@@ -36,6 +37,7 @@ from app.core.workflow.engine import (
     register_compensate,
     resume_instance,
     run,
+    scan_stalled_steps,
     scan_waiting_timeouts,
     step_status_counts,
     timeout_wait_step,
@@ -553,3 +555,87 @@ class TestProgress:
         inst = create_instance(db, LINEAR_DEF)
         counts = step_status_counts(db, inst.id)
         assert counts["pending"] == 3
+
+
+# ============================================================ 超时恢复（S4）
+
+
+class TestStalledTimeout:
+    def test_scan_stalled_marks_failed(self, db):
+        """运行中超过 timeout_minutes 的 task 步骤被标记超时。"""
+        stalled_def = {
+            "key": "stalled_test",
+            "name": "超时恢复测试",
+            "nodes": [
+                {"id": "s1", "type": "task", "name": "第一步", "handler": "slow_handler",
+                 "timeout_minutes": 1, "timeout_next": "s3"},
+                {"id": "s2", "type": "task", "name": "第二步", "handler": "slow_handler"},
+                {"id": "s3", "type": "task", "name": "超时恢复", "handler": "slow_handler"},
+            ],
+        }
+        inst = create_instance(db, stalled_def)
+        db.commit()
+        steps = db.execute(
+            select(CoreWorkflowStep).where(CoreWorkflowStep.instance_id == inst.id).order_by(CoreWorkflowStep.seq)
+        ).scalars().all()
+        steps[0].status = "running"
+        steps[0].started_at = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        db.commit()
+
+        now = datetime(2025, 1, 1, 0, 15, 0, tzinfo=timezone.utc)
+        count = scan_stalled_steps(db, timeout_minutes=1, now=now)
+        assert count == 1
+
+        db.refresh(steps[0])
+        assert steps[0].status == "failed"
+        assert steps[0].payload.get("timed_out") is True
+
+    def test_continue_after_stalled_with_timeout_next(self, db):
+        """超时步骤有 timeout_next 时继续推进。"""
+        stalled_def = {
+            "key": "stalled_next_test",
+            "name": "超时恢复下一步",
+            "nodes": [
+                {"id": "s1", "type": "task", "name": "第一步", "handler": "slow",
+                 "timeout_minutes": 1, "timeout_next": "s2"},
+                {"id": "s2", "type": "task", "name": "恢复", "handler": "ok_handler"},
+            ],
+        }
+        inst = create_instance(db, stalled_def)
+        db.commit()
+        steps = db.execute(
+            select(CoreWorkflowStep).where(CoreWorkflowStep.instance_id == inst.id).order_by(CoreWorkflowStep.seq)
+        ).scalars().all()
+        steps[0].status = "running"
+        steps[0].started_at = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        db.commit()
+
+        scan_stalled_steps(db, timeout_minutes=1, now=datetime(2025, 1, 1, 0, 15, 0, tzinfo=timezone.utc))
+
+        result = continue_after_stalled(db, inst.id, handlers={"ok_handler": lambda ctx, s: ctx})
+        assert result.status == "completed"
+        counts = step_status_counts(db, inst.id)
+        assert counts["completed"] == 1
+        assert counts["skipped"] == 1  # timed_out 步骤被改为 skipped
+
+    def test_scan_no_timeout_field_skipped(self, db):
+        """没有 timeout_minutes 配置的 running 步骤不被扫描。"""
+        stalled_def = {
+            "key": "no_timeout",
+            "nodes": [
+                {"id": "s1", "type": "task", "name": "无超时", "handler": "slow",
+                 "next": "s2"},
+                {"id": "s2", "type": "task", "name": "第二步", "handler": "slow"},
+            ],
+        }
+        inst = create_instance(db, stalled_def)
+        db.commit()
+        steps = db.execute(
+            select(CoreWorkflowStep).where(CoreWorkflowStep.instance_id == inst.id).order_by(CoreWorkflowStep.seq)
+        ).scalars().all()
+        steps[0].status = "running"
+        steps[0].started_at = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        db.commit()
+
+        count = scan_stalled_steps(db, timeout_minutes=1, now=datetime(2025, 1, 1, 0, 15, 0, tzinfo=timezone.utc))
+        assert count == 0
