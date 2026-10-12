@@ -238,3 +238,62 @@ def test_stats_under_threshold_no_alert(db) -> None:
     snap = quiet_bus.stats(db)
     assert snap["pending"] == 1
     assert fired == []  # 未超过阈值不告警
+
+
+def test_dead_letter_alert_fires_on_dead(db) -> None:
+    """S2: 事件转入死信时触发死信告警回调，携带完整详情。"""
+    alert_bus = EventBus()
+    fired: list[dict] = []
+    alert_bus.on_dead_letter(fired.append)
+
+    def boom(ctx) -> None:
+        raise RuntimeError("下游不可用")
+
+    registry.subscribe("core.alerting", boom, subscriber="alerter")
+    event_id = alert_bus.publish(db, "core.alerting", {"k": 2}, max_attempts=1)
+    alert_bus.dispatch_once(db)
+
+    assert len(fired) == 1
+    detail = fired[0]
+    assert detail["event_id"] == event_id
+    assert detail["event_name"] == "core.alerting"
+    assert detail["attempts"] == 1
+    assert "下游不可用" in detail["last_error"]
+    assert detail["failed_at"]  # 非空 ISO 时间
+
+
+def test_dead_letter_alert_only_on_terminal(db) -> None:
+    """S2: 仅重试耗尽转入死信时告警；可重试的失败不误报。"""
+    alert_bus = EventBus()
+    fired: list[dict] = []
+    alert_bus.on_dead_letter(fired.append)
+
+    def boom(ctx) -> None:
+        raise RuntimeError("暂时抖动")
+
+    registry.subscribe("core.noalert", boom, subscriber="noal")
+    alert_bus.publish(db, "core.noalert", {}, max_attempts=3)
+
+    # 第一次失败进入退避重试，不转入死信
+    alert_bus.dispatch_once(db)
+    assert fired == []  # 未到终态不告警
+
+    # 跳过退避窗口继续派发直至耗尽
+    alert_bus.dispatch_once(db, now=_now() + timedelta(hours=1))
+    alert_bus.dispatch_once(db, now=_now() + timedelta(hours=2))
+    assert len(fired) == 1
+    assert fired[0]["attempts"] == 3
+
+
+def test_dead_letter_alert_absent_callback_no_crash(db) -> None:
+    """S2: 未注册回调时转入死信不抛异常（默认行为兼容）。"""
+    plain_bus = EventBus()
+
+    def boom(ctx) -> None:
+        raise RuntimeError("x")
+
+    registry.subscribe("core.plain", boom, subscriber="plain")
+    plain_bus.publish(db, "core.plain", {}, max_attempts=1)
+
+    result = plain_bus.dispatch_once(db)
+    assert result.dead == 1  # 正常进入死信，无回调不报错

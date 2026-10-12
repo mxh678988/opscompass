@@ -111,10 +111,19 @@ class EventBus:
         """max_pending > 0 时启用积压水位告警，0 表示不限制。"""
         self._max_pending = max_pending
         self._on_high_watermark: Optional[Callable[[dict], None]] = None
+        self._on_dead_letter: Optional[Callable[[dict], None]] = None
 
     def on_high_watermark(self, callback: Callable[[dict], None]) -> None:
         """注册积压水位告警回调，入参为 stats() 概览 dict。"""
         self._on_high_watermark = callback
+
+    def on_dead_letter(self, callback: Callable[[dict], None]) -> None:
+        """注册死信告警回调（S2），入参为死信详情 dict。
+
+        详情含 event_id / event_name / attempts / last_error / failed_at，
+        订阅方可据此对接钉钉、邮件等外部告警通道。
+        """
+        self._on_dead_letter = callback
 
     # ---- 发布 ----------------------------------------------------------
 
@@ -276,7 +285,18 @@ class EventBus:
         db.commit()
 
     def _to_dead(self, db: Session, ev: CoreEvent, *, now: datetime) -> None:
-        """把事件转入死信表并从队列移除。"""
+        """把事件转入死信表并从队列移除。
+
+        S2：若注册了死信告警回调（on_dead_letter），转入死信时携带
+        死信详情触发回调，供运维通道第一时间感知消费失败。
+        """
+        detail = {
+            "event_id": ev.event_id,
+            "event_name": ev.event_name,
+            "attempts": ev.attempts,
+            "last_error": ev.last_error,
+            "failed_at": now.isoformat(),
+        }
         db.add(
             CoreEventDead(
                 event_id=ev.event_id,
@@ -291,6 +311,8 @@ class EventBus:
         )
         db.delete(ev)
         logger.error("事件转入死信：%s (%s)", ev.event_name, ev.event_id)
+        if self._on_dead_letter is not None:
+            self._on_dead_letter(detail)
 
     def requeue_expired(
         self, db: Session, *, lease_seconds: int = DEFAULT_LEASE_SECONDS, now: Optional[datetime] = None
