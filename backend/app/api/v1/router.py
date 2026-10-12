@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends
 
 from app.api.deps import get_current_user, require_module_access
 from app.api.v1.endpoints import (
+    agent,
     ai,
     audience,
     audit,
@@ -146,5 +147,13 @@ api_router.include_router(
     prefix="/knowledge",
     tags=["knowledge"],
     dependencies=[Depends(require_module_access("knowledge"))],
+)
+
+# M12 智能体编排：编排运行 / 分析洞察 / 人工确认闸门 / 执行动作闭环
+api_router.include_router(
+    agent.router,
+    prefix="/agents",
+    tags=["agents"],
+    dependencies=[Depends(require_module_access("agent"))],
 )
 

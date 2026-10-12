@@ -80,6 +80,10 @@ PERMISSION_DEFINITIONS: list[tuple[str, str, str, str]] = [
     ("knowledge:create", "沉淀知识", "knowledge", "创建知识文档与登记引用"),
     ("knowledge:update", "编辑知识", "knowledge", "修改知识文档"),
     ("knowledge:delete", "删除知识", "knowledge", "删除知识文档"),
+    ("agent:view", "查看智能体编排", "agent", "查看编排运行、洞察与动作记录"),
+    ("agent:create", "创建编排运行", "agent", "创建运行、发起分析、登记执行动作"),
+    ("agent:update", "确认/管理编排", "agent", "人工确认闸门 approve/reject、完成/失败编排"),
+    ("agent:delete", "删除编排记录", "agent", "删除编排运行及其洞察与动作"),
 ]
 
 ALL_PERMISSION_CODES: list[str] = [c for c, _, _, _ in PERMISSION_DEFINITIONS]
@@ -104,6 +108,8 @@ _OPERATOR_CODES = set(_VIEW_ONLY) | {
     "audience:update",
     "knowledge:create",
     "knowledge:update",
+    "agent:create",
+    "agent:update",
 }  # noqa: E501
 _ADMIN_CODES = set(ALL_PERMISSION_CODES) - {"role:delete", "user:delete", "audit:export"}
 

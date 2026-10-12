@@ -275,6 +275,12 @@ MODULE_PERMISSION_MAP: dict = {
         "write": ["knowledge:create", "knowledge:update"],
         "delete": ["knowledge:delete"],
     },
+    # M12 智能体编排：读（列表/详情）需查看权限，写（创建/分析/确认/动作/完成/失败）需创建/更新权限
+    "agent": {
+        "read": ["agent:view"],
+        "write": ["agent:create", "agent:update"],
+        "delete": ["agent:delete"],
+    },
 }
 
 

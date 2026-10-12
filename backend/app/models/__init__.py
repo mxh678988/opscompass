@@ -1,5 +1,14 @@
 """ORM 模型统一导出，便于 Alembic 自动发现。"""
 
+from app.models.agent import (  # noqa: F401
+    AGENT_ACTION_TYPES,
+    AGENT_INSIGHT_STATUSES,
+    AGENT_RUN_STATUSES,
+    AGENT_SCENARIOS,
+    AgentAction,
+    AgentInsight,
+    AgentRun,
+)
 from app.models.ai import (  # noqa: F401
     AiActionItem,
     AiActionPolicy,
@@ -124,6 +133,13 @@ __all__ = [
     "CoreEventDead",
     "CoreEventCursor",
     "EVENT_STATUSES",
+    "AgentRun",
+    "AgentInsight",
+    "AgentAction",
+    "AGENT_RUN_STATUSES",
+    "AGENT_SCENARIOS",
+    "AGENT_ACTION_TYPES",
+    "AGENT_INSIGHT_STATUSES",
     "PredictionJob",
     "PredictionResult",
     "PREDICTION_TARGETS",
