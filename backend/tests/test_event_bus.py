@@ -193,3 +193,18 @@ def test_stats_and_prune(db) -> None:
 
     # 完结事件早于保留窗口 → 可被清理
     assert bus.prune_done(db, keep_days=7, now=_now() + timedelta(days=30)) == 1
+
+
+def test_publish_idempotent_done(db) -> None:
+    """重复发布已 done 的同 event_id 事件，返回原 ID 且不创建副本。"""
+    rec = Recorder()
+    registry.subscribe("core.idempotent", rec, subscriber="idm")
+
+    event_id = bus.publish(db, "core.idempotent", {"v": 1}, event_id="same-id-1")
+    assert bus.dispatch_once(db).delivered == 1
+    assert len(_events(db)) == 1  # 只有 1 条事件
+
+    # 重复发布同一 event_id
+    ret2 = bus.publish(db, "core.idempotent", {"v": 2}, event_id="same-id-1")
+    assert ret2 == event_id
+    assert len(_events(db)) == 1  # 仍只有 1 条事件

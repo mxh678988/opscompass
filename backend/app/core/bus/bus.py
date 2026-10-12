@@ -131,6 +131,16 @@ class EventBus:
         """
         if not event_name:
             raise ValueError("event_name 不能为空")
+
+        # S1: 幂等去重 —— event_id 已存在且处于终态（done / dead），直接返回原 ID
+        if event_id:
+            existing = db.execute(
+                select(CoreEvent).where(CoreEvent.event_id == event_id)
+            ).scalar_one_or_none()
+            if existing is not None and existing.status in ("done", "dead"):
+                logger.debug("事件已幂等（%s），跳过创建", event_id)
+                return event_id
+
         now = _now()
         ev = CoreEvent(
             event_id=event_id or uuid.uuid4().hex,
