@@ -76,6 +76,10 @@ PERMISSION_DEFINITIONS: list[tuple[str, str, str, str]] = [
     ("plugin:manage", "管理插件", "plugin", "禁用、卸载插件"),
     ("predictive:view", "查看预测任务", "predictive", "查看预测任务列表与结果"),
     ("predictive:run", "运行预测", "predictive", "发起流失/转化概率预测"),
+    ("knowledge:view", "查看知识库", "knowledge", "查看知识文档列表与检索知识库"),
+    ("knowledge:create", "沉淀知识", "knowledge", "创建知识文档与登记引用"),
+    ("knowledge:update", "编辑知识", "knowledge", "修改知识文档"),
+    ("knowledge:delete", "删除知识", "knowledge", "删除知识文档"),
 ]
 
 ALL_PERMISSION_CODES: list[str] = [c for c, _, _, _ in PERMISSION_DEFINITIONS]
@@ -98,6 +102,8 @@ _OPERATOR_CODES = set(_VIEW_ONLY) | {
     "predictive:run",
     "audience:create",
     "audience:update",
+    "knowledge:create",
+    "knowledge:update",
 }  # noqa: E501
 _ADMIN_CODES = set(ALL_PERMISSION_CODES) - {"role:delete", "user:delete", "audit:export"}
 

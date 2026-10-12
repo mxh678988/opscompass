@@ -32,6 +32,13 @@ from app.models.audience import (  # noqa: F401
     AudienceMember,
     AudienceSegment,
 )
+from app.models.knowledge import (  # noqa: F401
+    KNOWLEDGE_STATUSES,
+    KNOWLEDGE_TYPES,
+    REF_SOURCES,
+    KnowledgeDoc,
+    KnowledgeRefLog,
+)
 from app.models.collect import CollectRun, CollectTask  # noqa: F401
 from app.models.datasource import DataSource  # noqa: F401
 from app.models.import_task import ImportTask  # noqa: F401
@@ -127,6 +134,11 @@ __all__ = [
     "AudienceMember",
     "SEGMENT_TARGETS",
     "SEGMENT_STATUSES",
+    "KnowledgeDoc",
+    "KnowledgeRefLog",
+    "KNOWLEDGE_TYPES",
+    "KNOWLEDGE_STATUSES",
+    "REF_SOURCES",
     "CorePlugin",
     "CorePluginConfig",
     "PLUGIN_STATES",

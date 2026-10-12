@@ -18,6 +18,7 @@ from app.api.v1.endpoints import (
     datasources,
     health,
     ingest,
+    knowledge,
     learning,
     marketing,
     metrics,
@@ -137,5 +138,13 @@ api_router.include_router(
     prefix="/audience",
     tags=["audience"],
     dependencies=[Depends(require_module_access("audience"))],
+)
+
+# M11 企业知识库：知识沉淀 / 检索供 Agent 引用 / 引用热度登记
+api_router.include_router(
+    knowledge.router,
+    prefix="/knowledge",
+    tags=["knowledge"],
+    dependencies=[Depends(require_module_access("knowledge"))],
 )
 

@@ -269,6 +269,12 @@ MODULE_PERMISSION_MAP: dict = {
         "write": ["audience:create", "audience:update"],
         "delete": ["audience:delete"],
     },
+    # M11 企业知识库：读（列表/详情/检索）需查看权限，写（沉淀/编辑/引用）需创建/更新权限
+    "knowledge": {
+        "read": ["knowledge:view"],
+        "write": ["knowledge:create", "knowledge:update"],
+        "delete": ["knowledge:delete"],
+    },
 }
 
 
