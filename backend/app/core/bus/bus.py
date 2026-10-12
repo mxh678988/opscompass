@@ -210,6 +210,7 @@ class EventBus:
         event_id: Optional[str] = None,
         commit: bool = True,
         occurred_at: Optional[datetime] = None,
+        priority: int = 0,
     ) -> str:
         """发布一个事件，返回事件 ID。
 
@@ -217,6 +218,7 @@ class EventBus:
             由调用方在业务事务提交时一并落库，避免「事件已发、业务回滚」。
         :param delay_seconds: 延迟投递秒数（定时/延时事件）
         :param event_id: 外部指定事件 ID（重放场景保持原 ID 以复用幂等语义）
+        :param priority: 派发优先级，数字越小越先派发（S7）
         """
         if not event_name:
             raise ValueError("event_name 不能为空")
@@ -243,6 +245,7 @@ class EventBus:
             max_attempts=max_attempts,
             available_at=now + timedelta(seconds=max(delay_seconds, 0)),
             occurred_at=occurred_at or now,
+            priority=max(int(priority or 0), 0),
         )
         db.add(ev)
         self._audit(
@@ -252,7 +255,11 @@ class EventBus:
             action="publish",
             trace_id=ev.trace_id,
             tenant_id=ev.tenant_id,
-            detail={"delay_seconds": max(delay_seconds, 0), "max_attempts": max_attempts},
+            detail={
+                "delay_seconds": max(delay_seconds, 0),
+                "max_attempts": max_attempts,
+                "priority": max(int(priority or 0), 0),
+            },
         )
         if commit:
             db.commit()
@@ -272,7 +279,8 @@ class EventBus:
 
         :param events: 事件定义列表，每项为 dict，字段与 :meth:`publish` 一致：
             ``event_name`` 必填；可选 payload / tenant_id / partition_key /
-            trace_id / delay_seconds / max_attempts / event_id / occurred_at。
+            trace_id / delay_seconds / max_attempts / event_id / occurred_at /
+            priority（S7，数字越小越先派发）。
         :param commit: True 立即提交；False 由调用方统一提交，
             任一条失败时整体回滚，避免「部分事件已发、业务未提交」。
         :return: 与输入一一对应的事件 ID 列表（幂等跳过的返回原 ID）。
@@ -361,7 +369,8 @@ class EventBus:
         stmt = (
             select(CoreEvent)
             .where(CoreEvent.status == "pending", CoreEvent.available_at <= now)
-            .order_by(CoreEvent.id)
+            # S7 延迟优先级队列：到期后按优先级升序派发，同级按入库顺序
+            .order_by(CoreEvent.priority, CoreEvent.id)
             .limit(limit)
         )
         # 多实例部署时用行锁跳过被其它工作者领取的行；SQLite 不支持 SKIP LOCKED

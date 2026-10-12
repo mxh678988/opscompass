@@ -470,3 +470,48 @@ def test_publish_many_empty(db) -> None:
     batch_bus = EventBus()
     assert batch_bus.publish_many(db, []) == []
     assert len(_events(db)) == 0
+
+
+def test_priority_dispatch_order(db) -> None:
+    """S7: 到期事件按优先级升序派发，同级按入库顺序。"""
+    prio_bus = EventBus()
+    rec = Recorder()
+    registry.subscribe("core.prio", rec, subscriber="p")
+
+    prio_bus.publish(db, "core.prio", {"k": 1}, priority=5, event_id="p5")
+    prio_bus.publish(db, "core.prio", {"k": 2}, priority=1, event_id="p1")
+    prio_bus.publish(db, "core.prio", {"k": 3}, priority=10, event_id="p10")
+    prio_bus.publish(db, "core.prio", {"k": 4}, priority=1, event_id="p1b")
+
+    prio_bus.dispatch_once(db)
+    assert [r.event_id for r in rec.received] == ["p1", "p1b", "p5", "p10"]
+    assert all(ev.status == "done" for ev in _events(db))
+
+
+def test_priority_defers_delivery_and_publish_many(db) -> None:
+    """S7: 延迟 + 优先级组合：高优先级未到期不抢占，批量发布可带优先级。"""
+    prio_bus = EventBus()
+    rec = Recorder()
+    registry.subscribe("core.prio.delay", rec, subscriber="pd")
+
+    # 低优先级立即到期，高优先级延迟 60 秒
+    prio_bus.publish_many(
+        db,
+        [
+            {"event_name": "core.prio.delay", "event_id": "low", "priority": 0},
+            {"event_name": "core.prio.delay", "event_id": "high", "priority": -5, "delay_seconds": 60},
+        ],
+    )
+    prio_bus.dispatch_once(db)
+    assert [r.event_id for r in rec.received] == ["low"]
+
+    ev = _events(db)[1]
+    assert ev.event_id == "high" and ev.status == "pending"
+    assert _as_utc(ev.available_at) > _now()
+
+
+def test_priority_default_zero(db) -> None:
+    """S7: 未指定优先级时默认 0。"""
+    prio_bus = EventBus()
+    prio_bus.publish(db, "core.prio.default", {})
+    assert _events(db)[0].priority == 0

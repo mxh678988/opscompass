@@ -44,8 +44,8 @@ class CoreEvent(Base):
 
     __tablename__ = "oc_core_event"
     __table_args__ = (
-        # 派发扫描主索引：按状态 + 可投递时间 + 自增序
-        Index("ix_core_event_dispatch", "status", "available_at", "id"),
+        # 派发扫描主索引：按状态 + 可投递时间 + 优先级 + 自增序（S7）
+        Index("ix_core_event_dispatch", "status", "available_at", "priority", "id"),
         # 按事件名回溯（调试、补数、订阅方对齐）
         Index("ix_core_event_name", "event_name", "id"),
         # 分区键内保序：同一 (分区键, 事件名) 按 id 顺序消费
@@ -82,6 +82,12 @@ class CoreEvent(Base):
     )
     max_attempts: Mapped[int] = mapped_column(
         Integer, default=5, server_default="5", comment="最大投递次数，超出转死信"
+    )
+    priority: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        comment="派发优先级，数字越小越先派发（S7 延迟优先级队列）",
     )
     available_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
