@@ -8,6 +8,7 @@ const updatedAt = ref<string | null>(null)
 const items = ref<OverviewItem[]>([])
 const trends = ref<Record<string, TrendPoint[]>>({})
 const activeCode = ref('')
+const initialLoading = ref(true)
 
 const activeItem = computed(() => items.value.find((i) => i.code === activeCode.value) ?? null)
 const activeTrend = computed(() => trends.value[activeCode.value] ?? [])
@@ -44,6 +45,7 @@ function sparkline(points: TrendPoint[], width = 100, height = 32): string {
 
 async function load() {
   loading.value = true
+  initialLoading.value = false
   error.value = ''
   try {
     const res = await fetchOverview({ granularity: 'day' })
@@ -70,7 +72,7 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(() => { load(); initialLoading.value = false })
 </script>
 
 <template>
@@ -92,7 +94,18 @@ onMounted(load)
     <p v-if="error" class="error">{{ error }}</p>
 
     <section class="cards">
-      <button
+      <!-- 骨架屏 -->
+      <template v-if="initialLoading || loading">
+        <button v-for="i in 3" :key="i" class="card skeleton" disabled>
+          <span class="label"><span class="skeleton-text"></span></span>
+          <strong><span class="skeleton-text sm"></span></strong>
+          <span class="delta"><span class="skeleton-text sm"></span></span>
+          <svg class="spark skeleton-svg" viewBox="0 0 100 32"></svg>
+        </button>
+      </template>
+      <!-- 数据 -->
+      <template v-else>
+        <button
         v-for="item in items"
         :key="item.code"
         class="card"
@@ -118,7 +131,8 @@ onMounted(load)
           />
         </svg>
       </button>
-      <p v-if="!items.length && !loading" class="empty">
+      </template>
+      <p v-if="!items.length && !initialLoading && !loading" class="empty">
         暂无上线指标，请到「指标中心」创建并上线
       </p>
     </section>
@@ -280,5 +294,32 @@ onMounted(load)
       .cards {
         grid-template-columns: 1fr;
       }
+    }
+
+    /* ===== 骨架屏 ===== */
+    .skeleton {
+      background: var(--color-bg-secondary);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .skeleton-text {
+      display: inline-block;
+      height: 1em;
+      background: var(--color-border);
+      border-radius: 3px;
+      animation: shimmer 1.2s ease-in-out infinite;
+    }
+    .skeleton-text.sm {
+      width: 3em;
+    }
+    .skeleton-svg {
+      width: 80%;
+      height: 32px;
+      background: var(--color-border);
+      border-radius: 3px;
+    }
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.7; }
     }
 </style>
