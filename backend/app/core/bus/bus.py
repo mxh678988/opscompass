@@ -24,7 +24,7 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional, Sequence
+from typing import Any, Callable, Optional, Sequence
 
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
@@ -104,6 +104,17 @@ def _backoff_seconds(attempts: int) -> int:
 
 class EventBus:
     """持久化事件总线。"""
+
+    # ---- 构造与水位告警 --------------------------------------------------
+
+    def __init__(self, max_pending: int = 0):
+        """max_pending > 0 时启用积压水位告警，0 表示不限制。"""
+        self._max_pending = max_pending
+        self._on_high_watermark: Optional[Callable[[dict], None]] = None
+
+    def on_high_watermark(self, callback: Callable[[dict], None]) -> None:
+        """注册积压水位告警回调，入参为 stats() 概览 dict。"""
+        self._on_high_watermark = callback
 
     # ---- 发布 ----------------------------------------------------------
 
@@ -357,7 +368,11 @@ class EventBus:
         return res.rowcount or 0
 
     def stats(self, db: Session) -> dict:
-        """积压与死信概览，供内核状态页与运维告警使用。"""
+        """积压与死信概览，供内核状态页与运维告警使用。
+
+        若配置了水位阈值（max_pending > 0）且 pending 超过阈值，
+        会触发已注册的告警回调（on_high_watermark）。
+        """
         pending = db.execute(
             select(func.count()).select_from(CoreEvent).where(CoreEvent.status == "pending")
         ).scalar_one()
@@ -368,7 +383,7 @@ class EventBus:
         oldest = db.execute(
             select(func.min(CoreEvent.occurred_at)).where(CoreEvent.status == "pending")
         ).scalar_one()
-        return {
+        snap = {
             "pending": pending,
             "processing": processing,
             "dead": dead,
@@ -377,6 +392,10 @@ class EventBus:
             ),
             "subscriptions": registry.registered_names(),
         }
+        if self._max_pending > 0 and pending > self._max_pending and self._on_high_watermark:
+            logger.warning("事件总线积压水位告警：pending=%d 超过阈值 %d", pending, self._max_pending)
+            self._on_high_watermark(snap)
+        return snap
 
     def advance_cursor(
         self, db: Session, *, subscriber: str, event_name: str, event_id: int, commit: bool = True

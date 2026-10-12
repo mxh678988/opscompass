@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.bus import bus, registry
+from app.core.bus import EventBus, bus, registry
 from app.models.base import Base
 from app.models.kernel import CoreEvent, CoreEventCursor, CoreEventDead
 
@@ -208,3 +208,33 @@ def test_publish_idempotent_done(db) -> None:
     ret2 = bus.publish(db, "core.idempotent", {"v": 2}, event_id="same-id-1")
     assert ret2 == event_id
     assert len(_events(db)) == 1  # 仍只有 1 条事件
+
+
+def test_stats_high_watermark_alert(db) -> None:
+    """S3: pending 超过水位阈值时触发告警回调。"""
+    alert_bus = EventBus(max_pending=3)
+    fired: list[dict] = []
+    alert_bus.on_high_watermark(fired.append)
+
+    for i in range(4):
+        alert_bus.publish(db, "core.hwm", {"i": i})
+    db.commit()
+
+    snap = alert_bus.stats(db)
+    assert snap["pending"] == 4
+    assert len(fired) == 1  # 超过阈值触发一次
+    assert fired[0]["pending"] == 4
+
+
+def test_stats_under_threshold_no_alert(db) -> None:
+    """S3: pending 未超过阈值时不触发告警回调。"""
+    quiet_bus = EventBus(max_pending=10)
+    fired: list[dict] = []
+    quiet_bus.on_high_watermark(fired.append)
+
+    quiet_bus.publish(db, "core.hwm", {"i": 1})
+    db.commit()
+
+    snap = quiet_bus.stats(db)
+    assert snap["pending"] == 1
+    assert fired == []  # 未超过阈值不告警
