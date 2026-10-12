@@ -14,6 +14,29 @@ AIGC:
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 实现（v0.13.0 稳定性增强 S1-S7，已全部落地）
+
+- **S1 幂等去重**（`a5b7917`）：事件消费按事件 ID 幂等，重复投递不重复执行。
+- **S2 订阅者健康检查 + 死信告警**（`a5b7917` / `7115d25`）：订阅者健康检查；事件转入死信时触发 `on_dead_letter` 回调并携带详情（274 passed）。
+- **S3 积压水位告警 + 官方插件强制验签**（`bcf12fa` / `7fb8e99` / `49a9334`）：总线积压超阈值告警；官方插件 `activate` 强制验签，失败返回 403 语义（新增 `PluginVerificationError`），社区插件行为不受影响。
+- **S4 工作流步骤超时自动恢复**（`1262f6e`）：等待步骤超时自动恢复推进。
+- **S5 事件追溯审计**（`95fac20`）：`CoreEventAudit` 全生命周期审计，凭 `trace_id` 追溯（279 passed）。
+- **S6 批量事务**（`567d22f`）：批量消费事务提交，减少单条落库开销（283 passed）。
+- **S7 延迟优先级队列**（`9664373`）：事件支持 `delay_seconds` / `priority`，越小越先派发（286 passed）。
+- 验收：全量 `pytest` 286 passed，`origin/main` 已同步，工作区干净。
+
+### 实现（v0.13.0 开发者文档 D1-D4 与文档自动化 A1-A3）
+
+- **D1 SDK 使用手册**：新增 `docs/sdk-guide.md`，覆盖 SDK 1.0 十三类门面（数据 / 事件 / 权限 / 配置 / 模型 / 日志 / 定时 / 存储 / 待办 / 工作流 / 签名 / 前端 / 业务）的接口与用法示例，全部以 `backend/app/sdk/context.py` 实际实现为准。
+- **D2 插件开发教程**：新增 `docs/plugin-dev-guide.md`，以 `plugins/sentiment` 为完整范例，覆盖清单编写、`register` 入口、SDK 接入、本地调试、验签发布与验收清单。
+- **D3 内核集成指南**：新增 `docs/kernel-integration-guide.md`，说明模块地图、插件装载链路、事件总线集成、SDK 装配契约、S 系列稳定性落点、契约与 CI、版本约定与上线检查清单。
+- **D4 API 参考文档（并入 A1 自动生成）**：新增 `docs/api-reference.md`（144 条路径，v0.12.0），由 `scripts/gen_api_docs.py` 从 `docs/openapi.json` 自动生成，禁止手改。
+- **A1 API 文档自动生成**：新增 `scripts/gen_api_docs.py`（OpenAPI 快照 → Markdown 参考，支持 `--check`）；同步刷新 `docs/openapi.json` 快照（补齐插件市场 6 条端点，138 → 144 路径，版本 0.10.1 → 0.12.0），`scripts/check_openapi.py` 恢复全 PASS。
+- **A2 文档 CI 检查**：新增 `scripts/check_docs.py`（Markdown 相对链接以文档目录 / 仓库根双重解析、自动生成文档提示），34 个 .md 文件全 PASS；`scripts/ci.ps1` 并入「API 参考文档最新」与「文档链接完整性」两项检查。
+- **A3 文档版本控制**：新增 `docs/VERSIONING.md`，确立文档与代码同源同提交、快照冻结、多版本共存（`docs/RELEASES/<version>/`）与 changelog 约定。
+
 ## [v0.12.0] - 2026-10-11
 
 ### 新增

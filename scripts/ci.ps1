@@ -163,6 +163,28 @@ Invoke-Step '接口契约基线' {
     "路径 $($livePaths.Count) 条与 docs/openapi.json 完全一致（v$($live.info.version)）"
 }
 
+# ---------------------------------------------------------------- A1 API 参考文档
+Invoke-Step 'API 参考文档最新' {
+    $log = Join-Path $logDir 'gen-api-docs.log'
+    python scripts\gen_api_docs.py --check *> $log
+    if ($LASTEXITCODE -ne 0) {
+        throw "docs/api-reference.md 过期，请运行 python scripts\gen_api_docs.py（日志：$log）"
+    }
+    'docs/api-reference.md 与 openapi 快照一致'
+}
+
+# ---------------------------------------------------------------- A2 文档链接检查
+Invoke-Step '文档链接完整性' {
+    $log = Join-Path $logDir 'check-docs.log'
+    python scripts\check_docs.py *> $log
+    if ($LASTEXITCODE -ne 0) {
+        $bad = @(Get-Content $log -ErrorAction SilentlyContinue |
+                 Select-String -Pattern '\[坏链\]')
+        throw "存在坏链 $($bad.Count) 处：$($bad -join '; ')（日志：$log）"
+    }
+    'docs/ 全部 Markdown 链接/引用完整'
+}
+
 # ---------------------------------------------------------------- 5/6 运行态
 if (-not $SkipRuntime) {
     Invoke-Step '容器健康' {
