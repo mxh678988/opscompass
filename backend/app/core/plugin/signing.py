@@ -37,6 +37,14 @@ VERIFY_OK = "ok"
 VERIFY_FAILED = "failed"
 VERIFY_NO_SIGNATURE = "no_signature"
 
+
+class PluginVerificationError(RuntimeError):
+    """官方插件验签失败：加载/启用被拒绝（HTTP 403 语义）。
+
+    触发场景：official 插件启用前强制验签，签名缺失、无效、内容被篡改、
+    公钥未登记或内核未装配签名服务，均抛本异常拒绝启用。
+    """
+
 # 公钥生命周期
 KEY_STATE_ENABLED = "enabled"
 KEY_STATE_REVOKED = "revoked"
