@@ -74,6 +74,8 @@ PERMISSION_DEFINITIONS: list[tuple[str, str, str, str]] = [
     ("plugin:view", "查看插件市场", "plugin", "查看插件市场列表与详情"),
     ("plugin:install", "安装/启用插件", "plugin", "安装、启用插件"),
     ("plugin:manage", "管理插件", "plugin", "禁用、卸载插件"),
+    ("predictive:view", "查看预测任务", "predictive", "查看预测任务列表与结果"),
+    ("predictive:run", "运行预测", "predictive", "发起流失/转化概率预测"),
 ]
 
 ALL_PERMISSION_CODES: list[str] = [c for c, _, _, _ in PERMISSION_DEFINITIONS]
@@ -93,6 +95,7 @@ _OPERATOR_CODES = set(_VIEW_ONLY) | {
     "marketing:update",
     "marketing:authorize",
     "collect:run",
+    "predictive:run",
 }
 _ADMIN_CODES = set(ALL_PERMISSION_CODES) - {"role:delete", "user:delete", "audit:export"}
 

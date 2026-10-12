@@ -18,6 +18,14 @@ from app.models.auth import (  # noqa: F401
     user_role,
 )
 from app.models.base import Base  # noqa: F401
+from app.models.predictive import (  # noqa: F401
+    PREDICTION_BANDS,
+    PREDICTION_MODES,
+    PREDICTION_STATUSES,
+    PREDICTION_TARGETS,
+    PredictionJob,
+    PredictionResult,
+)
 from app.models.collect import CollectRun, CollectTask  # noqa: F401
 from app.models.datasource import DataSource  # noqa: F401
 from app.models.import_task import ImportTask  # noqa: F401
@@ -103,6 +111,12 @@ __all__ = [
     "CoreEventDead",
     "CoreEventCursor",
     "EVENT_STATUSES",
+    "PredictionJob",
+    "PredictionResult",
+    "PREDICTION_TARGETS",
+    "PREDICTION_MODES",
+    "PREDICTION_BANDS",
+    "PREDICTION_STATUSES",
     "CorePlugin",
     "CorePluginConfig",
     "PLUGIN_STATES",

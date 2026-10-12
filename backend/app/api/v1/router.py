@@ -23,6 +23,7 @@ from app.api.v1.endpoints import (
     model_hub,
     ops,
     plugin_market,
+    predictive,
     rbac,
     storage,
     tenants,
@@ -119,5 +120,13 @@ api_router.include_router(
     prefix="/plugins",
     tags=["plugins"],
     dependencies=[Depends(require_module_access("plugin"))],
+)
+
+# M9 预测引擎：流失/转化概率预测（本地优先、规则兜底、可插拔模型路由）
+api_router.include_router(
+    predictive.router,
+    prefix="/predictive",
+    tags=["predictive"],
+    dependencies=[Depends(require_module_access("predictive"))],
 )
 

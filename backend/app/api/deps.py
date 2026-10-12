@@ -257,6 +257,12 @@ MODULE_PERMISSION_MAP: dict = {
         "write": ["plugin:install", "plugin:manage"],
         "delete": ["plugin:manage"],
     },
+    # M9 预测引擎：读需查看权限，写（发起预测）需运行权限
+    "predictive": {
+        "read": ["predictive:view"],
+        "write": ["predictive:run"],
+        "delete": ["predictive:run"],
+    },
 }
 
 
