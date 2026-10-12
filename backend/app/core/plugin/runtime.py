@@ -374,11 +374,42 @@ class PluginRuntime:
         return registered
 
     def activate(self, plugin_id: str) -> PluginContext:
-        """启用插件并返回其上下文（先登记权限点/推荐角色，再装配上下文）。"""
+        """启用插件并返回其上下文（先强制验签，再登记权限点/装配上下文）。
+
+        官方插件（kind=official）启用前强制验签：签名缺失/无效/内容被篡改、
+        公钥未登记或内核未装配签名服务，均抛 ``PluginVerificationError``
+        （403 语义）拒绝启用；社区插件不强制，登记公钥后同样可验。
+        """
+        meta = self.registry.get(plugin_id)
+        if meta is None:
+            raise KeyError(f"插件未注册: {plugin_id}")
+        if meta.kind == "official":
+            self._enforce_official_signature(plugin_id)
         self.sync_permissions(plugin_id)
         ctx = self.build_context(plugin_id)
         self.registry.enable(plugin_id)
         return ctx
+
+    def _enforce_official_signature(self, plugin_id: str) -> None:
+        """官方插件强制验签（S3）：验签未通过一律拒绝启用，报 403 语义。
+
+        未注入签名服务视为“无法证明官方身份”，同样拒绝启用，绝不降级放行。
+        """
+        from app.core.plugin.signing import (
+            VERIFY_OK,
+            PluginVerificationError,
+        )
+
+        if self._signing_service is None:
+            raise PluginVerificationError(
+                f"官方插件 {plugin_id} 必须验签，但内核未装配签名服务，拒绝启用"
+            )
+        plugin_dir = self.registry.plugins_dir / plugin_id
+        status, message = self._signing_service.verify_plugin(plugin_dir, plugin_id)
+        if status != VERIFY_OK:
+            raise PluginVerificationError(
+                f"官方插件 {plugin_id} 验签失败，拒绝启用: {message}"
+            )
 
     def deactivate(self, plugin_id: str) -> None:
         """禁用插件（保留数据与权限声明），回收上下文。"""

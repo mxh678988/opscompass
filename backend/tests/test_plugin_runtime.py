@@ -5,6 +5,7 @@
 - 注册表：发现 → 注册 → 启用/禁用/卸载，非法状态转换拦截
 - SDK 门面：事件命名空间越界、表前缀越界、配置分区隔离、未落地能力分期提示
 - 运行时：能力装配、声明收集、坏插件不阻断好插件
+- S3 强制验签：官方插件启用前验签，失败拒绝（403 语义），社区插件不强制
 
 无外部依赖，直接执行：``pytest tests/test_plugin_runtime.py -v``。
 """
@@ -12,10 +13,21 @@
 from pathlib import Path
 
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.core.plugin.manifest_validator import validate_manifest
 from app.core.plugin.registry import PluginRegistry, PluginState
 from app.core.plugin.runtime import PluginRuntime
+from app.core.plugin.signing import (
+    PluginSigningService,
+    PluginVerificationError,
+    generate_keypair,
+    sign_plugin_dir,
+)
+from app.models.base import Base
+from app.models.plugin import CorePluginKey
 from app.sdk.context import PluginNamespace, create_context
 from app.sdk.exceptions import NamespaceViolation, NotAvailableError
 
@@ -40,6 +52,19 @@ events:
     - core.metric.written
 """
 
+OFFICIAL_MANIFEST = """\
+id: official_guard
+name: 官方守门插件
+version: 0.1.0
+kind: official
+min_kernel_version: 0.11.0
+entry: main:register
+namespace:
+  tables: os_guard_
+  events: "guard."
+  permissions: "guard:"
+"""
+
 BROKEN_MANIFEST = """\
 id: Core_Bad
 version: 0.1
@@ -59,6 +84,27 @@ def plugins_dir(tmp_path: Path) -> Path:
     (root / "broken").mkdir(parents=True)
     (root / "broken" / "plugin.yaml").write_text(BROKEN_MANIFEST, encoding="utf-8")
     return root
+
+
+@pytest.fixture()
+def official_plugin_dir(tmp_path: Path) -> Path:
+    """构造一个可签名的官方插件发布包目录（kind=official）。"""
+    root = tmp_path / "official_guard"
+    (root / "backend").mkdir(parents=True)
+    (root / "backend" / "main.py").write_text("def register(ctx): pass\n", encoding="utf-8")
+    (root / "plugin.yaml").write_text(OFFICIAL_MANIFEST, encoding="utf-8")
+    return root
+
+
+@pytest.fixture()
+def session_factory():
+    """SQLite 内存库 + 仅建公钥注册表。"""
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    Base.metadata.create_all(engine, tables=[CorePluginKey.__table__])
+    maker = sessionmaker(bind=engine)
+    return maker
 
 
 class StubBus:
@@ -281,6 +327,121 @@ def test_runtime_broken_plugin_does_not_block(plugins_dir: Path) -> None:
     runtime = PluginRuntime(registry, bus=StubBus(), config_store=DictConfigStore())
 
     assert runtime.load_all() == ["sentiment"]
+
+
+# ---------------- S3 官方插件强制验签 ----------------
+
+
+def test_activate_official_plugin_requires_signature_service(
+    official_plugin_dir: Path,
+) -> None:
+    """官方插件启用时未装配签名服务：拒绝启用（403 语义），绝不降级放行。"""
+    registry = PluginRegistry(official_plugin_dir.parent)
+    registry.register("official_guard")
+    runtime = PluginRuntime(registry, bus=StubBus(), config_store=DictConfigStore())
+
+    with pytest.raises(PluginVerificationError) as e:
+        runtime.activate("official_guard")
+    assert "未装配签名服务" in str(e.value)
+    assert runtime.active_plugins == []  # 未被启用
+
+
+def test_activate_official_plugin_unregistered_key_rejected(
+    official_plugin_dir: Path, session_factory
+) -> None:
+    """官方插件已签名但公钥未登记：验签失败，拒绝启用。"""
+    private_pem, _ = generate_keypair()
+    sign_plugin_dir(official_plugin_dir, private_pem)
+
+    registry = PluginRegistry(official_plugin_dir.parent)
+    registry.register("official_guard")
+    service = PluginSigningService(session_factory)  # 未登记任何公钥
+    runtime = PluginRuntime(
+        registry, bus=StubBus(), config_store=DictConfigStore(), signing_service=service
+    )
+
+    with pytest.raises(PluginVerificationError) as e:
+        runtime.activate("official_guard")
+    assert "验签失败" in str(e.value)
+    assert "未登记公钥" in str(e.value)
+    assert runtime.active_plugins == []
+
+
+def test_activate_official_plugin_unsigned_rejected(
+    official_plugin_dir: Path, session_factory
+) -> None:
+    """官方插件未签名（无 .sig）：拒绝启用。"""
+    private_pem, public_pem = generate_keypair()
+    # 故意不调用 sign_plugin_dir —— 无 .sig
+    service = PluginSigningService(session_factory)
+    service.register_public_key("official_guard", public_pem)
+
+    registry = PluginRegistry(official_plugin_dir.parent)
+    registry.register("official_guard")
+    runtime = PluginRuntime(
+        registry, bus=StubBus(), config_store=DictConfigStore(), signing_service=service
+    )
+
+    with pytest.raises(PluginVerificationError) as e:
+        runtime.activate("official_guard")
+    assert "验签失败" in str(e.value)
+    assert runtime.active_plugins == []
+
+
+def test_activate_official_plugin_signed_ok(
+    official_plugin_dir: Path, session_factory
+) -> None:
+    """官方插件签名有效且公钥已登记：正常启用。"""
+    private_pem, public_pem = generate_keypair()
+    sign_plugin_dir(official_plugin_dir, private_pem)
+    service = PluginSigningService(session_factory)
+    service.register_public_key("official_guard", public_pem)
+
+    registry = PluginRegistry(official_plugin_dir.parent)
+    registry.register("official_guard")
+    runtime = PluginRuntime(
+        registry, bus=StubBus(), config_store=DictConfigStore(), signing_service=service
+    )
+
+    ctx = runtime.activate("official_guard")
+    assert runtime.active_plugins == ["official_guard"]
+    assert ctx is not None
+
+
+def test_activate_official_plugin_tampered_rejected(
+    official_plugin_dir: Path, session_factory
+) -> None:
+    """官方插件签名后内容被篡改：验签失败，拒绝启用。"""
+    private_pem, public_pem = generate_keypair()
+    sign_plugin_dir(official_plugin_dir, private_pem)
+    service = PluginSigningService(session_factory)
+    service.register_public_key("official_guard", public_pem)
+
+    # 签名后篡改 backend 源码
+    (official_plugin_dir / "backend" / "main.py").write_text(
+        "def register(ctx): raise RuntimeError('tampered')\n", encoding="utf-8"
+    )
+
+    registry = PluginRegistry(official_plugin_dir.parent)
+    registry.register("official_guard")
+    runtime = PluginRuntime(
+        registry, bus=StubBus(), config_store=DictConfigStore(), signing_service=service
+    )
+
+    with pytest.raises(PluginVerificationError) as e:
+        runtime.activate("official_guard")
+    assert "验签失败" in str(e.value)
+    assert runtime.active_plugins == []
+
+
+def test_activate_community_plugin_not_forced(plugins_dir: Path) -> None:
+    """社区插件不强制验签：未装配签名服务也能正常启用（原有行为保持）。"""
+    registry = PluginRegistry(plugins_dir)
+    registry.register("sentiment")
+    runtime = PluginRuntime(registry, bus=StubBus(), config_store=DictConfigStore())
+
+    runtime.activate("sentiment")  # 不应抛 PluginVerificationError
+    assert runtime.active_plugins == ["sentiment"]
 
 
 def test_model_facade_assembled_forwards_to_router() -> None:
