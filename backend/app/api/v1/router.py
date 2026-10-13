@@ -31,6 +31,7 @@ from app.api.v1.endpoints import (
     rbac,
     security_transfer,
     site_generator,
+    site_resource,
     storage,
     tenants,
 )
@@ -182,5 +183,12 @@ api_router.include_router(
     prefix="/sites",
     tags=["site-generator"],
     dependencies=[Depends(require_module_access("sites"))],
+)
+
+# M16 网站资源管理器：发布产物资源扫描 / 清单 / 统计 / 维护（挂在 /sites 下）
+api_router.include_router(
+    site_resource.router,
+    prefix="/sites",
+    tags=["site-resource"],
 )
 

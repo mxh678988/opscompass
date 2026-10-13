@@ -25,6 +25,11 @@ from app.models.site_project import (  # noqa: F401
     SITE_STATUSES,
     SiteProject,
 )
+from app.models.site_resource import (  # noqa: F401
+    RESOURCE_STATUSES,
+    RESOURCE_TYPES,
+    SiteResource,
+)
 from app.models.ai import (  # noqa: F401
     AiActionItem,
     AiActionPolicy,
