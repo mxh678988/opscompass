@@ -82,3 +82,6 @@ deploy/installers/
 
 # ---------- 商业插件设计文档（闭源，禁止入库；详见 docs/OPEN_SOURCE_PLAN.md 第九章） ----------
 docs_business/
+
+# M14 导出压缩产物（运行时生成）
+backend/exports/

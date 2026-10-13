@@ -292,6 +292,12 @@ MODULE_PERMISSION_MAP: dict = {
         "write": ["security_transfer:create", "security_transfer:update"],
         "delete": ["security_transfer:delete"],
     },
+    # M15 响应式网站生成器：网站项目 CRUD / 发布 / 预览
+    "sites": {
+        "read": ["sites:view"],
+        "write": ["sites:create", "sites:update"],
+        "delete": ["sites:delete"],
+    },
 }
 
 

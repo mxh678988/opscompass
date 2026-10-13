@@ -30,6 +30,7 @@ from app.api.v1.endpoints import (
     predictive,
     rbac,
     security_transfer,
+    site_generator,
     storage,
     tenants,
 )
@@ -173,5 +174,13 @@ api_router.include_router(
     prefix="/security",
     tags=["security-transfer"],
     dependencies=[Depends(require_module_access("security_transfer"))],
+)
+
+# M15 响应式网站生成器：网站项目 / SEO+GEO 元数据 / 发布与预览
+api_router.include_router(
+    site_generator.router,
+    prefix="/sites",
+    tags=["site-generator"],
+    dependencies=[Depends(require_module_access("sites"))],
 )
 

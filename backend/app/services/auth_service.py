@@ -92,6 +92,10 @@ PERMISSION_DEFINITIONS: list[tuple[str, str, str, str]] = [
     ("security_transfer:create", "发起压缩传输", "security_transfer", "发起导入解压与导出压缩（含加密导出）"),
     ("security_transfer:update", "管理传输记录", "security_transfer", "更新传输记录状态/进度"),
     ("security_transfer:delete", "删除传输记录", "security_transfer", "删除导入导出记录"),
+    ("sites:view", "查看网站生成", "sites", "查看网站项目与发布/预览"),
+    ("sites:create", "创建网站", "sites", "创建响应式网站项目"),
+    ("sites:update", "管理网站", "sites", "编辑网站内容/SEO/GEO 与发布"),
+    ("sites:delete", "删除网站", "sites", "删除网站项目"),
 ]
 
 ALL_PERMISSION_CODES: list[str] = [c for c, _, _, _ in PERMISSION_DEFINITIONS]
@@ -122,6 +126,8 @@ _OPERATOR_CODES = set(_VIEW_ONLY) | {
     "api_bridge:update",
     "security_transfer:create",
     "security_transfer:update",
+    "sites:create",
+    "sites:update",
 }  # noqa: E501
 _ADMIN_CODES = set(ALL_PERMISSION_CODES) - {"role:delete", "user:delete", "audit:export"}
 
