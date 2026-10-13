@@ -150,3 +150,4 @@ python scripts\start_dev.ps1
 - [ ] register() 入口存在，entry 路径正确
 - [ ] 单测覆盖：加载 / 激活 / 业务调用 / 验签拒绝
 - [ ] 全量 pytest 无回归
+*（内容由AI生成，仅供参考）*

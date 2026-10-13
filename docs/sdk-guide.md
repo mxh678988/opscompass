@@ -166,3 +166,4 @@ ctx.ui.register_route("/sentiment/detail", "SentimentDetail.vue")
 ## 15. 接口稳定性承诺
 
 SDK 主版本内向后兼容；弃用项提前一个次版本标注，下个大版本移除。插件清单 `sdk.min_version` 与内核版本独立。
+*（内容由AI生成，仅供参考）*

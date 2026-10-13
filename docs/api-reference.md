@@ -5406,3 +5406,4 @@ CPU / 内存 / GPU 与显存 / 磁盘 / 网络出口；探测不可用时返回�
 |---|---|---|
 | 200 | Successful Response | `ApiResponse_CollectTaskOut_` |
 | 422 | Validation Error | `HTTPValidationError` |
+*（内容由AI生成，仅供参考）*

@@ -45,3 +45,4 @@ docs/
 
 - `python scripts/check_docs.py`：链接 / 引用完整性，全 PASS 才允许提交；
 - `scripts/ci.ps1` 全量检查入口已并入 A1/A2 检查项。
+*（内容由AI生成，仅供参考）*

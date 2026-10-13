@@ -79,3 +79,4 @@ SDK 不 import 内核；内核装载时注入回调（`session_factory` / `autho
 - [ ] `python scripts/check_docs.py` 无坏链
 - [ ] 全量 `pytest` 无回归
 - [ ] `docs/changelog.md` 已补里程碑条目
+*（内容由AI生成，仅供参考）*
