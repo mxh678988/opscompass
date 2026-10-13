@@ -16,12 +16,31 @@ AIGC:
 
 ## [Unreleased]
 
+## [v0.14.0] - 2026-10-13
+
+### 实现（v0.14.0 后端内核 M9-M16）
+
+- **M9 智能预测引擎**：新增 `backend/app/modules/predictive/`，预测任务提交/列表/详情与批量预测，`/predictive/runs`、`/batch`、`/runs/{id}` 端点（e509a1e）。
+- **M10 人群包管理**：新增 audience 模块，人群包创建/复用/详情，`/audience/segments`、`/segments/reuse`、`/segments/{id}`（3893c1f）。
+- **M11 企业知识库**：新增 knowledge 模块，文档沉淀、语义搜索与引用，`/knowledge/docs`、`/search`、`/refs`、`/docs/{id}`（e48acb2）。
+- **M12 运营智能体**：新增 agent 模块，双 Agent 协同编排与审批闭环，`/agents/runs`、`/runs/{id}/analyze`、`/patch`、`/actions`、`/complete`、`/fail`（1f5f459）。
+- **M13 API 代申请**：新增 api_bridge 模块，账号密码自动代申请第三方 API，`/api-bridge/templates`、`/tasks`（b8bd05f，20 passed）。
+- **M14 压缩安全**：新增 security_transfer 模块，导入自动解压（zip-slip 防护）+ 导出 AES-256 加密压缩（付费插件门控），`/security/imports`、`/exports`（b89b237，13 passed）。
+- **M15 网站生成**：新增 site_project 模块，响应式 HTML + SEO meta + GEO JSON-LD + host_mode link/space，`/sites`、`/sites/{id}/publish`、`/preview`（3f9aa02，11 passed）。
+- **M16 网站资源管理**：新增 site_resource 模块，发布目录扫描 sha256/类型识别/消失标记/物理删除路径越界防护，`/sites/resources/scan`（e547957，11 passed）。
+- **迁移链**：M13-M16 新增 p17-p20 四个迁移，head=p20_site_resource；全量回归 419 passed（仅 sla 时间敏感用例已知失败）。
+
 ### 实现（v0.14.0 运营决策前端 M9-M16）
 
 - **M9 智能预测工作台**：新增 `frontend/src/views/InsightCenter.vue`（1192 行），整合流失/转化预测、人群包管理、知识库沉淀与智能体编排四大工作台，含任务发起/列表/详情、概率分布条带、人群复用、文档搜索与智能体审批分析闭环；`frontend/src/api/predictive.ts`、`audience.ts`、`knowledge.ts`、`agent.ts` 按后端真实路由与字段对齐。
 - **M13-M16 新页面**：新增 `ApiBridge.vue`（API 代申请助手）、`SecurityCenter.vue`（压缩安全中心）、`SiteStudio.vue`（响应式网站生成器）、`SiteManager.vue`（网站资源管理器）；`apiBridge.ts`、`securityTransfer.ts`、`sites.ts` 对齐 `/api-bridge/*`、`/security/*`、`/sites/*` 后端端点。
 - **路由与导航**：`router/index.ts` 注册 `/insight`、`/site-studio`、`/site-manager`、`/security-center`、`/api-bridge`；`App.vue` 导航补齐全部新入口。
 - **验收**：`npm run build`（vue-tsc + vite）一次通过，dist 已更新。
+
+### 部署与发布（v0.14.0）
+
+- **后端构建修复**：Dockerfile.backend pip 改用清华镜像源，修复 pyzipper 等依赖构建失败（1e4e49b）。
+- **版本冻结**：v0.14.0 标签已推送 GitHub（1e4e49b），教学演示视频《OpsCompass v0.14.0 功能演示》已产出。
 
 ### 实现（v0.13.0 稳定性增强 S1-S7，已全部落地）
 
