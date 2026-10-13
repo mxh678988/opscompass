@@ -9,7 +9,7 @@ const sites = ref<SiteProject[]>([])
 const loading = ref(false)
 const msg = reactive({ type: '', text: '' })
 let timer: number | undefined
-function tip(type: 'ok' | 'error', text: string) {
+function tip(type: 'ok' | 'warn' | 'error', text: string) {
   msg.type = type
   msg.text = text
   if (timer) window.clearTimeout(timer)
@@ -25,6 +25,7 @@ const form = reactive<SiteProjectIn>({
   host_mode: 'link',
 })
 const submitting = ref(false)
+const pendingId = ref<number | null>(null)
 const previewUrl = ref('')
 
 async function load() {
@@ -37,7 +38,8 @@ async function load() {
 }
 
 async function submit() {
-  if (!form.name.trim() || !form.slug.trim()) { tip('error', '请填写站点名称与 slug'); return }
+  if (!form.name.trim() || !form.slug.trim()) { tip('warn', '请填写站点名称与 slug'); return }
+  if (!/^[a-z0-9-]+$/.test(form.slug)) { tip('warn', 'slug 仅支持小写字母、数字与中划线'); return }
   submitting.value = true
   try {
     await createSite({ ...form })
@@ -49,27 +51,36 @@ async function submit() {
 }
 
 async function doPublish(site: SiteProject) {
+  if (pendingId.value !== null) return
+  pendingId.value = site.id
   try {
     await publishSite(site.id)
     tip('ok', `「${site.name}」已发布`)
     await load()
   } catch (e) { tip('error', `发布失败：${errText(e)}`) }
+  finally { pendingId.value = null }
 }
 
 async function doPreview(site: SiteProject) {
+  if (pendingId.value !== null) return
+  pendingId.value = site.id
   try {
     const html = await previewSite(site.id)
     previewUrl.value = html ?? ''
   } catch (e) { tip('error', `预览失败：${errText(e)}`) }
+  finally { pendingId.value = null }
 }
 
 async function doDelete(site: SiteProject) {
+  if (pendingId.value !== null) return
   if (!window.confirm(`确认删除站点「${site.name}」及其资源？删除后不可恢复。`)) return
+  pendingId.value = site.id
   try {
     await deleteSite(site.id)
     tip('ok', '站点已删除')
     await load()
   } catch (e) { tip('error', `删除失败：${errText(e)}`) }
+  finally { pendingId.value = null }
 }
 
 onMounted(load)
@@ -165,9 +176,9 @@ onMounted(load)
               <td class="td-muted">{{ s.seo_title ? '已配置' : '-' }}</td>
               <td class="td-muted">{{ dt(s.updated_at || s.created_at) }}</td>
               <td class="ops">
-                <button class="btn ghost sm" @click="doPreview(s)">预览</button>
-                <button v-if="s.status !== 'published'" class="btn ghost sm" @click="doPublish(s)">发布</button>
-                <button class="btn ghost sm danger-text" @click="doDelete(s)">删除</button>
+                <button class="btn ghost sm" :disabled="pendingId === s.id" @click="doPreview(s)">预览</button>
+                <button v-if="s.status !== 'published'" class="btn ghost sm" :disabled="pendingId === s.id" @click="doPublish(s)">{{ pendingId === s.id ? '处理中…' : '发布' }}</button>
+                <button class="btn ghost sm danger-text" :disabled="pendingId === s.id" @click="doDelete(s)">删除</button>
               </td>
             </tr>
           </tbody>
@@ -220,6 +231,7 @@ onMounted(load)
 .msg { padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: 13px; }
 .msg.ok { background: var(--color-success-light); color: var(--color-success); border: 1px solid var(--color-success-border); }
 .msg.error { background: var(--color-error-light); color: var(--color-error); border: 1px solid var(--color-error-border); }
+.msg.warn { background: var(--color-warning-light); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
 .table { width: 100%; }
 .td-main { font-weight: 500; }
 .td-muted { color: var(--color-text-muted); font-size: 12px; }

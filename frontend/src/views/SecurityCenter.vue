@@ -10,7 +10,7 @@ const exports_ = ref<ExportRecord[]>([])
 const loading = ref(false)
 const msg = reactive({ type: '', text: '' })
 let timer: number | undefined
-function tip(type: 'ok' | 'error', text: string) {
+function tip(type: 'ok' | 'warn' | 'error', text: string) {
   msg.type = type
   msg.text = text
   if (timer) window.clearTimeout(timer)
@@ -18,6 +18,9 @@ function tip(type: 'ok' | 'error', text: string) {
 }
 function errText(e: any) { return e?.response?.data?.message || e?.message || '请求失败' }
 function dt(v?: string | null) { return v ? String(v).replace('T', ' ').slice(0, 19) : '-' }
+const STATUS_LABEL: Record<string, string> = { pending: '待处理', processing: '处理中', done: '已完成', failed: '失败' }
+function stLabel(v?: string) { return v ? (STATUS_LABEL[v] ?? v) : '-' }
+function stCls(v?: string) { return v === 'done' ? 'ok' : (v === 'failed' ? 'error' : 'muted') }
 
 const importForm = reactive({ source_path: '', target_dir: '', archive_type: 'zip' as 'zip' | 'tar.gz' })
 const exportForm = reactive({ source_dir: '', target_name: '', encrypted: false, password: '' })
@@ -34,7 +37,7 @@ async function load() {
 }
 
 async function submitImport() {
-  if (!importForm.source_path.trim() || !importForm.target_dir.trim()) { tip('error', '请填写来源路径与目标目录'); return }
+  if (!importForm.source_path.trim() || !importForm.target_dir.trim()) { tip('warn', '请填写来源路径与目标目录'); return }
   submitting.value = true
   try {
     const res = await createImport({ ...importForm })
@@ -46,8 +49,8 @@ async function submitImport() {
 }
 
 async function submitExport() {
-  if (!exportForm.source_dir.trim() || !exportForm.target_name.trim()) { tip('error', '请填写来源目录与目标文件名'); return }
-  if (exportForm.encrypted && !exportForm.password) { tip('error', '启用加密时请填写密码'); return }
+  if (!exportForm.source_dir.trim() || !exportForm.target_name.trim()) { tip('warn', '请填写来源目录与目标文件名'); return }
+  if (exportForm.encrypted && !exportForm.password) { tip('warn', '启用加密时请填写密码'); return }
   submitting.value = true
   try {
     const res = await createExport({
@@ -56,7 +59,7 @@ async function submitExport() {
       encrypted: exportForm.encrypted,
       password: exportForm.encrypted ? exportForm.password : null,
     })
-    if (res.data?.plugin_required) tip('error', '加密导出需要付费插件，当前任务未加密执行')
+    if (res.data?.plugin_required) tip('warn', '加密导出需要付费插件，当前任务未加密执行')
     else tip('ok', `导出任务已创建（状态：${res.data?.status ?? '处理中'}）`)
     Object.assign(exportForm, { source_dir: '', target_name: '', encrypted: false, password: '' })
     await load()
@@ -134,7 +137,7 @@ onMounted(load)
               <td class="td-main">{{ r.source_name }}</td>
               <td><span class="tag">{{ r.archive_type }}</span></td>
               <td>{{ r.file_count }}</td>
-              <td><span class="badge" :class="r.status === 'done' ? 'ok' : (r.status === 'failed' ? 'error' : 'muted')">{{ r.status }}</span></td>
+              <td><span class="badge" :class="stCls(r.status)">{{ stLabel(r.status) }}</span></td>
               <td class="td-muted">{{ dt(r.created_at) }}</td>
             </tr>
           </tbody>
@@ -152,7 +155,7 @@ onMounted(load)
               <td class="td-main">{{ r.target_name }}</td>
               <td>{{ r.encrypted ? '已加密' : '未加密' }}</td>
               <td>{{ r.file_count }}</td>
-              <td><span class="badge" :class="r.status === 'done' ? 'ok' : (r.status === 'failed' ? 'error' : 'muted')">{{ r.status }}</span></td>
+              <td><span class="badge" :class="stCls(r.status)">{{ stLabel(r.status) }}</span></td>
               <td class="td-muted">{{ dt(r.created_at) }}</td>
             </tr>
           </tbody>
@@ -191,6 +194,7 @@ onMounted(load)
 .msg { padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: 13px; }
 .msg.ok { background: var(--color-success-light); color: var(--color-success); border: 1px solid var(--color-success-border); }
 .msg.error { background: var(--color-error-light); color: var(--color-error); border: 1px solid var(--color-error-border); }
+.msg.warn { background: var(--color-warning-light); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
 .table { width: 100%; }
 .td-main { font-weight: 500; }
 .td-muted { color: var(--color-text-muted); font-size: 12px; }

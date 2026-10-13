@@ -106,6 +106,10 @@ async function submitPrediction() {
     tip('warn', '请先填写任务名称')
     return
   }
+  if (predForm.threshold == null || predForm.threshold < 0 || predForm.threshold > 1) {
+    tip('warn', '判定阈值需在 0~1 之间')
+    return
+  }
   predSubmitting.value = true
   try {
     predForm.subject_keys = predKeysText.value
@@ -183,6 +187,10 @@ async function submitSegment() {
     tip('warn', '请先填写人群包名称')
     return
   }
+  if (segForm.min_prob < 0 || segForm.min_prob > 1 || (segForm.max_prob !== null && (segForm.max_prob < 0 || segForm.max_prob > 1 || segForm.max_prob < segForm.min_prob))) {
+    tip('warn', '概率区间不合法：需在 0~1 之间且最小值不大于最大值')
+    return
+  }
   segSubmitting.value = true
   try {
     await createAudienceSegment({
@@ -207,6 +215,14 @@ async function submitSegment() {
 async function submitReuse() {
   if (!reuseForm.source_segment_id) {
     tip('warn', '请先选择来源人群包')
+    return
+  }
+  if (!reuseForm.name.trim()) {
+    tip('warn', '请先填写新人群包名称')
+    return
+  }
+  if (reuseForm.min_prob < 0 || reuseForm.min_prob > 1 || (reuseForm.max_prob !== null && (reuseForm.max_prob < 0 || reuseForm.max_prob > 1 || reuseForm.max_prob < reuseForm.min_prob))) {
+    tip('warn', '概率区间不合法：需在 0~1 之间且最小值不大于最大值')
     return
   }
   reuseSubmitting.value = true
@@ -275,6 +291,10 @@ async function loadDocs(keyword = '') {
 async function submitDoc() {
   if (!docForm.title.trim()) {
     tip('warn', '请先填写文档标题')
+    return
+  }
+  if (!docForm.content.trim()) {
+    tip('warn', '请先填写文档内容')
     return
   }
   docSubmitting.value = true

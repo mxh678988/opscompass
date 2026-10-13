@@ -10,7 +10,7 @@ const tasks = ref<ApiApplyTask[]>([])
 const loading = ref(false)
 const msg = reactive({ type: '', text: '' })
 let timer: number | undefined
-function tip(type: 'ok' | 'error', text: string) {
+function tip(type: 'ok' | 'warn' | 'error', text: string) {
   msg.type = type
   msg.text = text
   if (timer) window.clearTimeout(timer)
@@ -36,6 +36,7 @@ function stLabel(v?: string) { return v ? (STATUS_LABEL[v] ?? v) : '-' }
 function stCls(v?: string) {
   if (v === 'success') return 'ok'
   if (v === 'failed') return 'error'
+  if (v === 'applying' || v === 'manual') return 'warn'
   return 'muted'
 }
 
@@ -50,7 +51,8 @@ async function load() {
 }
 
 async function submitApply() {
-  if (!applyForm.account.trim()) { tip('error', '请填写账号'); return }
+  if (!applyForm.platform_id && !applyForm.platform.trim()) { tip('warn', '请选择平台模板或填写平台名称'); return }
+  if (!applyForm.account.trim()) { tip('warn', '请填写账号'); return }
   submitting.value = true
   try {
     await createApiTask({
@@ -143,7 +145,8 @@ onMounted(load)
 
     <div class="card">
       <div class="card-head"><h3>平台模板</h3><span class="hint">常用平台的申请引导模板</span></div>
-      <div v-if="!templates.length" class="empty"><p class="empty-title">暂无模板</p><p class="empty-sub">模板由管理员配置</p></div>
+      <div v-if="loading" class="loading">加载中…</div>
+      <div v-else-if="!templates.length" class="empty"><p class="empty-title">暂无模板</p><p class="empty-sub">模板由管理员配置</p></div>
       <table v-else class="table">
         <thead><tr><th>名称</th><th>分类</th><th>申请地址</th><th>人工流程</th><th>状态</th><th>操作</th></tr></thead>
         <tbody>
@@ -191,6 +194,7 @@ onMounted(load)
 .msg { padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: 13px; }
 .msg.ok { background: var(--color-success-light); color: var(--color-success); border: 1px solid var(--color-success-border); }
 .msg.error { background: var(--color-error-light); color: var(--color-error); border: 1px solid var(--color-error-border); }
+.msg.warn { background: var(--color-warning-light); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
 .table { width: 100%; }
 .td-main { font-weight: 500; }
 .td-muted { color: var(--color-text-muted); font-size: 12px; }
@@ -198,6 +202,7 @@ onMounted(load)
 .badge { display: inline-block; padding: 1px 10px; border-radius: var(--radius-full); font-size: 12px; font-weight: 600; line-height: 1.7; background: var(--color-bg-subtle); color: var(--color-text-secondary); }
 .badge.ok { background: var(--color-success-light); color: var(--color-success); }
 .badge.error { background: var(--color-error-light); color: var(--color-error); }
+.badge.warn { background: var(--color-warning-light); color: var(--color-warning); }
 .badge.muted { background: var(--color-bg-subtle); color: var(--color-text-muted); }
 .tag { display: inline-block; padding: 0 8px; border-radius: var(--radius-sm); font-size: 12px; background: var(--color-primary-light); color: var(--color-primary); }
 .loading { padding: var(--space-10); text-align: center; color: var(--color-text-muted); }

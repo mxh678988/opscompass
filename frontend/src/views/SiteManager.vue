@@ -12,6 +12,7 @@ const resources = ref<SiteResource[]>([])
 const summary = ref<ResourceSummaryOut | null>(null)
 const loading = ref(false)
 const scanning = ref(false)
+const pendingId = ref<number | null>(null)
 const msg = reactive({ type: '', text: '' })
 let timer: number | undefined
 function tip(type: 'ok' | 'error', text: string) {
@@ -67,20 +68,26 @@ async function doScan() {
 }
 
 async function setResourceStatus(r: SiteResource, status: string) {
+  if (pendingId.value !== null) return
+  pendingId.value = r.id
   try {
     await patchSiteResource(r.id, { status })
     tip('ok', `资源「${r.name}」已标记为${stLabel(status)}`)
     await loadResources()
   } catch (e) { tip('error', `更新失败：${errText(e)}`) }
+  finally { pendingId.value = null }
 }
 
 async function doDelete(r: SiteResource) {
+  if (pendingId.value !== null) return
   if (!window.confirm(`确认删除资源「${r.name}」？`)) return
+  pendingId.value = r.id
   try {
     await deleteSiteResource(r.id)
     tip('ok', '资源已删除')
     await loadResources()
   } catch (e) { tip('error', `删除失败：${errText(e)}`) }
+  finally { pendingId.value = null }
 }
 
 watch(siteId, () => loadResources())
@@ -148,9 +155,9 @@ onMounted(async () => {
             <td class="td-muted">{{ fmtSize(r.size_bytes) }}</td>
             <td><span class="badge" :class="r.status === 'ok' ? 'ok' : (r.status === 'missing' || r.status === 'error' ? 'error' : 'muted')">{{ stLabel(r.status) }}</span></td>
             <td class="ops">
-              <button v-if="r.status !== 'ok'" class="btn ghost sm" @click="setResourceStatus(r, 'ok')">标正常</button>
-              <button v-if="r.status !== 'missing'" class="btn ghost sm warn-text" @click="setResourceStatus(r, 'missing')">标缺失</button>
-              <button class="btn ghost sm danger-text" @click="doDelete(r)">删除</button>
+              <button v-if="r.status !== 'ok'" class="btn ghost sm" :disabled="pendingId === r.id" @click="setResourceStatus(r, 'ok')">标正常</button>
+              <button v-if="r.status !== 'missing'" class="btn ghost sm warn-text" :disabled="pendingId === r.id" @click="setResourceStatus(r, 'missing')">标缺失</button>
+              <button class="btn ghost sm danger-text" :disabled="pendingId === r.id" @click="doDelete(r)">删除</button>
             </td>
           </tr>
         </tbody>
