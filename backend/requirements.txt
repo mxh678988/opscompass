@@ -45,3 +45,4 @@ thrift==0.24.0
 thrift-sasl==0.4.3
 pure-sasl==0.6.2
 future==1.0.0
+pyzipper==0.3.6

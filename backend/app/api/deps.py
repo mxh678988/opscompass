@@ -287,6 +287,11 @@ MODULE_PERMISSION_MAP: dict = {
         "write": ["api_bridge:create", "api_bridge:update"],
         "delete": ["api_bridge:delete"],
     },
+    "security_transfer": {
+        "read": ["security_transfer:view"],
+        "write": ["security_transfer:create", "security_transfer:update"],
+        "delete": ["security_transfer:delete"],
+    },
 }
 
 

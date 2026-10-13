@@ -29,6 +29,7 @@ from app.api.v1.endpoints import (
     plugin_market,
     predictive,
     rbac,
+    security_transfer,
     storage,
     tenants,
 )
@@ -164,5 +165,13 @@ api_router.include_router(
     prefix="/api-bridge",
     tags=["api-bridge"],
     dependencies=[Depends(require_module_access("api_bridge"))],
+)
+
+# M14 导入导出安全中心：压缩包安全解压 / 加密导出（付费插件门控）
+api_router.include_router(
+    security_transfer.router,
+    prefix="/security",
+    tags=["security-transfer"],
+    dependencies=[Depends(require_module_access("security_transfer"))],
 )
 

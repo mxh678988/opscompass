@@ -14,6 +14,12 @@ from app.models.api_bridge import (  # noqa: F401
     ApiApplyTask,
     ApiPlatformTemplate,
 )
+from app.models.security_transfer import (  # noqa: F401
+    EXPORT_STATUSES,
+    IMPORT_STATUSES,
+    ExportRecord,
+    ImportRecord,
+)
 from app.models.ai import (  # noqa: F401
     AiActionItem,
     AiActionPolicy,
@@ -225,4 +231,8 @@ __all__ = [
     "CASE_STATUSES",
     "EXPERIMENT_STATUSES",
     "EXPERIMENT_WINNERS",
+    "ImportRecord",
+    "ExportRecord",
+    "IMPORT_STATUSES",
+    "EXPORT_STATUSES",
 ]
