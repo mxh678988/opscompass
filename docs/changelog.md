@@ -16,6 +16,13 @@ AIGC:
 
 ## [Unreleased]
 
+### 实现（知识中心独立页 · 知识库管理/文件/问答）
+
+- **知识库管理后端**：`models/knowledge.py` 新增 `KnowledgeBase`（oc_knowledge_base）与 `KnowledgeBaseFile`（oc_knowledge_base_file）模型；迁移 `p21_knowledge_base` 建表；`knowledge_service.py` 补齐 `create_base` / `list_bases` / `get_base` / `update_base` / `delete_base` / `upload_base_file` / `list_base_files` / `delete_base_file` / `ask_base` 方法（文件落盘 `data/knowledge/{tenant}/{base}/`，同名校验、软删+磁盘清理，问答按库内文件+已发布文档召回片段交由 LLM 生成，模型不可用降级返回片段拼装）。
+- **知识库管理端点**：`endpoints/knowledge.py` 新增 `POST/GET/PATCH/DELETE /bases`、`GET /bases/{id}`、`POST /bases/{id}/files`（multipart 上传）、`GET /bases/{id}/files`、`DELETE /files/{file_id}`、`POST /bases/{id}/ask` 路由，沿用 `require_module_access("knowledge")` 与租户隔离。
+- **知识中心独立页**：新增 `frontend/src/views/KnowledgeCenter.vue`（知识库总览 / 新建 / 编辑 / 删除 / 文件上传与删除 / 库内问答），`api/knowledge.ts` 补齐 `bases/files/ask` 方法，路由注册 `/knowledge-center` 并在顶部导航加入口，风格沿用 InsightCenter（原生标签 + main.css 变量）。
+- **验收**：前端 `npm run build` 通过（KnowledgeCenter 独立 chunk 打包成功）；后端全仓测试 461 passed（仅 sla 时间敏感用例已知失败，与本次改动无关）。
+
 ### 实现（数据源连接器插件 · 电商/交易与广告投放）
 
 - **电商/交易数据源连接器插件**：新增 `plugins/ecom_connector/`，清单 namespace `os_ecom_`、events `ecom.`、permissions `ecom:`、entry `backend.src.main:register`；复用 `ConnectorBase` / `FieldMapping` / `ConnectorDataset` / `ConnectorError` 与 CSV/REST 双接入模式，字段覆盖订单号/商品SKU/金额/数量/订单时间/渠道；落库 `os_ecom_source` / `os_ecom_sync_task` / `os_ecom_dataset`（schema_version 1.0）。

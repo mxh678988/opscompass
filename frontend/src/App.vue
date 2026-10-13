@@ -28,6 +28,7 @@ const links = [
   { to: '/sentiment', label: '舆情监控' },
   { to: '/audit', label: '审计日志' },
   { to: '/insight', label: '洞察中心' },
+  { to: '/knowledge-center', label: '知识中心' },
   { to: '/site-studio', label: '响应式网站' },
   { to: '/site-manager', label: '资源管理' },
   { to: '/security-center', label: '安全压缩' },

@@ -47,3 +47,37 @@ class KnowledgeRefIn(BaseModel):
     source: str = Field(default="agent", description="引用来源 agent/user/system/insight_center/decision_studio")
     ref_key: Optional[str] = Field(default=None, max_length=128, description="引用方标识")
     note: Optional[str] = Field(default=None, description="引用说明")
+
+
+class KnowledgeBaseIn(BaseModel):
+    """新建知识库。"""
+
+    name: str = Field(..., min_length=1, max_length=100, description="知识库名称")
+    description: Optional[str] = Field(default=None, max_length=500, description="描述")
+    config: Optional[dict] = Field(default=None, description="配置（top_k/模型/标签等）")
+
+
+class KnowledgeBasePatch(BaseModel):
+    """修改知识库配置。"""
+
+    name: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    description: Optional[str] = Field(default=None, max_length=500)
+    config: Optional[dict] = Field(default=None)
+    status: Optional[str] = Field(default=None, description="active/disabled")
+
+
+class KnowledgeAskIn(BaseModel):
+    """知识库问答提问。"""
+
+    question: str = Field(..., min_length=1, max_length=1000, description="问题")
+    top_k: int = Field(default=5, ge=1, le=20, description="召回条数")
+
+
+class KnowledgeAskOut(BaseModel):
+    """知识库问答响应。"""
+
+    answer: str = Field(..., description="回答内容")
+    fallback: bool = Field(default=False, description="是否降级模式（未调用模型/模型失败）")
+    model: Optional[str] = Field(default=None, description="实际使用的模型")
+    sources: list[dict] = Field(default_factory=list, description="引用来源片段")
+

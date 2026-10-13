@@ -101,3 +101,57 @@ class KnowledgeRefLog(Base):
     )
     note: Mapped[Optional[str]] = mapped_column(Text, default=None, comment="引用说明")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# 知识库状态
+KB_STATUSES = ("active", "disabled")
+# 知识库文件状态
+KB_FILE_STATUSES = ("active", "removed")
+
+
+class KnowledgeBase(Base):
+    """知识库（虚拟视图）：挂载一批知识文档与文件，支撑检索问答。"""
+
+    __tablename__ = "oc_knowledge_base"
+    __table_args__ = (
+        Index("ix_kb_tenant_status", "tenant_id", "status"),
+        Index("ix_kb_tenant_name", "tenant_id", "name"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True, comment="租户 ID")
+    name: Mapped[str] = mapped_column(String(100), comment="知识库名称")
+    description: Mapped[Optional[str]] = mapped_column(String(500), default=None, comment="描述")
+    config: Mapped[Optional[dict]] = mapped_column(JSON, default=None, comment="配置（模型/top_k/标签等）")
+    status: Mapped[str] = mapped_column(
+        String(16), default="active", server_default="active", comment="active/disabled"
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class KnowledgeBaseFile(Base):
+    """知识库文件：上传到知识库的源文件（仅登记，磁盘落于 data/knowledge）。"""
+
+    __tablename__ = "oc_knowledge_base_file"
+    __table_args__ = (
+        Index("ix_kb_file_base_status", "base_id", "status"),
+        Index("ix_kb_file_tenant_time", "tenant_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, index=True, comment="租户 ID")
+    base_id: Mapped[int] = mapped_column(
+        ForeignKey("oc_knowledge_base.id", ondelete="CASCADE"), index=True, comment="所属知识库"
+    )
+    file_name: Mapped[str] = mapped_column(String(200), comment="原始文件名")
+    file_path: Mapped[str] = mapped_column(String(600), comment="磁盘存储路径")
+    file_type: Mapped[str] = mapped_column(String(16), default="other", comment="扩展名（小写）")
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0, server_default="0", comment="文件大小")
+    uploader: Mapped[str] = mapped_column(String(64), default="system", server_default="system", comment="上传者")
+    status: Mapped[str] = mapped_column(
+        String(16), default="active", server_default="active", comment="active/removed"
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

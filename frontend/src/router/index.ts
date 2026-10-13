@@ -114,6 +114,12 @@ const router = createRouter({
       meta: { title: '洞察中心' },
     },
     {
+      path: '/knowledge-center',
+      name: 'knowledge-center',
+      component: () => import('@/views/KnowledgeCenter.vue'),
+      meta: { title: '知识中心' },
+    },
+    {
       path: '/site-studio',
       name: 'site-studio',
       component: () => import('@/views/SiteStudio.vue'),
