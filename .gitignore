@@ -85,3 +85,4 @@ docs_business/
 
 # M14 导出压缩产物（运行时生成）
 backend/exports/
+backend/data/
