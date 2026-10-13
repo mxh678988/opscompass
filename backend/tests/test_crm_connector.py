@@ -23,6 +23,12 @@ REAL_PLUGIN_SRC = Path(__file__).resolve().parents[2] / "plugins" / "crm_connect
 PLUGIN_SRC = REAL_PLUGIN_SRC / "backend" / "src"
 sys.path.insert(0, str(PLUGIN_SRC))
 
+# 多插件测试在同一 pytest 进程运行时，包名 connectors 可能命中其它插件已
+# 缓存的实现；每次导入前弹出缓存，强制加载本插件自己的 connectors 包。
+for _name in list(sys.modules):
+    if _name == "connectors" or _name.startswith("connectors."):
+        sys.modules.pop(_name, None)
+
 from connectors.base import ConnectorError  # noqa: E402
 from connectors.csv_source import CsvConnector  # noqa: E402
 from connectors.rest_source import RestConnector  # noqa: E402

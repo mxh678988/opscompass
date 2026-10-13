@@ -18,6 +18,7 @@ from __future__ import annotations
 import importlib
 import logging
 import sys
+import types
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -266,13 +267,25 @@ class PluginRuntime:
                 f"插件 {plugin_id} backend 模块不存在: {plugin_dir / mod_rel}"
             )
 
-        added: list[str] = []
-        for d in (str(plugin_dir), str(backend_dir)):
-            if d not in sys.path:
-                sys.path.insert(0, d)
-                added.append(d)
+        # 插件专属命名空间加载：多插件共用 "backend.src.*" 包名时，直接
+        # importlib.import_module 会把同名模块写入 sys.modules 并互相覆盖。
+        # 这里把每个插件的 backend 包挂到 __plugin_ns__.<plugin_id> 下，使
+        # 各插件拥有独立模块图（插件内部相对导入不受影响）。
+        ns_root = "__plugin_ns__"
+        ns_root_mod = sys.modules.get(ns_root)
+        if ns_root_mod is None:
+            ns_root_mod = types.ModuleType(ns_root)
+            ns_root_mod.__path__ = []
+            sys.modules[ns_root] = ns_root_mod
+        ns_plugin_name = f"{ns_root}.{plugin_id}"
+        ns_plugin = sys.modules.get(ns_plugin_name)
+        if ns_plugin is None:
+            ns_plugin = types.ModuleType(ns_plugin_name)
+            ns_plugin.__path__ = [str(plugin_dir), str(backend_dir)]
+            sys.modules[ns_plugin_name] = ns_plugin
+
         try:
-            mod = importlib.import_module(mod_name)
+            mod = importlib.import_module(f"{ns_plugin_name}.{mod_name}")
             sys.modules[cache_key] = mod
             func = getattr(mod, func_name, None)
             if func is None:
@@ -283,12 +296,6 @@ class PluginRuntime:
             return mod
         except Exception as e:
             raise RuntimeError(f"插件 {plugin_id} backend 加载失败: {e}") from e
-        finally:
-            for d in added:
-                try:
-                    sys.path.remove(d)
-                except ValueError:
-                    pass
 
     def provision_tables(self, plugin_id: str) -> list[str]:
         """内核监督下为插件建表（插件不得自行建表，M2 设计约束）。

@@ -16,6 +16,13 @@ AIGC:
 
 ## [Unreleased]
 
+### 实现（数据源连接器插件 · 电商/交易与广告投放）
+
+- **电商/交易数据源连接器插件**：新增 `plugins/ecom_connector/`，清单 namespace `os_ecom_`、events `ecom.`、permissions `ecom:`、entry `backend.src.main:register`；复用 `ConnectorBase` / `FieldMapping` / `ConnectorDataset` / `ConnectorError` 与 CSV/REST 双接入模式，字段覆盖订单号/商品SKU/金额/数量/订单时间/渠道；落库 `os_ecom_source` / `os_ecom_sync_task` / `os_ecom_dataset`（schema_version 1.0）。
+- **广告投放数据源连接器插件**：新增 `plugins/ads_connector/`，清单 namespace `os_ads_`、events `ads.`、permissions `ads:`、entry `backend.src.main:register`；复用同一基类与 CSV/REST 双接入模式，字段覆盖计划/广告组/花费/展示/点击/转化/日期；落库 `os_ads_source` / `os_ads_sync_task` / `os_ads_dataset`（schema_version 1.0）。
+- **多插件加载隔离**：`PluginRuntime.load_backend` 改为插件专属命名空间（`__plugin_ns__.<plugin_id>`）加载 backend，消除多插件共用 `backend.src` 包名时的 `sys.modules` 缓存互相覆盖问题。
+- **验收**：新增 `backend/tests/test_ecom_connector.py` 14 个用例与 `backend/tests/test_ads_connector.py` 14 个用例（清单解析、装载注入、监督建表、CSV/REST 归一、异常路径、门面全链路）全部通过；CRM 回归 14 passed；全仓 461 passed（仅 sla 时间敏感用例已知失败）。
+
 ### 实现（数据源连接器插件 · CRM/会员打样）
 
 - **CRM/会员数据源连接器插件**：新增 `plugins/crm_connector/`（首个数据源连接器打样），清单 namespace `os_crm_`、events `crm.`、entry `backend.src.main:register`；支持 CSV 文件导入与 REST API 拉取两种接入，统一归一为平台可消费数据集（`os_crm_dataset`，schema_version 1.0）。

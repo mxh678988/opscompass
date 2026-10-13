@@ -1,0 +1,58 @@
+id: ecom_connector
+name: 电商/交易数据源连接器
+version: "0.1.0"
+min_kernel_version: "0.11.0"
+kind: community
+entry: backend.src.main:register
+description: 数据源连接器插件：接入电商/交易订单数据，支持 CSV 文件导入与 REST API 拉取两种方式，统一归一为平台可消费的数据集结构；复用 crm_connector 打样的 ConnectorBase/FieldMapping 结构与 csv/rest 双接入模式。
+author: OpsCompass Team
+email: dev@opscompass.local
+category: data
+license: commercial
+
+namespace:
+  tables: os_ecom_
+  events: "ecom."
+  permissions: "ecom:"
+
+permissions:
+  - code: ecom:source:manage
+    name: 数据源管理
+  - code: ecom:sync:run
+    name: 执行同步
+  - code: ecom:dataset:read
+    name: 数据集读取
+
+roles:
+  - code: ecom:operator
+    name: 电商数据运营
+    permissions:
+      - ecom:source:manage
+      - ecom:sync:run
+      - ecom:dataset:read
+
+events:
+  publish:
+    - ecom.source.created
+    - ecom.dataset.ready
+    - ecom.sync.finished
+  subscribe:
+    - core.metric.written
+
+sdk:
+  min_version: "0.11.0"
+  required_capabilities:
+    - event_bus
+    - plugin_signing
+    - plugin_storage
+
+config:
+  ecom_connector:
+    csv_batch_size: 1000
+    rest_timeout_seconds: 15
+    rest_max_pages: 1
+    default_user_agent: OpsCompass-EcomConnector/0.1.0
+    dataset_schema_version: "1.0"
+  storage:
+    root_type: user
+    max_file_size_mb: 100
