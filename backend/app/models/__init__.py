@@ -9,6 +9,11 @@ from app.models.agent import (  # noqa: F401
     AgentInsight,
     AgentRun,
 )
+from app.models.api_bridge import (  # noqa: F401
+    API_TASK_STATUSES,
+    ApiApplyTask,
+    ApiPlatformTemplate,
+)
 from app.models.ai import (  # noqa: F401
     AiActionItem,
     AiActionPolicy,
@@ -133,6 +138,9 @@ __all__ = [
     "CoreEventDead",
     "CoreEventCursor",
     "EVENT_STATUSES",
+    "ApiPlatformTemplate",
+    "ApiApplyTask",
+    "API_TASK_STATUSES",
     "AgentRun",
     "AgentInsight",
     "AgentAction",

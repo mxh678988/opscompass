@@ -84,6 +84,10 @@ PERMISSION_DEFINITIONS: list[tuple[str, str, str, str]] = [
     ("agent:create", "创建编排运行", "agent", "创建运行、发起分析、登记执行动作"),
     ("agent:update", "确认/管理编排", "agent", "人工确认闸门 approve/reject、完成/失败编排"),
     ("agent:delete", "删除编排记录", "agent", "删除编排运行及其洞察与动作"),
+    ("api_bridge:view", "查看API申请助手", "api_bridge", "查看平台申请模板与代申请任务"),
+    ("api_bridge:create", "发起API代申请", "api_bridge", "创建平台模板与代申请任务"),
+    ("api_bridge:update", "管理API申请", "api_bridge", "更新平台模板与申请任务状态/进度"),
+    ("api_bridge:delete", "删除API申请数据", "api_bridge", "删除平台模板与申请任务"),
 ]
 
 ALL_PERMISSION_CODES: list[str] = [c for c, _, _, _ in PERMISSION_DEFINITIONS]
@@ -110,6 +114,8 @@ _OPERATOR_CODES = set(_VIEW_ONLY) | {
     "knowledge:update",
     "agent:create",
     "agent:update",
+    "api_bridge:create",
+    "api_bridge:update",
 }  # noqa: E501
 _ADMIN_CODES = set(ALL_PERMISSION_CODES) - {"role:delete", "user:delete", "audit:export"}
 

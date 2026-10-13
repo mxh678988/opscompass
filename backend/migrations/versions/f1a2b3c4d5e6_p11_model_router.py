@@ -6,7 +6,8 @@ Create Date: 2026-10-11
 """
 from alembic import op
 import sqlalchemy as sa
-from app.models.kernel import BIGINT, TIMESTAMP
+from sqlalchemy import TIMESTAMP
+from sqlalchemy.dialects.postgresql import BIGINT
 
 revision = "f1a2b3c4d5e6"
 down_revision = "e5f6a7b8c9d0"

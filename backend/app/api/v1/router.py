@@ -12,6 +12,7 @@ from app.api.deps import get_current_user, require_module_access
 from app.api.v1.endpoints import (
     agent,
     ai,
+    api_bridge,
     audience,
     audit,
     auth,
@@ -155,5 +156,13 @@ api_router.include_router(
     prefix="/agents",
     tags=["agents"],
     dependencies=[Depends(require_module_access("agent"))],
+)
+
+# M13 API 申请助手：平台申请模板 / 凭据加密代申请任务状态机
+api_router.include_router(
+    api_bridge.router,
+    prefix="/api-bridge",
+    tags=["api-bridge"],
+    dependencies=[Depends(require_module_access("api_bridge"))],
 )
 

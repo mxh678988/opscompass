@@ -281,6 +281,12 @@ MODULE_PERMISSION_MAP: dict = {
         "write": ["agent:create", "agent:update"],
         "delete": ["agent:delete"],
     },
+    # M13 API 申请助手：平台模板与代申请任务
+    "api_bridge": {
+        "read": ["api_bridge:view"],
+        "write": ["api_bridge:create", "api_bridge:update"],
+        "delete": ["api_bridge:delete"],
+    },
 }
 
 
