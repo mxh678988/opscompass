@@ -395,6 +395,60 @@ class SentimentFacade:
         return self._require("get_events")(action="get_events", params={"topic_id": topic_id, "status": status}, **kwargs)
 
 
+class ConnectorFacade:
+    """数据源连接器门面：插件通过 SDK 调用连接器能力（M17 数据源连接器落地）。
+
+    内核在装载插件时注入 ``connector_fn``；未注入时抛 ``NotAvailableError``
+    指明 M17，防止插件误以为连接器能力已就绪。回调约定与引擎工厂一致：
+    ``connector_fn(action=..., params={...}, **kwargs)``，内核会按插件
+    命名空间代理会话后调用 ``engine(db, plugin_id, action, params)``。
+    """
+
+    def __init__(
+        self,
+        plugin_id: str,
+        connector_fn: Optional[Callable[..., Any]] = None,
+    ) -> None:
+        self._plugin_id = plugin_id
+        self._connector_fn = connector_fn
+
+    def _require(self, op: str) -> Callable[..., Any]:
+        if self._connector_fn is None:
+            raise NotAvailableError(f"connector.{op}", "M17 装配完成")
+        return self._connector_fn
+
+    def _call(self, action: str, params: dict[str, Any], **kwargs: Any) -> Any:
+        return self._require(action)(action=action, params=params, **kwargs)
+
+    def create_source(self, source_type: str, name: str, config: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        """登记一个数据源（csv / rest），返回数据源 ID。"""
+        return self._call("create_source", {"source_type": source_type, "name": name, "config": config}, **kwargs)
+
+    def list_sources(self, **kwargs: Any) -> list[dict[str, Any]]:
+        """列出当前插件已登记的数据源。"""
+        return self._call("list_sources", {}, **kwargs)
+
+    def ingest_csv(self, source_id: str, file_path: str, **kwargs: Any) -> dict[str, Any]:
+        """从 CSV 文件导入并归一为平台数据集，返回数据集摘要。"""
+        return self._call("ingest_csv", {"source_id": source_id, "file_path": file_path}, **kwargs)
+
+    def fetch_rest(self, source_id: str, **kwargs: Any) -> dict[str, Any]:
+        """按 REST 数据源配置拉取并归一为平台数据集，返回数据集摘要。"""
+        return self._call("fetch_rest", {"source_id": source_id}, **kwargs)
+
+    def sync(self, source_id: str, mode: str = "auto", **kwargs: Any) -> dict[str, Any]:
+        """对数据源执行同步（auto 按 source_type 自动选择 csv/rest）。"""
+        return self._call("sync", {"source_id": source_id, "mode": mode}, **kwargs)
+
+    def list_datasets(self, source_id: Optional[str] = None, **kwargs: Any) -> list[dict[str, Any]]:
+        """列出已归一化的数据集（可按数据源过滤）。"""
+        return self._call("list_datasets", {"source_id": source_id}, **kwargs)
+
+    def get_dataset(self, dataset_id: str, **kwargs: Any) -> dict[str, Any]:
+        """读取单条数据集摘要（含记录数/来源/归一化时间）。"""
+        return self._call("get_dataset", {"dataset_id": dataset_id}, **kwargs)
+
+
 class SigningFacade:
     """签名门面：插件侧查询自身签名状态并校验发布包完整性（M7 插件签名密钥体系落地）。
 
@@ -606,6 +660,7 @@ class PluginContext:
         signing_verify_fn: Optional[Callable[[], Any]] = None,
         signing_key_query_fn: Optional[Callable[[], Any]] = None,
         sentiment_fn: Optional[Callable[..., Any]] = None,
+        connector_fn: Optional[Callable[..., Any]] = None,
     ) -> None:
         self.plugin_id = plugin_id
         self.plugin_version = plugin_version
@@ -630,6 +685,7 @@ class PluginContext:
             plugin_id, signing_verify_fn, signing_key_query_fn
         )
         self.sentiment = SentimentFacade(plugin_id, sentiment_fn)
+        self.connector = ConnectorFacade(plugin_id, connector_fn)
         self.ui = UIFacade(plugin_id)
 
     def declarations(self) -> dict[str, list[dict[str, Any]]]:
@@ -663,6 +719,7 @@ def create_context(
     signing_verify_fn: Optional[Callable[[], Any]] = None,
     signing_key_query_fn: Optional[Callable[[], Any]] = None,
     sentiment_fn: Optional[Callable[..., Any]] = None,
+    connector_fn: Optional[Callable[..., Any]] = None,
 ) -> PluginContext:
     """内核侧创建插件上下文（插件作者通常不直接调用）。"""
     return PluginContext(
@@ -682,4 +739,5 @@ def create_context(
         signing_verify_fn=signing_verify_fn,
         signing_key_query_fn=signing_key_query_fn,
         sentiment_fn=sentiment_fn,
+        connector_fn=connector_fn,
     )

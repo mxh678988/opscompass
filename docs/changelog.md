@@ -16,6 +16,14 @@ AIGC:
 
 ## [Unreleased]
 
+### 实现（数据源连接器插件 · CRM/会员打样）
+
+- **CRM/会员数据源连接器插件**：新增 `plugins/crm_connector/`（首个数据源连接器打样），清单 namespace `os_crm_`、events `crm.`、entry `backend.src.main:register`；支持 CSV 文件导入与 REST API 拉取两种接入，统一归一为平台可消费数据集（`os_crm_dataset`，schema_version 1.0）。
+- **可复用连接器基类**：`connectors/base.py` 提供 `ConnectorBase` / `FieldMapping` / `ConnectorDataset` / `ConnectorError`，`csv_source.py` 与 `rest_source.py` 为 CSV/REST 实现（REST 支持注入替身传输层，便于测试）；后续电商/交易、广告投放连接器可直接复制扩展。
+- **SDK connector 门面**：`backend/app/sdk/context.py` 新增 `ConnectorFacade`（create_source / list_sources / ingest_csv / fetch_rest / sync / list_datasets / get_dataset），`PluginRuntime` 装配 `connector_engine`，未装配时抛 `NotAvailableError`。
+- **引擎与落库**：`core.py` 提供 `CrmConnectorEngine`，接入记录同步流水（`os_crm_sync_task`，成功/失败原因）与数据集快照（`os_crm_dataset`）。
+- **验收**：新增 `backend/tests/test_crm_connector.py` 14 个用例（清单解析、装载注入、监督建表、CSV 归一、REST 测试桩、缺字段/坏文件/网络失败异常路径、门面全链路）全部通过；既有插件测试 27 passed 无回归。
+
 ## [v0.14.0] - 2026-10-13
 
 ### 实现（v0.14.0 后端内核 M9-M16）

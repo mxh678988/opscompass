@@ -47,6 +47,7 @@ class PluginRuntime:
         signing_service: Any = None,
         storage_engine: Any = None,
         sentiment_engine: Any = None,
+        connector_engine: Any = None,
     ) -> None:
         self.registry = registry
         self._session_factory = session_factory
@@ -61,6 +62,7 @@ class PluginRuntime:
         self._signing_service = signing_service
         self._storage_engine = storage_engine
         self._sentiment_engine = sentiment_engine
+        self._connector_engine = connector_engine
         self._contexts: dict[str, PluginContext] = {}
 
     # ---- 装配：把内核能力包成 SDK 回调 ----
@@ -185,6 +187,27 @@ class PluginRuntime:
 
         return sentiment_fn
 
+    def _make_connector(self, plugin_id: str) -> Optional[Callable[..., Any]]:
+        """构造连接器门面回调（M17）：基于注入的连接器引擎返回 callable。
+
+        连接器引擎属插件业务层（``plugins/crm_connector/backend``），内核
+        不感知插件代码路径：仅当外部显式注入 ``connector_engine`` 时才装配，
+        否则返回 None，插件侧 connector.* 抛
+        NotAvailableError("connector.*", "M17 装配完成")，不假装可用。
+        """
+        if self._connector_engine is None:
+            return None
+        engine = self._connector_engine
+
+        def connector_fn(*, action: str, params: Optional[dict] = None, **kwargs: Any) -> Any:
+            db = self._session_factory()
+            try:
+                return engine(db, plugin_id, action, params or {}, **kwargs)
+            finally:
+                db.close()
+
+        return connector_fn
+
     # ---- M8 插件 backend 加载与引擎注入 ----
 
     def inject_sentiment_engine(self, engine: Any) -> None:
@@ -194,6 +217,14 @@ class PluginRuntime:
         engine(db, plugin_id, action, params, **kwargs) -> result。
         """
         self._sentiment_engine = engine
+
+    def inject_connector_engine(self, engine: Any) -> None:
+        """插件 backend 通过本方法把连接器引擎注入内核（register 内调用）。
+
+        注入对象与 ``_make_connector`` 约定一致：
+        engine(db, plugin_id, action, params, **kwargs) -> result。
+        """
+        self._connector_engine = engine
 
     def load_backend(self, plugin_id: str) -> Any:
         """按清单 entry 加载插件 backend 并调用入口函数（幂等）。
@@ -322,6 +353,7 @@ class PluginRuntime:
             signing_verify_fn=signing_verify,
             signing_key_query_fn=signing_query,
             sentiment_fn=self._make_sentiment(meta.plugin_id),
+            connector_fn=self._make_connector(meta.plugin_id),
         )
         self._contexts[plugin_id] = ctx
         return ctx

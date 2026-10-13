@@ -1,0 +1,58 @@
+id: crm_connector
+name: CRM/会员数据源连接器
+version: "0.1.0"
+min_kernel_version: "0.11.0"
+kind: community
+entry: backend.src.main:register
+description: 数据源连接器插件（首个打样）：接入 CRM/会员数据，支持 CSV 文件导入与 REST API 拉取两种方式，统一归一为平台可消费的数据集结构。后续电商/交易、广告投放连接器可复制本插件结构扩展。
+author: OpsCompass Team
+email: dev@opscompass.local
+category: data
+license: commercial
+
+namespace:
+  tables: os_crm_
+  events: "crm."
+  permissions: "crm:"
+
+permissions:
+  - code: crm:source:manage
+    name: 数据源管理
+  - code: crm:sync:run
+    name: 执行同步
+  - code: crm:dataset:read
+    name: 数据集读取
+
+roles:
+  - code: crm:operator
+    name: CRM数据运营
+    permissions:
+      - crm:source:manage
+      - crm:sync:run
+      - crm:dataset:read
+
+events:
+  publish:
+    - crm.source.created
+    - crm.dataset.ready
+    - crm.sync.finished
+  subscribe:
+    - core.metric.written
+
+sdk:
+  min_version: "0.11.0"
+  required_capabilities:
+    - event_bus
+    - plugin_signing
+    - plugin_storage
+
+config:
+  crm_connector:
+    csv_batch_size: 1000
+    rest_timeout_seconds: 15
+    rest_max_pages: 1
+    default_user_agent: OpsCompass-CrmConnector/0.1.0
+    dataset_schema_version: "1.0"
+  storage:
+    root_type: user
+    max_file_size_mb: 100
