@@ -25,7 +25,13 @@ const links = [
   { to: '/security-log', label: '安全日志' },
   { to: '/ai-governance', label: 'AI 治理' },
   { to: '/learning', label: '学习进化' },
+  { to: '/sentiment', label: '舆情监控' },
   { to: '/audit', label: '审计日志' },
+  { to: '/insight', label: '洞察中心' },
+  { to: '/site-studio', label: '响应式网站' },
+  { to: '/site-manager', label: '资源管理' },
+  { to: '/security-center', label: '安全压缩' },
+  { to: '/api-bridge', label: 'API 代申请' },
 ]
 
 /** 登录页不展示导航栏 */

@@ -107,6 +107,36 @@ const router = createRouter({
       component: () => import('@/views/AuditCenter.vue'),
       meta: { title: '审计日志' },
     },
+    {
+      path: '/insight',
+      name: 'insight-center',
+      component: () => import('@/views/InsightCenter.vue'),
+      meta: { title: '洞察中心' },
+    },
+    {
+      path: '/site-studio',
+      name: 'site-studio',
+      component: () => import('@/views/SiteStudio.vue'),
+      meta: { title: '响应式网站' },
+    },
+    {
+      path: '/site-manager',
+      name: 'site-manager',
+      component: () => import('@/views/SiteManager.vue'),
+      meta: { title: '网站资源管理器' },
+    },
+    {
+      path: '/security-center',
+      name: 'security-center',
+      component: () => import('@/views/SecurityCenter.vue'),
+      meta: { title: '压缩安全中心' },
+    },
+    {
+      path: '/api-bridge',
+      name: 'api-bridge',
+      component: () => import('@/views/ApiBridge.vue'),
+      meta: { title: 'API 代申请' },
+    },
   ],
 })
 

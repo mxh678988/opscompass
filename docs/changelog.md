@@ -16,6 +16,13 @@ AIGC:
 
 ## [Unreleased]
 
+### 实现（v0.14.0 运营决策前端 M9-M16）
+
+- **M9 智能预测工作台**：新增 `frontend/src/views/InsightCenter.vue`（1192 行），整合流失/转化预测、人群包管理、知识库沉淀与智能体编排四大工作台，含任务发起/列表/详情、概率分布条带、人群复用、文档搜索与智能体审批分析闭环；`frontend/src/api/predictive.ts`、`audience.ts`、`knowledge.ts`、`agent.ts` 按后端真实路由与字段对齐。
+- **M13-M16 新页面**：新增 `ApiBridge.vue`（API 代申请助手）、`SecurityCenter.vue`（压缩安全中心）、`SiteStudio.vue`（响应式网站生成器）、`SiteManager.vue`（网站资源管理器）；`apiBridge.ts`、`securityTransfer.ts`、`sites.ts` 对齐 `/api-bridge/*`、`/security/*`、`/sites/*` 后端端点。
+- **路由与导航**：`router/index.ts` 注册 `/insight`、`/site-studio`、`/site-manager`、`/security-center`、`/api-bridge`；`App.vue` 导航补齐全部新入口。
+- **验收**：`npm run build`（vue-tsc + vite）一次通过，dist 已更新。
+
 ### 实现（v0.13.0 稳定性增强 S1-S7，已全部落地）
 
 - **S1 幂等去重**（`a5b7917`）：事件消费按事件 ID 幂等，重复投递不重复执行。
