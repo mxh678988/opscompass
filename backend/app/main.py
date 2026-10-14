@@ -10,6 +10,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.middleware import AuditMiddleware, IPAllowlistMiddleware
+from app.core.otel import init_tracing, instrument_app
 
 # 统一日志初始化：控制台 + app.log + 安全分级日志（security.log）
 setup_logging()
@@ -66,6 +67,12 @@ async def lifespan(app: FastAPI):
     except Exception as exc:  # 调度线程启动失败不阻塞服务
         logger.warning("[startup] 采集调度线程启动失败: %s", exc)
 
+    # OTel 可观测性：初始化 TracerProvider
+    try:
+        init_tracing()
+    except Exception as exc:
+        logger.warning("[startup] OTel 初始化跳过: %s", exc)
+
     yield
 
 
@@ -100,6 +107,12 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+    # OTel 可观测性：注入 FastAPI Instrumentor
+    try:
+        instrument_app(app)
+    except Exception as exc:
+        logger.warning("[OTel] FastAPI Instrumentor 注入失败: %s", exc)
 
     @app.get("/health", tags=["system"])
     def health() -> dict:

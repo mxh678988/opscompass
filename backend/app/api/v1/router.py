@@ -30,6 +30,7 @@ from app.api.v1.endpoints import (
     predictive,
     rbac,
     security_transfer,
+    semantic,
     site_generator,
     site_resource,
     storage,
@@ -63,6 +64,12 @@ api_router.include_router(
     metrics.router,
     prefix="/metrics",
     tags=["metrics"],
+    dependencies=[Depends(require_module_access("metric"))],
+)
+api_router.include_router(
+    semantic.router,
+    prefix="/semantic",
+    tags=["semantic"],
     dependencies=[Depends(require_module_access("metric"))],
 )
 api_router.include_router(

@@ -82,6 +82,16 @@ class Settings(BaseSettings):
     AI_TIMEOUT: int = 120
     AI_MAX_TOKENS: int = 2048
     AI_TEMPERATURE: float = 0.3
+    # 语义层（Text2Metric）
+    SEMANTIC_ENABLED: bool = True
+    SEMANTIC_EXTERNAL_QUERY_LIMIT: int = 200
+    SEMANTIC_EXTERNAL_TIMEOUT_SECONDS: int = 15
+    SEMANTIC_DERIVED_MAX_DEPTH: int = 2
+    # 可观测性（OpenTelemetry）
+    OTEL_ENABLED: bool = False
+    OTEL_SERVICE_NAME: str = "opscompass-backend"
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = "http://localhost:4317"
+    OTEL_EXPORTER_OTLP_PROTOCOL: str = "grpc"
 
     # ---------- 安全与权限 ----------
     # IP 白名单（默认关闭；开启后仅白名单内来源可访问）

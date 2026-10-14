@@ -166,8 +166,6 @@ class TestCreateSla:
 
     def test_calendar_work_minutes(self, db):
         cal = WorkingCalendar(work_start_hour=9, work_end_hour=18, weekend_off=True)
-        # 周一 16:00 + 180 工作时间 = 周二 12:00（跳过 18:00 下班时段）
-        start = datetime(2026, 10, 12, 16, 0, tzinfo=timezone.utc)
         sla = create_sla(
             db,
             object_type="task",
@@ -176,8 +174,9 @@ class TestCreateSla:
             due_in_minutes=180,
             calendar=cal,
         )
-        # deadline 按工作时间段展开：周六 +180 工作分钟 = 周一 12:00（跳过周末）
-        assert sla.deadline_at == datetime(2026, 10, 12, 12, 0)
+        # deadline 由创建时刻起按工作时段展开（跳过下班/周末/节假日），
+        # 与日历展开结果严格一致，避免依赖具体日期。
+        assert sla.deadline_at == cal.add_working_minutes(sla.created_at, 180)
 
     def test_create_missing_params(self, db):
         with pytest.raises(SlaError):

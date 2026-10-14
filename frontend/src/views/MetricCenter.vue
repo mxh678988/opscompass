@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import {
   createMetric,
   deleteMetric,
+  fetchMetric,
   fetchMetrics,
   updateMetric,
   type MetricItem,
@@ -27,6 +28,78 @@ const form = reactive({
   granularity: 'day',
   status: 'online',
 })
+
+// ===== 编辑 =====
+const editing = ref(false)
+const saving = ref(false)
+const editError = ref('')
+const editForm = reactive({
+  name: '',
+  description: '',
+  metric_type: 'atomic',
+  agg_func: 'sum',
+  formula: '',
+  unit: '',
+  precision: 2,
+  granularity: 'day',
+  owner: '',
+  status: 'draft',
+})
+let editingCode = ''
+
+async function openEdit(row: MetricItem) {
+  editError.value = ''
+  editingCode = row.code
+  const res = await fetchMetric(row.code)
+  const detail = res.data
+  Object.assign(editForm, {
+    name: detail.name,
+    description: detail.description ?? '',
+    metric_type: detail.metric_type,
+    agg_func: detail.agg_func,
+    formula: detail.formula ?? '',
+    unit: detail.unit ?? '',
+    precision: detail.precision,
+    granularity: detail.granularity,
+    owner: detail.owner ?? '',
+    status: detail.status,
+  })
+  editing.value = true
+}
+
+async function saveEdit() {
+  editError.value = ''
+  if (!editForm.name.trim()) {
+    editError.value = '指标名称不能为空'
+    return
+  }
+  saving.value = true
+  try {
+    await updateMetric(editingCode, {
+      name: editForm.name.trim(),
+      description: editForm.description.trim() || null,
+      metric_type: editForm.metric_type,
+      agg_func: editForm.agg_func,
+      formula: editForm.formula.trim() || null,
+      unit: editForm.unit.trim(),
+      precision: Number(editForm.precision),
+      granularity: editForm.granularity,
+      owner: editForm.owner.trim() || null,
+      status: editForm.status,
+    })
+    editing.value = false
+    await load()
+  } catch (e: any) {
+    editError.value = e?.response?.data?.detail ?? '保存失败'
+  } finally {
+    saving.value = false
+  }
+}
+
+function closeEdit() {
+  editing.value = false
+  editError.value = ''
+}
 
 async function load() {
   loading.value = true
@@ -191,6 +264,7 @@ onMounted(load)
               <span class="tag" :class="row.status">{{ row.status }}</span>
             </td>
             <td class="ops">
+              <button @click="openEdit(row)">编辑</button>
               <button @click="toggleStatus(row)">
                 {{ row.status === 'online' ? '下线' : '上线' }}
               </button>
@@ -205,6 +279,80 @@ onMounted(load)
       </div>
       <p v-if="loading" class="tip">加载中…</p>
     </section>
+
+    <!-- 编辑弹窗 -->
+    <div v-if="editing" class="modal-mask" @click.self="closeEdit">
+      <div class="modal">
+        <h2>编辑指标 <span class="mono">{{ editingCode }}</span></h2>
+        <div class="modal-form">
+          <label>
+            <span>指标名称 *</span>
+            <input v-model="editForm.name" placeholder="如 支付金额" />
+          </label>
+          <label>
+            <span>单位</span>
+            <input v-model="editForm.unit" placeholder="元 / 单 / %" />
+          </label>
+          <label>
+            <span>类型</span>
+            <select v-model="editForm.metric_type">
+              <option value="atomic">原子指标</option>
+              <option value="derived">派生指标</option>
+            </select>
+          </label>
+          <label>
+            <span>聚合方式</span>
+            <select v-model="editForm.agg_func">
+              <option value="sum">sum</option>
+              <option value="avg">avg</option>
+              <option value="count">count</option>
+              <option value="count_distinct">count_distinct</option>
+              <option value="max">max</option>
+              <option value="min">min</option>
+              <option value="ratio">ratio</option>
+            </select>
+          </label>
+          <label>
+            <span>粒度</span>
+            <select v-model="editForm.granularity">
+              <option value="hour">小时</option>
+              <option value="day">天</option>
+              <option value="week">周</option>
+              <option value="month">月</option>
+            </select>
+          </label>
+          <label>
+            <span>小数位</span>
+            <input v-model.number="editForm.precision" type="number" min="0" max="6" />
+          </label>
+          <label>
+            <span>负责人</span>
+            <input v-model="editForm.owner" placeholder="owner" />
+          </label>
+          <label>
+            <span>状态</span>
+            <select v-model="editForm.status">
+              <option value="draft">草稿</option>
+              <option value="online">已上线</option>
+              <option value="offline">已下线</option>
+            </select>
+          </label>
+          <label class="wide">
+            <span>派生表达式</span>
+            <input v-model="editForm.formula" placeholder="如 ratio(paid_amount / gmv)" />
+          </label>
+          <label class="wide">
+            <span>口径说明</span>
+            <input v-model="editForm.description" placeholder="计算口径 / 业务含义" />
+          </label>
+        </div>
+        <p v-if="editError" class="error">{{ editError }}</p>
+        <div class="modal-ops">
+          <button :disabled="saving" @click="saveEdit">{{ saving ? '保存中…' : '保存' }}</button>
+          <button class="ghost" @click="closeEdit">取消</button>
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
@@ -277,6 +425,63 @@ button.primary:disabled {
 button.danger {
   color: var(--color-error);
   border-color: var(--color-error-border);
+}
+button.ghost {
+  color: var(--color-text-secondary);
+}
+/* ===== 编辑弹窗 ===== */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+.modal {
+  width: min(640px, 100%);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+.modal h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+.modal-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px 16px;
+}
+.modal-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.modal-form label.wide {
+  grid-column: 1 / -1;
+}
+.modal-form input,
+.modal-form select {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 14px;
+}
+.modal-ops {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  justify-content: flex-end;
 }
 .toolbar {
   display: flex;

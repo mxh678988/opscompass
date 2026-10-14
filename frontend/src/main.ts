@@ -4,6 +4,10 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import './styles/main.css'
+import { initFrontendTracing } from './core/otel'
+
+// OTel 可观测性：初始化前端 tracing
+initFrontendTracing()
 
 createApp(App).use(createPinia()).use(router).mount('#app')
 
