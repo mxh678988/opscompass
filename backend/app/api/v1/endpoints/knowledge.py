@@ -169,7 +169,7 @@ def create_base(
     return ApiResponse[dict](data=data, message="知识库已创建")
 
 
-@router.get("/bases", response_model=ApiResponse[dict], summary="知识库列表")
+@router.get("/bases", response_model=ApiResponse[list], summary="知识库列表")
 def list_bases(
     keyword: str | None = Query(default=None, description="名称关键词"),
     status: str | None = Query(default=None, description="active/disabled"),
@@ -180,7 +180,7 @@ def list_bases(
         data = svc.list_bases(db, tenant_id, keyword=keyword, status=status)
     except svc.KnowledgeServiceError as exc:
         raise _fail(exc)
-    return ApiResponse[dict](data=data)
+    return ApiResponse[list](data=data)
 
 
 @router.get("/bases/{base_id}", response_model=ApiResponse[dict], summary="知识库详情")
@@ -241,7 +241,7 @@ async def upload_base_file(
     return ApiResponse[dict](data=data, message="文件已上传")
 
 
-@router.get("/bases/{base_id}/files", response_model=ApiResponse[dict], summary="知识库文件列表")
+@router.get("/bases/{base_id}/files", response_model=ApiResponse[list], summary="知识库文件列表")
 def list_base_files(
     base_id: int,
     db: Session = Depends(get_db),
@@ -251,7 +251,7 @@ def list_base_files(
         data = svc.list_base_files(db, tenant_id, base_id)
     except svc.KnowledgeServiceError as exc:
         raise _fail(exc)
-    return ApiResponse[dict](data=data)
+    return ApiResponse[list](data=data)
 
 
 @router.delete("/files/{file_id}", response_model=ApiResponse[dict], summary="删除知识库文件")
