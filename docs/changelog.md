@@ -16,6 +16,16 @@ AIGC:
 
 ## [Unreleased]
 
+### 实现（v0.15.0 迭代1 · 语义层与链路可观测）— 已冻结
+
+- **指标注册表（Metrics Registry）**：`models/metric.py` 指标数据模型（名称/代码/聚合/粒度/精度/负责人/状态/公式/口径）+ 指标 CRUD 管理页 `MetricCenter.vue`（fetchMetric/updateMetric 编辑弹窗闭环）。
+- **指标编译解析层**：`semantic/compiler.py` 指标声明 → 确定 SQL（内部/外部/派生三模式，聚合/粒度/时间窗口翻译），`/api/v1/semantic/compile` 调试端点。
+- **语义层与模型路由**：`semantic/intent.py` Text2Metric 意图解析（规则兜底 + 本地 LLM 路由 + 双采样投票 + 语义关键词校正 + 粒度/时间规则校验优先）；`/api/v1/semantic/ask` 问数端点，`semantic/executor.py` 指标执行。
+- **LLM 路由准确率验收**：`validate_llm_route.py` 10 组用例（指标/粒度/时间范围），调优后连续 4 轮 10/10（100%），达标线 ≥90%。
+- **可观测性（OpenTelemetry）**：后端 `otel.py` + 前端 `otel.ts` 埋点（默认关闭，`OTEL_ENABLED=False` / `VITE_OTEL_ENABLED=false`）。
+- **Docker healthcheck 与编排加固**：healthcheck 指向 `/api/v1/system/health`，容器 `Health Status=healthy`，端点返回 200。
+- **验收**：语义层问数演示通过（上周成交总额按天 / 本月 shop 订单量按周 / 近30天成交总额按月，本地模型 qwen2.5:3b 路由，返回时序结果）；容器健康检查通过；全量 pytest 462 passed 无回归。迭代1 六项任务全部完成，进入冻结（commit `bbe53a3`）。
+
 ### 实现（知识中心独立页 · 知识库管理/文件/问答）
 
 - **知识库管理后端**：`models/knowledge.py` 新增 `KnowledgeBase`（oc_knowledge_base）与 `KnowledgeBaseFile`（oc_knowledge_base_file）模型；迁移 `p21_knowledge_base` 建表；`knowledge_service.py` 补齐 `create_base` / `list_bases` / `get_base` / `update_base` / `delete_base` / `upload_base_file` / `list_base_files` / `delete_base_file` / `ask_base` 方法（文件落盘 `data/knowledge/{tenant}/{base}/`，同名校验、软删+磁盘清理，问答按库内文件+已发布文档召回片段交由 LLM 生成，模型不可用降级返回片段拼装）。
