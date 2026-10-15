@@ -16,6 +16,28 @@ AIGC:
 
 ## [Unreleased]
 
+（v0.16.0 待发布内容）
+
+## [v0.15.0] - 2026-10-15
+
+### 实现（v0.15.0 迭代2 · 双主题与侧栏重构，commit 28afdf5）
+
+- **明暗双主题第一公民**：`main.css` 新增浅色语义化表面令牌与暗色 `[data-theme="dark"]` 深灰主题（表面/边框/文字三级/品牌与语义色全量覆盖），品牌字体栈与页面渐变背景统一；`prefers-reduced-motion` 媒体查询减弱动效；`core/theme.ts` `initTheme` 首帧注入防闪烁，`ThemeToggle.vue` 一键换肤并 localStorage 持久化。
+- **顶栏 + 可折叠分组侧栏**：`App.vue` 重写为顶栏（品牌 + 版本号 v0.15.0 + 换肤 + 用户区）与侧栏（工作台 / 数据接入 / 智能治理 / 站点与能力 4 组导航，`SidebarIcon.vue` SVG 图标，折叠状态持久化、窄屏默认折叠、子路径高亮）。
+- **前端组件库**：新增 `components/ui/` 8 个组件 — `CountUp`（数字滚动）、`DataCard`（指标数据卡）、`EmptyState`（空态）、`NbaCard`（行动卡）、`Skeleton`（骨架屏）、`StatusBadge`（状态徽标）、`SidebarIcon`、`ThemeToggle`。
+- **Dashboard 重写**：运营总览改为 NBA 行动卡（规则版 Next Best Action：环比降幅 >5% 高优 / 小幅回落中优 / 增长低优，至多 3 条，链接运营参谋/指标中心）+ DataCard + CountUp 指标卡 + ECharts 趋势图（`core/echarts.ts` 统一初始化，替换手写 SVG sparkline），Skeleton / EmptyState 加载与空态闭环。
+- **ECharts 定制与暗色轴线微调**：`core/echarts.ts` 注册浅/暗双主题（暗色轴线/分割线/文字色微调、渐变主题色），随主题切换 dispose 重建；涉及 Dashboard 与 OpsCenter 图表。
+- **硬编码清理**：19 个视图（ApiBridge / CollectCenter / DataImport / DataSourceCenter / InsightCenter / KnowledgeCenter / Learning / Login / MarketingCenter / MetricCenter / ModelCenter / OpsCenter / PluginMarket / SecurityCenter / SecurityLog / SentimentCenter / SiteManager / SiteStudio / StorageCenter）样式硬编码色值/字号令牌化，接入 `composables/useReducedMotion.ts` 尊重系统减弱动效偏好。
+- **构建分包**：`vite.config.ts` 新增 `rollupOptions.manualChunks`，将 echarts 与 vue vendor 拆为独立 chunk（build_log 产物：`echarts-*.js` 约 576 kB、`vendor-*.js` 约 100 kB、主包降至约 71 kB）。
+- **验收**：前端走查 `/metrics` `/ops` `/insight` `/knowledge-center` 四页明暗主题渲染正常，控制台 403/500 报错随后端修复消除；`npm run build` 通过（vendor / echarts 独立 chunk 生成）。
+
+### 修复（v0.15.0 迭代2 后端，commit 33db970）
+
+- **audience 403 修复**：`auth_service.py` 的 `PERMISSION_DEFINITIONS` 在 marketing 与 collect 定义之间补齐 `audience:view/create/update/delete` 四权限码，seed 入库后 `/api/v1/audience/segments` 鉴权通过。
+- **knowledge 500 修复**：`endpoints/knowledge.py` 的 `GET /knowledge/bases` 与 `GET /bases/{id}/files` 两处 `response_model=ApiResponse[dict]` 修正为 `ApiResponse[list]`（service 实际返回 list，Pydantic 校验不再抛 ValidationError）。
+- **Dockerfile 镜像源**（commit 335cb46）：`deploy/docker/Dockerfile.backend` 移除清华 pip 镜像源，改回官方源。
+- **验收**：后端全量 pytest 462 passed；Docker 重启后线上 `/api/v1/audience/segments` 与 `/api/v1/knowledge/bases` 均返回 200。
+
 ### 实现（v0.15.0 迭代1 · 语义层与链路可观测）— 已冻结
 
 - **指标注册表（Metrics Registry）**：`models/metric.py` 指标数据模型（名称/代码/聚合/粒度/精度/负责人/状态/公式/口径）+ 指标 CRUD 管理页 `MetricCenter.vue`（fetchMetric/updateMetric 编辑弹窗闭环）。
