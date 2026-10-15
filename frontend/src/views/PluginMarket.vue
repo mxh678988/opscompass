@@ -461,7 +461,7 @@ onMounted(load)
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-sm);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;

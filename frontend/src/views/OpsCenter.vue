@@ -1310,7 +1310,7 @@ button:hover:not(:disabled) {
 button.primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);
+  box-shadow: var(--shadow-primary);
 }
 .tag {
   font-weight: 600;

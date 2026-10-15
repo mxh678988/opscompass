@@ -25,6 +25,17 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: mode !== 'production',
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/echarts')) return 'echarts'
+            if (id.includes('node_modules/vue') || id.includes('node_modules/@vue') ||
+                id.includes('node_modules/vue-router') || id.includes('node_modules/pinia')) {
+              return 'vendor'
+            }
+          },
+        },
+      },
     },
   }
 })

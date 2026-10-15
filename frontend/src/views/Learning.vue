@@ -1223,13 +1223,13 @@ td.ops {
 .btn.primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .btn.primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);
+  color: var(--color-text-on-primary);
+  box-shadow: var(--shadow-primary);
 }
 .btn.mini {
   padding: 3px 8px;
@@ -1242,7 +1242,7 @@ td.ops {
 .btn.danger:hover:not(:disabled) {
   background: var(--color-error);
   border-color: var(--color-error);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .tag {
   display: inline-block;

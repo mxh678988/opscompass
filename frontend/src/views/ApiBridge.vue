@@ -184,7 +184,7 @@ onMounted(load)
 .input.area { resize: vertical; }
 .btn { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-2) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); color: var(--color-text); font-size: 13px; cursor: pointer; transition: all var(--transition-fast); white-space: nowrap; }
 .btn:hover { background: var(--color-bg-hover); }
-.btn.primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.btn.primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-text-on-primary); }
 .btn.primary:hover { background: var(--color-primary-hover); }
 .btn.primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn.ghost { background: transparent; }

@@ -1101,7 +1101,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--color-primary);
-  background: #fff;
+  background: var(--color-bg);
 }
 
 input:disabled {
@@ -1131,7 +1131,7 @@ textarea {
   font-size: 13px;
   border-radius: 6px;
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: var(--color-bg);
   color: var(--color-text);
   padding: 7px 14px;
   cursor: pointer;
@@ -1150,7 +1150,7 @@ textarea {
 .btn.primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 .btn.ghost {

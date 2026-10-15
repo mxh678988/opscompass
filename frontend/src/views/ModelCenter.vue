@@ -1045,11 +1045,11 @@ td.ops {
 .btn.primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .btn.primary:hover:not(:disabled) {
   opacity: 0.9;
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .btn.mini {
   padding: 3px 8px;
@@ -1061,7 +1061,7 @@ td.ops {
 }
 .btn.danger:hover:not(:disabled) {
   background: var(--color-error);
-  color: #fff;
+  color: var(--color-text-on-primary);
   border-color: var(--color-error);
 }
 .tag {

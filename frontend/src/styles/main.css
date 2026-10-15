@@ -19,6 +19,7 @@
   --color-text-secondary: #4b5563;
   --color-text-muted: #9ca3af;
   --color-text-link: #2563eb;
+  --color-text-on-primary: #ffffff;
 
   /* 背景 */
   --color-bg: #ffffff;
@@ -34,6 +35,8 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.04);
+  --shadow-primary: 0 2px 8px rgba(37, 99, 235, 0.22);
+  --mask-overlay: rgba(15, 23, 42, 0.4);
 
   /* 圆角 */
   --radius-sm: 6px;
@@ -42,9 +45,26 @@
   --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* 字体 */
-  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  /* 字体（品牌字体栈：中文 MiSans / PingFang 优先，数字用 tabular 特性保证对齐） */
+  --font-sans: 'MiSans', 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  --font-numeric: 'MiSans', 'DIN Alternate', 'Bahnschrift', 'Segoe UI', var(--font-sans);
+
+  /* 语义化表面令牌（浅色 · 与旧色名同值，供新组件引用） */
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-subtle: #f8fafc;
+  --bg-hover: #f1f5f9;
+  --bg-active: #eff6ff;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --text-invert: #ffffff;
+  --border-subtle: #f1f5f9;
+  --border-strong: #e5e7eb;
+  --border-focus: #3b82f6;
+
+  color-scheme: light;
 
   /* 间距 */
   --space-1: 4px;
@@ -184,7 +204,80 @@ code {
 /* 选择文本 */
 ::selection {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-invert);
+}
+
+/* ===== 暗色主题（[data-theme="dark"] 第一公民，深灰而非纯黑）===== */
+[data-theme='dark'] {
+  --color-primary: #3b82f6;
+  --color-primary-hover: #60a5fa;
+  --color-primary-light: rgba(59, 130, 246, 0.16);
+  --color-primary-border: rgba(59, 130, 246, 0.45);
+  --color-success: #22c55e;
+  --color-success-light: rgba(34, 197, 94, 0.14);
+  --color-success-border: rgba(34, 197, 94, 0.4);
+  --color-warning: #f59e0b;
+  --color-warning-light: rgba(245, 158, 11, 0.14);
+  --color-warning-border: rgba(245, 158, 11, 0.4);
+  --color-error: #ef4444;
+  --color-error-light: rgba(239, 68, 68, 0.14);
+  --color-error-border: rgba(239, 68, 68, 0.4);
+  --color-focus: #60a5fa;
+
+  --color-text: #e5e7eb;
+  --color-text-secondary: #c3c7d0;
+  --color-text-muted: #7d8290;
+  --color-text-link: #60a5fa;
+  --color-text-on-primary: #ffffff;
+
+  --color-bg: #17171c;
+  --color-bg-subtle: #1e1e24;
+  --color-bg-hover: #26262e;
+  --color-border: #2e2e38;
+  --color-border-light: #26262e;
+
+  --bg-surface: #1e1e24;
+  --bg-elevated: #232329;
+  --bg-subtle: #26262e;
+  --bg-hover: #2c2c34;
+  --bg-active: rgba(59, 130, 246, 0.14);
+  --text-primary: #e5e7eb;
+  --text-secondary: #c3c7d0;
+  --text-muted: #7d8290;
+  --text-invert: #ffffff;
+  --border-subtle: #26262e;
+  --border-strong: #2e2e38;
+  --border-focus: #60a5fa;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.44), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.42), 0 6px 12px rgba(0, 0, 0, 0.24);
+  --shadow-primary: 0 2px 8px rgba(59, 130, 246, 0.28);
+  --mask-overlay: rgba(0, 0, 0, 0.55);
+
+  /* 图表色（ECharts 渐变随主题切换） */
+  --chart-primary: #3b82f6;
+  --chart-primary-soft: rgba(59, 130, 246, 0.04);
+
+  color-scheme: dark;
+}
+
+/* 页面背景：浅色 subtle 渐变，暗色深灰渐变，减少纯色疲劳 */
+body {
+  background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-subtle) 100%);
+  background-attachment: fixed;
+}
+
+/* 尊重系统减弱动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ===== 响应式自适应基线（窗口缩放）=====

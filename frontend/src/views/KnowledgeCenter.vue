@@ -466,7 +466,7 @@ onMounted(loadBases)
 .mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--mask-overlay);
   display: flex;
   justify-content: flex-end;
   z-index: 100;

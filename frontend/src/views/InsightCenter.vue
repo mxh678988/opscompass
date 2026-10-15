@@ -963,7 +963,7 @@ onMounted(async () => {
 .btn.primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .btn.primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
 .btn.primary:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -1129,7 +1129,7 @@ onMounted(async () => {
 .mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--mask-overlay);
   display: flex;
   justify-content: flex-end;
   z-index: 100;

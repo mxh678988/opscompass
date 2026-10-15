@@ -433,7 +433,7 @@ button.ghost {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--mask-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -561,7 +561,7 @@ button:hover:not(:disabled) {
 button.primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);
+  box-shadow: var(--shadow-primary);
 }
 .tag {
   font-weight: 600;

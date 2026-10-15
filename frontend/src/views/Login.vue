@@ -186,7 +186,7 @@ async function onSubmit() {
   border: none;
   border-radius: var(--radius-md);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 1px;

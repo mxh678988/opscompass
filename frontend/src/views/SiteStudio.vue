@@ -221,7 +221,7 @@ onMounted(load)
 .check { display: flex; align-items: center; gap: var(--space-2); font-size: 13px; color: var(--color-text-secondary); cursor: pointer; }
 .btn { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-2) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); color: var(--color-text); font-size: 13px; cursor: pointer; transition: all var(--transition-fast); white-space: nowrap; }
 .btn:hover { background: var(--color-bg-hover); }
-.btn.primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.btn.primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-text-on-primary); }
 .btn.primary:hover { background: var(--color-primary-hover); }
 .btn.primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn.ghost { background: transparent; }
@@ -243,7 +243,7 @@ onMounted(load)
 .empty { padding: var(--space-10) var(--space-4); text-align: center; border: 1px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-subtle); }
 .empty-title { margin: 0 0 var(--space-1); font-weight: 600; color: var(--color-text-secondary); }
 .empty-sub { margin: 0; font-size: 12px; color: var(--color-text-muted); }
-.mask { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); display: flex; justify-content: center; align-items: center; z-index: 100; }
+.mask { position: fixed; inset: 0; background: var(--mask-overlay); display: flex; justify-content: center; align-items: center; z-index: 100; }
 .preview-panel { width: min(1100px, 94vw); height: 90vh; background: var(--color-bg); border-radius: var(--radius-lg); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-card); }
 .preview-head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-border-light); }
 .preview-head h3 { margin: 0; font-size: 16px; }
